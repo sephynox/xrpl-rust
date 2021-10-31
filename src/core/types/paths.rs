@@ -7,8 +7,6 @@ use crate::constants::ACCOUNT_ID_LENGTH;
 use crate::core::binarycodec::exceptions::XRPLBinaryCodecException;
 use crate::core::types::exceptions::XRPLHashException;
 use crate::core::types::utils::CURRENCY_CODE_LENGTH;
-use crate::core::types::AccountId;
-use crate::core::types::Currency;
 use crate::core::types::*;
 use crate::core::BinaryParser;
 use crate::core::Parser;
@@ -19,10 +17,9 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::convert::TryFrom;
 use indexmap::IndexMap;
-use serde::ser::SerializeMap;
-use serde::ser::SerializeSeq;
-use serde::Serializer;
-use serde::{Deserialize, Serialize};
+use serde::ser::{SerializeMap, SerializeSeq};
+use serde::{Deserialize, Serialize, Serializer};
+use serde_with::skip_serializing_none;
 
 // Constant Keys
 const _ACC_KEY: &str = "account";
@@ -38,15 +35,13 @@ const _TYPE_ISSUER: u8 = 0x20;
 const _PATHSET_END_BYTE: u8 = 0x00;
 const _PATH_SEPARATOR_BYTE: u8 = 0xFF;
 
+#[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct PathStepData {
     #[serde(skip_serializing)]
     index: u8,
-    #[serde(skip_serializing_if = "Option::is_none")]
     account: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     currency: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     issuer: Option<String>,
 }
 

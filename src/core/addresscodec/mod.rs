@@ -1,4 +1,5 @@
 //! This module contains commonly-used constants.
+
 pub mod exceptions;
 #[cfg(test)]
 pub mod test_cases;
