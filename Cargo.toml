@@ -1,6 +1,6 @@
 [package]
 name = "xrpl-rust"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2018"
 authors = ["Tanveer Wahid <tan@wahid.email>"]
 description = "A 100% Rust library to interact with the XRPL"
@@ -25,19 +25,20 @@ sha2 = "0.9.8"
 rand_hc = "0.3.1"
 ripemd160 = "0.9.1"
 ed25519-dalek = "1.0.1"
+secp256k1 = { version = "0.20.3", default-features = false, features = ["alloc"] }
+bs58 = { version = "0.4.0", default-features = false, features = ["check", "alloc"] }
 indexmap = { version = "1.7.0", features = ["serde"] }
+regex = { version = "1.5.4", default-features = false }
 strum = { version = "0.22.0", default-features = false }
 strum_macros = { version = "0.22.0", default-features = false }
-regex = { version = "1.5.4", default-features = false }
 num-bigint = { version = "0.4.2", default-features = false }
 rust_decimal = { version = "1.17.0", default-features = false, features = ["serde"] }
 chrono = { version = "0.4.19", default-features = false, features = ["alloc", "clock"] }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
-bs58 = { version = "0.4.0", default-features = false, features = ["check", "alloc"] }
+rand = { version = "0.8.4", default-features = false, features = ["getrandom"] }
 serde = { version = "1.0.130", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false, features = ["alloc"] }
-rand = { version = "0.8.4", default-features = false, features = ["getrandom"] }
-secp256k1 = { version = "0.20.3", default-features = false, features = ["alloc"] }
+serde_with = "1.11.0"
 
 [dev-dependencies]
 criterion = "0.3.5"

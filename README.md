@@ -58,7 +58,7 @@ Documentation is available [here](https://docs.rs/xrpl-rust).
 ## ⛮ Quickstart
 TODO - Most core functionality is in place and working. 
 
-In Progres:
+In Progress:
 * Models
 * Asynchronous ledger interactions
     * JSON RPC
