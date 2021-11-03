@@ -46,15 +46,18 @@ struct PathStepData {
 }
 
 /// Serialize and deserialize a single step in a Path.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
+#[serde(try_from = "&str")]
 pub struct PathStep(Vec<u8>);
 
 /// Class for serializing/deserializing Paths.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
+#[serde(try_from = "&str")]
 pub struct Path(Vec<u8>);
 
 /// Class for serializing/deserializing Paths.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
+#[serde(try_from = "&str")]
 pub struct PathSet(Vec<u8>);
 
 /// Helper function to determine if a dictionary represents
@@ -401,6 +404,16 @@ impl TryFrom<&str> for Path {
     /// Construct a Path object from a string.
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let json: Vec<IndexMap<String, String>> = serde_json::from_str(value)?;
+        Self::try_from(json)
+    }
+}
+
+impl TryFrom<&str> for PathStep {
+    type Error = XRPLHashException;
+
+    /// Construct a PathSet object from a string.
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let json: IndexMap<String, String> = serde_json::from_str(value)?;
         Self::try_from(json)
     }
 }
