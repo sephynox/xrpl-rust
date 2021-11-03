@@ -1,8 +1,6 @@
 //! Request models.
 
 use crate::constants::CryptoAlgorithm;
-use crate::core::types::Amount;
-use crate::core::types::PathSet;
 use crate::models::*;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
@@ -500,10 +498,10 @@ pub struct PathFind<'a> {
     subcommand: PathFindSubcommand,
     source_account: &'a str,
     destination_account: &'a str,
-    destination_amount: Amount,
+    destination_amount: Currency,
     id: Option<u32>,
-    send_max: Option<Amount>,
-    paths: Option<PathSet>,
+    send_max: Option<Currency>,
+    paths: Option<Vec<Vec<PathStep<'a>>>>,
 }
 
 /// The ripple_path_find method is a simplified version of
@@ -530,13 +528,13 @@ pub struct RipplePathFind<'a> {
     method: RequestMethod,
     source_account: &'a str,
     destination_account: &'a str,
-    destination_amount: Amount,
+    destination_amount: Currency,
     id: Option<u32>,
     ledger_hash: Option<&'a str>,
     ledger_index: Option<&'a str>,
-    send_max: Option<Amount>,
+    send_max: Option<Currency>,
     source_currencies: Option<Vec<Currency>>,
-    paths: Option<PathSet>,
+    paths: Option<Vec<Vec<PathStep<'a>>>>,
 }
 
 /// The ping command returns an acknowledgement, so that
