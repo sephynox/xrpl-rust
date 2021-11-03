@@ -244,6 +244,16 @@ pub struct Ticket<'a> {
     ticket_sequence: u64,
 }
 
+/// A PathStep represents an individual step along a Path.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PathStep<'a> {
+    account: Option<&'a str>,
+    currency: Option<&'a str>,
+    issuer: Option<&'a str>,
+    r#type: Option<u8>,
+    type_hex: Option<&'a str>,
+}
+
 /// An arbitrary piece of data attached to a transaction. A
 /// transaction can have multiple Memo objects as an array
 /// in the Memos field.
