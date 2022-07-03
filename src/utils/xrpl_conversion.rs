@@ -51,18 +51,17 @@ fn _calculate_precision(value: &str) -> Result<usize, XRPRangeException> {
 /// Ensure that the value after being multiplied by the
 /// exponent does not contain a decimal.
 fn _verify_no_decimal(decimal: Decimal) -> Result<(), XRPRangeException> {
-    let value: String;
     let decimal = Decimal::from_u32(decimal.scale()).expect("_verify_no_decimal");
 
-    if decimal == Decimal::ZERO {
-        value = decimal.mantissa().to_string();
+    let value: String = if decimal == Decimal::ZERO {
+        decimal.mantissa().to_string()
     } else {
-        value = decimal
+        decimal
             .checked_mul(decimal)
             .or(Some(Decimal::ZERO))
             .unwrap()
-            .to_string();
-    }
+            .to_string()
+    };
 
     if value.contains('.') {
         Err(XRPRangeException::InvalidValueContainsDecimal)
