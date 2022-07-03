@@ -76,7 +76,7 @@ pub enum RequestMethod {
 /// in the Flags field. This enum represents those options.
 ///
 /// See AccountSet flags:
-/// https://xrpl.org/accountset.html#accountset-flags
+/// `<https://xrpl.org/accountset.html#accountset-flags>`
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
 pub enum AccountSetFlag {
     /// Track the ID of this account's most recent transaction
@@ -117,7 +117,7 @@ pub enum AccountSetFlag {
 /// in the Flags field. This enum represents those options.
 ///
 /// See NFTokenCreateOffer flags:
-/// https://xrpl.org/nftokencreateoffer.html#nftokencreateoffer-flags
+/// `<https://xrpl.org/nftokencreateoffer.html#nftokencreateoffer-flags>`
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
 pub enum NFTokenCreateOfferFlag {
     /// If enabled, indicates that the offer is a sell offer.
@@ -129,7 +129,7 @@ pub enum NFTokenCreateOfferFlag {
 /// in the Flags field. This enum represents those options.
 ///
 /// See NFTokenMint flags:
-/// https://xrpl.org/nftokenmint.html#nftokenmint-flags
+/// `<https://xrpl.org/nftokenmint.html#nftokenmint-flags>`
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
 pub enum NFTokenMintFlag {
     /// Allow the issuer (or an entity authorized by the issuer) to
@@ -151,7 +151,7 @@ pub enum NFTokenMintFlag {
 /// in the Flags field. This enum represents those options.
 ///
 /// See OfferCreate flags:
-/// https://xrpl.org/offercreate.html#offercreate-flags
+/// `<https://xrpl.org/offercreate.html#offercreate-flags>`
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
 pub enum OfferCreateFlag {
     /// If enabled, the Offer does not consume Offers that exactly match it,
@@ -179,7 +179,7 @@ pub enum OfferCreateFlag {
 /// in the Flags field. This enum represents those options.
 ///
 /// See Payment flags:
-/// https://xrpl.org/payment.html#payment-flags
+/// `<https://xrpl.org/payment.html#payment-flags>`
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
 pub enum PaymentFlag {
     /// Do not use the default path; only use paths included in the Paths field.
@@ -200,7 +200,7 @@ pub enum PaymentFlag {
 /// in the Flags field. This enum represents those options.
 ///
 /// See PaymentChannelClaim flags:
-/// https://xrpl.org/paymentchannelclaim.html#paymentchannelclaim-flags
+/// `<https://xrpl.org/paymentchannelclaim.html#paymentchannelclaim-flags>`
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
 pub enum PaymentChannelClaimFlag {
     /// Clear the channel's Expiration time. (Expiration is different from the
@@ -224,7 +224,7 @@ pub enum PaymentChannelClaimFlag {
 /// in the Flags field. This enum represents those options.
 ///
 /// See TrustSet flags:
-/// https://xrpl.org/trustset.html#trustset-flags
+/// `<https://xrpl.org/trustset.html#trustset-flags>`
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
 pub enum TrustSetFlag {
     /// Authorize the other party to hold currency issued by this account.
@@ -245,7 +245,7 @@ pub enum TrustSetFlag {
 /// in the Flags field. This enum represents those options.
 ///
 /// See EnableAmendment flags:
-/// https://xrpl.org/enableamendment.html#enableamendment-flags
+/// `<https://xrpl.org/enableamendment.html#enableamendment-flags>`
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
 pub enum EnableAmendmentFlag {
     /// Support for this amendment increased to at least 80% of trusted
