@@ -2,6 +2,7 @@
 
 pub mod exceptions;
 pub mod requests;
+pub mod transactions;
 pub mod utils;
 
 pub use requests::*;
@@ -71,6 +72,49 @@ pub enum RequestMethod {
     Random,
 }
 
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
+pub enum AccountSetFlag {
+    AsfAccountTxnID,
+    AsfAuthorizedNFTokenMinter,
+    AsfDefaultRipple,
+    AsfDepositAuth,
+    AsfDisableMaster,
+    AsfDisallowXRP,
+    AsfGlobalFreeze,
+    AsfNoFreeze,
+    AsfRequireAuth,
+    AsfRequireDest,
+}
+
+pub enum NFTokenCreateOfferflag {
+    TfSellOffer,
+}
+
+pub enum NFTokenMintFlag {
+    TfBurnable,
+    TfOnlyXRP,
+    TfTrustline,
+    TfTransferable,
+}
+
+pub enum OfferCreateFlag {
+    TfPassive,
+    TfImmediateOrCancel,
+    TfFillOrKill,
+    TfSell,
+}
+
+pub enum PaymentFlag {
+    TfNoDirectRipple,
+    TfPartialPayment,
+    TfLimitQuality,
+}
+
+pub enum PaymentChannelClaimFlag {
+    TfRenew,
+    TfClose,
+}
+
 /// Transactions of the TrustSet type support additional values
 /// in the Flags field. This enum represents those options.
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
@@ -80,6 +124,11 @@ pub enum TrustSetFlag {
     TfClearNoRipple,
     TfSetFreeze,
     TfClearFreeze,
+}
+
+pub enum EnableAmendmentFlag {
+    TfGotMajority,
+    TfLostMajority,
 }
 
 /// Represents the object types that an AccountObjects
@@ -95,7 +144,7 @@ pub enum AccountObjectType {
     Offer,
     PaymentChannel,
     SignerList,
-    State,
+    RippleState,
     Ticket,
 }
 
@@ -132,6 +181,11 @@ pub enum TransactionType {
     EscrowCancel,
     EscrowCreate,
     EscrowFinish,
+    NFTokenAcceptOffer,
+    NFTokenBurn,
+    NFTokenCancelOffer,
+    NFTokenCreateOffer,
+    NFTokenMint,
     OfferCancel,
     OfferCreate,
     Payment,
@@ -140,6 +194,7 @@ pub enum TransactionType {
     PaymentChannelFund,
     SetRegularKey,
     SignerListSet,
+    TicketCreate,
     TrustSet,
 
     // Psuedo-Transaction types,
@@ -334,6 +389,7 @@ pub struct TransactionFields<'a> {
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
+    ticket_sequence: Option<u32>,
     txn_signature: Option<&'a str>,
     flags: Option<Vec<u32>>,
     memos: Option<Vec<Memo<'a>>>,
@@ -386,6 +442,102 @@ pub trait FromXRPL<T> {
 }
 
 /// For use with serde defaults.
+impl AccountSetFlag {
+    fn asf_account_txn_id() -> u32 {
+        5
+    }
+    fn asf_authorized_nftoken_minter() -> u32 {
+        10
+    }
+    fn asf_default_ripple() -> u32 {
+        8
+    }
+    fn asf_deposit_auth() -> u32 {
+        9
+    }
+    fn asf_disable_master() -> u32 {
+        4
+    }
+    fn asf_disallow_xrp() -> u32 {
+        3
+    }
+    fn asf_global_freeze() -> u32 {
+        7
+    }
+    fn asf_no_freeze() -> u32 {
+        6
+    }
+    fn asf_require_auth() -> u32 {
+        2
+    }
+    fn asf_require_dest() -> u32 {
+        1
+    }
+}
+
+/// For use with serde defaults.
+impl NFTokenCreateOfferflag {
+    fn tf_sell_token() -> u32 {
+        0x00000001
+    }
+}
+
+/// For use with serde defaults.
+impl NFTokenMintFlag {
+    fn tf_burnable() -> u32 {
+        0x00000001
+    }
+    fn tf_only_xrp() -> u32 {
+        0x00000002
+    }
+    fn tf_trustline() -> u32 {
+        0x00000004
+    }
+    fn tf_transferable() -> u32 {
+        0x00000008
+    }
+}
+
+/// For use with serde defaults.
+impl OfferCreateFlag {
+    fn tf_passive() -> u32 {
+        0x00010000
+    }
+    fn tf_immediate_or_cancel() -> u32 {
+        0x00020000
+    }
+    fn tf_fill_or_kill() -> u32 {
+        0x00040000
+    }
+    fn tf_sell() -> u32 {
+        0x00080000
+    }
+}
+
+/// For use with serde defaults.
+impl PaymentFlag {
+    fn tf_no_direct_ripple() -> u32 {
+        0x00010000
+    }
+    fn tf_partial_payment() -> u32 {
+        0x00020000
+    }
+    fn tf_limit_quality() -> u32 {
+        0x00040000
+    }
+}
+
+/// For use with serde defaults.
+impl PaymentChannelClaimFlag {
+    fn tf_renew() -> u32 {
+        0x00010000
+    }
+    fn tf_close() -> u32 {
+        0x00020000
+    }
+}
+
+/// For use with serde defaults.
 impl TrustSetFlag {
     fn tf_set_auth() -> u32 {
         0x00010000
@@ -401,6 +553,16 @@ impl TrustSetFlag {
     }
     fn tf_clear_freeze() -> u32 {
         0x00200000
+    }
+}
+
+/// For use with serde defaults.
+impl EnableAmendmentFlag {
+    fn tf_got_majority() -> u32 {
+        0x00010000
+    }
+    fn tf_lost_majority() -> u32 {
+        0x00020000
     }
 }
 
@@ -505,5 +667,91 @@ impl RequestMethod {
     }
     fn tx() -> Self {
         RequestMethod::Tx
+    }
+}
+
+/// For use with serde defaults.
+/// TODO Find a better way
+impl TransactionType {
+    fn account_delete() -> Self {
+        TransactionType::AccountDelete
+    }
+    fn account_set() -> Self {
+        TransactionType::AccountSet
+    }
+    fn check_cancel() -> Self {
+        TransactionType::CheckCancel
+    }
+    fn check_cash() -> Self {
+        TransactionType::CheckCash
+    }
+    fn check_create() -> Self {
+        TransactionType::CheckCreate
+    }
+    fn deposit_preauth() -> Self {
+        TransactionType::DepositPreauth
+    }
+    fn escrow_cancel() -> Self {
+        TransactionType::EscrowCancel
+    }
+    fn escrow_create() -> Self {
+        TransactionType::EscrowCreate
+    }
+    fn escrow_finish() -> Self {
+        TransactionType::EscrowFinish
+    }
+    fn nftoken_accept_offer() -> Self {
+        TransactionType::NFTokenAcceptOffer
+    }
+    fn nftoken_burn() -> Self {
+        TransactionType::NFTokenBurn
+    }
+    fn nftoken_cancel_offer() -> Self {
+        TransactionType::NFTokenCancelOffer
+    }
+    fn nftoken_create_offer() -> Self {
+        TransactionType::NFTokenCreateOffer
+    }
+    fn nftoken_mint() -> Self {
+        TransactionType::NFTokenMint
+    }
+    fn offer_cancel() -> Self {
+        TransactionType::OfferCancel
+    }
+    fn offer_create() -> Self {
+        TransactionType::OfferCreate
+    }
+    fn payment() -> Self {
+        TransactionType::Payment
+    }
+    fn payment_channel_claim() -> Self {
+        TransactionType::PaymentChannelClaim
+    }
+    fn payment_channel_create() -> Self {
+        TransactionType::PaymentChannelCreate
+    }
+    fn payment_channel_fund() -> Self {
+        TransactionType::PaymentChannelFund
+    }
+    fn set_regular_key() -> Self {
+        TransactionType::SetRegularKey
+    }
+    fn signer_list_set() -> Self {
+        TransactionType::SignerListSet
+    }
+    fn ticket_create() -> Self {
+        TransactionType::TicketCreate
+    }
+    fn trust_set() -> Self {
+        TransactionType::TrustSet
+    }
+    fn enable_amendment() -> Self {
+        TransactionType::EnableAmendment
+    }
+    fn set_fee() -> Self {
+        TransactionType::SetFee
+    }
+    fn unl_modify() -> Self {
+        TransactionType::UNLModify
     }
 }
