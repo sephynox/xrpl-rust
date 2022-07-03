@@ -12,6 +12,8 @@ pub const HEX_CURRENCY_REGEX: &str = r"^[A-F0-9]{40}$";
 /// Length of an account id.
 pub const ACCOUNT_ID_LENGTH: usize = 20;
 
+pub const TRANSACTION_HASH_PREFIX: &str = "54584E00";
+
 /// Represents the supported cryptography algorithms.
 #[derive(Debug, PartialEq, Clone, EnumIter, Display, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
