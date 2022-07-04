@@ -30,8 +30,8 @@ pub struct AccountDelete<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -50,17 +50,14 @@ pub struct AccountDelete<'a> {
 
 impl Transaction for AccountDelete<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `AccountDelete` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `AccountDelete` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -96,14 +93,14 @@ pub struct AccountSet<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
     ticket_sequence: Option<u32>,
     txn_signature: Option<&'a str>,
-    flags: Option<Vec<u32>>,
+    flags: Option<Vec<AccountSetFlag>>,
     memos: Option<Vec<Memo<'a>>>,
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the AccountSet model.
@@ -122,14 +119,28 @@ pub struct AccountSet<'a> {
 
 impl Transaction for AccountSet<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `AccountSet` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `AccountSet` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
             for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
+                match flag {
+                    AccountSetFlag::AsfAccountTxnID => flags_int += 0x00000005,
+                    AccountSetFlag::AsfAuthorizedNFTokenMinter => flags_int += 0x0000000A,
+                    AccountSetFlag::AsfDefaultRipple => flags_int += 0x00000008,
+                    AccountSetFlag::AsfDepositAuth => flags_int += 0x00000009,
+                    AccountSetFlag::AsfDisableMaster => flags_int += 0x00000004,
+                    AccountSetFlag::AsfDisallowXRP => flags_int += 0x00000003,
+                    AccountSetFlag::AsfGlobalFreeze => flags_int += 0x00000007,
+                    AccountSetFlag::AsfNoFreeze => flags_int += 0x00000006,
+                    AccountSetFlag::AsfRequireAuth => flags_int += 0x00000002,
+                    AccountSetFlag::AsfRequireDest => flags_int += 0x00000001,
+                }
             }
         }
         flags_int
@@ -170,8 +181,8 @@ pub struct CheckCancel<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -189,17 +200,14 @@ pub struct CheckCancel<'a> {
 
 impl Transaction for CheckCancel<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `CheckCancel` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `CheckCancel` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -237,8 +245,8 @@ pub struct CheckCash<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -258,17 +266,14 @@ pub struct CheckCash<'a> {
 
 impl Transaction for CheckCash<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `CheckCash` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `CheckCash` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -304,8 +309,8 @@ pub struct CheckCreate<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -327,17 +332,14 @@ pub struct CheckCreate<'a> {
 
 impl Transaction for CheckCreate<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `CheckCreate` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `CheckCreate` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -373,8 +375,8 @@ pub struct DepositPreauth<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -393,17 +395,14 @@ pub struct DepositPreauth<'a> {
 
 impl Transaction for DepositPreauth<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `DepositPreauth` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `DepositPreauth` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -438,8 +437,8 @@ pub struct EscrowCancel<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -458,17 +457,14 @@ pub struct EscrowCancel<'a> {
 
 impl Transaction for EscrowCancel<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `EscrowCancel` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `EscrowCancel` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -503,8 +499,8 @@ pub struct EscrowCreate<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -527,17 +523,14 @@ pub struct EscrowCreate<'a> {
 
 impl Transaction for EscrowCreate<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `EscrowCreate` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `EscrowCreate` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -572,8 +565,8 @@ pub struct EscrowFinish<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -594,17 +587,14 @@ pub struct EscrowFinish<'a> {
 
 impl Transaction for EscrowFinish<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `EscrowFinish` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `EscrowFinish` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -639,8 +629,8 @@ pub struct NFTokenAcceptOffer<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -660,17 +650,14 @@ pub struct NFTokenAcceptOffer<'a> {
 
 impl Transaction for NFTokenAcceptOffer<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `NFTokenAcceptOffer` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `NFTokenAcceptOffer` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -706,8 +693,8 @@ pub struct NFTokenBurn<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -726,17 +713,14 @@ pub struct NFTokenBurn<'a> {
 
 impl Transaction for NFTokenBurn<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `NFTokenBurn` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `NFTokenBurn` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -771,8 +755,8 @@ pub struct NFTokenCancelOffer<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -792,17 +776,14 @@ pub struct NFTokenCancelOffer<'a> {
 
 impl Transaction for NFTokenCancelOffer<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `NFTokenCancelOffer` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `NFTokenCancelOffer` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -839,14 +820,14 @@ pub struct NFTokenCreateOffer<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
     ticket_sequence: Option<u32>,
     txn_signature: Option<&'a str>,
-    flags: Option<Vec<u32>>,
+    flags: Option<Vec<NFTokenCreateOfferFlag>>,
     memos: Option<Vec<Memo<'a>>>,
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the NFTokenCreateOffer model.
@@ -862,14 +843,19 @@ pub struct NFTokenCreateOffer<'a> {
 
 impl Transaction for NFTokenCreateOffer<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `NFTokenCreateOffer` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `NFTokenCreateOffer` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
             for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
+                match flag {
+                    &NFTokenCreateOfferFlag::TfSellOffer => flags_int += 0x00000001,
+                }
             }
         }
         flags_int
@@ -908,14 +894,14 @@ pub struct NFTokenMint<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
     ticket_sequence: Option<u32>,
     txn_signature: Option<&'a str>,
-    flags: Option<Vec<u32>>,
+    flags: Option<Vec<NFTokenMintFlag>>,
     memos: Option<Vec<Memo<'a>>>,
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the NFTokenMint model.
@@ -930,14 +916,22 @@ pub struct NFTokenMint<'a> {
 
 impl Transaction for NFTokenMint<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `NFTokenMint` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `NFTokenMint` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
             for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
+                match flag {
+                    NFTokenMintFlag::TfBurnable => flags_int += 0x00000001,
+                    NFTokenMintFlag::TfOnlyXRP => flags_int += 0x00000002,
+                    NFTokenMintFlag::TfTrustline => flags_int += 0x00000004,
+                    NFTokenMintFlag::TfTransferable => flags_int += 0x00000008,
+                }
             }
         }
         flags_int
@@ -975,8 +969,8 @@ pub struct OfferCancel<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -994,17 +988,14 @@ pub struct OfferCancel<'a> {
 
 impl Transaction for OfferCancel<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `OfferCancel` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `OfferCancel` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -1039,14 +1030,14 @@ pub struct OfferCreate<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
     ticket_sequence: Option<u32>,
     txn_signature: Option<&'a str>,
-    flags: Option<Vec<u32>>,
+    flags: Option<Vec<OfferCreateFlag>>,
     memos: Option<Vec<Memo<'a>>>,
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the OfferCreate model.
@@ -1061,14 +1052,22 @@ pub struct OfferCreate<'a> {
 
 impl Transaction for OfferCreate<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `OfferCreate` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `OfferCreate` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
             for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
+                match flag {
+                    OfferCreateFlag::TfPassive => flags_int += 0x00010000,
+                    OfferCreateFlag::TfImmediateOrCancel => flags_int += 0x00020000,
+                    OfferCreateFlag::TfFillOrKill => flags_int += 0x00040000,
+                    OfferCreateFlag::TfSell => flags_int += 0x00080000,
+                }
             }
         }
         flags_int
@@ -1106,14 +1105,14 @@ pub struct Payment<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
     ticket_sequence: Option<u32>,
     txn_signature: Option<&'a str>,
-    flags: Option<Vec<u32>>,
+    flags: Option<Vec<PaymentFlag>>,
     memos: Option<Vec<Memo<'a>>>,
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the Payment model.
@@ -1131,14 +1130,21 @@ pub struct Payment<'a> {
 
 impl Transaction for Payment<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `Payment` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `Payment` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
             for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
+                match flag {
+                    PaymentFlag::TfNoDirectRipple => flags_int += 0x00010000,
+                    PaymentFlag::TfPartialPayment => flags_int += 0x00020000,
+                    PaymentFlag::TfLimitQuality => flags_int += 0x00040000,
+                }
             }
         }
         flags_int
@@ -1177,14 +1183,14 @@ pub struct PaymentChannelClaim<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
     ticket_sequence: Option<u32>,
     txn_signature: Option<&'a str>,
-    flags: Option<Vec<u32>>,
+    flags: Option<Vec<PaymentChannelClaimFlag>>,
     memos: Option<Vec<Memo<'a>>>,
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the PaymentChannelClaim model.
@@ -1200,14 +1206,20 @@ pub struct PaymentChannelClaim<'a> {
 
 impl Transaction for PaymentChannelClaim<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `PaymentChannelClaim` to json.")
+        let mut transaction_json = serde_json::to_value(&self)
+            .expect("Unable to serialize `PaymentChannelClaim` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
             for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
+                match flag {
+                    PaymentChannelClaimFlag::TfRenew => flags_int += 0x00010000,
+                    PaymentChannelClaimFlag::TfClose => flags_int += 0x00020000,
+                }
             }
         }
         flags_int
@@ -1245,8 +1257,8 @@ pub struct PaymentChannelCreate<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -1269,17 +1281,14 @@ pub struct PaymentChannelCreate<'a> {
 
 impl Transaction for PaymentChannelCreate<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `PaymentChannelCreate` to json.")
+        let mut transaction_json = serde_json::to_value(&self)
+            .expect("Unable to serialize `PaymentChannelCreate` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -1315,8 +1324,8 @@ pub struct PaymentChannelFund<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -1336,17 +1345,14 @@ pub struct PaymentChannelFund<'a> {
 
 impl Transaction for PaymentChannelFund<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `PaymentChannelFund` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `PaymentChannelFund` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -1385,8 +1391,8 @@ pub struct SetRegularKey<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -1404,17 +1410,14 @@ pub struct SetRegularKey<'a> {
 
 impl Transaction for SetRegularKey<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `SetRegularKey` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `SetRegularKey` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -1452,8 +1455,8 @@ pub struct SignerListSet<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -1471,17 +1474,14 @@ pub struct SignerListSet<'a> {
 
 impl Transaction for SignerListSet<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `TicketCreate` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `SignerListSet` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -1516,8 +1516,8 @@ pub struct TicketCreate<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
@@ -1535,17 +1535,14 @@ pub struct TicketCreate<'a> {
 
 impl Transaction for TicketCreate<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `TicketCreate` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `TicketCreate` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -1580,14 +1577,14 @@ pub struct TrustSet<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
-    last_ledger_sequence: Option<u64>,
+    sequence: Option<u32>,
+    last_ledger_sequence: Option<u32>,
     account_txn_id: Option<&'a str>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
     ticket_sequence: Option<u32>,
     txn_signature: Option<&'a str>,
-    flags: Option<Vec<u32>>,
+    flags: Option<Vec<TrustSetFlag>>,
     memos: Option<Vec<Memo<'a>>>,
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the TrustSet model.
@@ -1601,14 +1598,23 @@ pub struct TrustSet<'a> {
 
 impl Transaction for TrustSet<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `TrustSet` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `TrustSet` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
             for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
+                match flag {
+                    TrustSetFlag::TfSetAuth => flags_int += 0x00010000,
+                    TrustSetFlag::TfSetNoRipple => flags_int += 0x00020000,
+                    TrustSetFlag::TfClearNoRipple => flags_int += 0x00040000,
+                    TrustSetFlag::TfSetFreeze => flags_int += 0x00100000,
+                    TrustSetFlag::TfClearFreeze => flags_int += 0x00200000,
+                }
             }
         }
         flags_int
@@ -1646,11 +1652,11 @@ pub struct EnableAmendment<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
+    sequence: Option<u32>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
     txn_signature: Option<&'a str>,
-    flags: Option<Vec<u32>>,
+    flags: Option<Vec<EnableAmendmentFlag>>,
     /// The custom fields for the EnableAmendment model.
     ///
     /// See EnableAmendment fields:
@@ -1661,14 +1667,20 @@ pub struct EnableAmendment<'a> {
 
 impl Transaction for EnableAmendment<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `EnableAmendment` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `EnableAmendment` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
             for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
+                match flag {
+                    EnableAmendmentFlag::TfGotMajority => flags_int += 0x00010000,
+                    EnableAmendmentFlag::TfLostMajority => flags_int += 0x00020000,
+                }
             }
         }
         flags_int
@@ -1704,7 +1716,7 @@ pub struct SetFee<'a> {
     transaction_type: TransactionType,
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
+    sequence: Option<u32>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
     txn_signature: Option<&'a str>,
@@ -1722,17 +1734,14 @@ pub struct SetFee<'a> {
 
 impl Transaction for SetFee<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `SetFee` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `SetFee` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -1766,7 +1775,7 @@ pub struct UNLModify<'a> {
     #[serde(default = "default_account_zero")]
     account: &'a str,
     fee: Option<&'a str>,
-    sequence: Option<u64>,
+    sequence: Option<u32>,
     signing_pub_key: Option<&'a str>,
     source_tag: Option<u32>,
     txn_signature: Option<&'a str>,
@@ -1782,17 +1791,14 @@ pub struct UNLModify<'a> {
 
 impl Transaction for UNLModify<'static> {
     fn to_json(&self) -> Value {
-        serde_json::to_value(&self).expect("Unable to serialize `UNLModify` to json.")
+        let mut transaction_json =
+            serde_json::to_value(&self).expect("Unable to serialize `UNLModify` to json.");
+        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json
     }
 
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                flags_int += flag
-            }
-        }
-        flags_int
+        0
     }
 
     fn has_flag(&self) -> bool {
@@ -1804,5 +1810,125 @@ impl Transaction for UNLModify<'static> {
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use alloc::vec;
+
+    use super::*;
+
+    #[test]
+    fn test_to_json() {
+        let sequence: u32 = 1;
+        let last_ledger_sequence: u32 = 72779837;
+        let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
+        let xrp_amount = "1000000";
+        let usd_amount = "0.3";
+        let offer_create: OfferCreate = OfferCreate {
+            transaction_type: TransactionType::OfferCreate,
+            account: "rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe",
+            fee: Some("10"),
+            sequence: Some(sequence),
+            last_ledger_sequence: Some(last_ledger_sequence),
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: Some(flags),
+            memos: None,
+            signers: None,
+            taker_gets: Currency::Xrp {
+                amount: Some(Borrowed(xrp_amount)),
+                currency: Borrowed("XRP"),
+            },
+            taker_pays: Currency::IssuedCurrency {
+                amount: Some(Borrowed(usd_amount)),
+                currency: Borrowed("USD"),
+                issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
+            },
+            expiration: None,
+            offer_sequence: None,
+        };
+        let actual = offer_create.to_json();
+        let json = r#"{"Account":"rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe","Fee":"10","Sequence":1,"LastLedgerSequence":72779837,"Flags":131072,"TakerGets":{"amount":"1000000","currency":"XRP"},"TakerPays":{"amount":"0.3","currency":"USD","issuer":"rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"}}"#;
+        let expect: Value = serde_json::from_str(json).unwrap();
+        assert_eq!(actual, expect)
+    }
+
+    #[test]
+    fn test_has_flag() {
+        let sequence: u32 = 1;
+        let last_ledger_sequence: u32 = 72779837;
+        let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
+        let xrp_amount = "1000000";
+        let usd_amount = "0.3";
+        let offer_create: OfferCreate = OfferCreate {
+            transaction_type: TransactionType::OfferCreate,
+            account: "rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe",
+            fee: Some("10"),
+            sequence: Some(sequence),
+            last_ledger_sequence: Some(last_ledger_sequence),
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: Some(flags),
+            memos: None,
+            signers: None,
+            taker_gets: Currency::Xrp {
+                amount: Some(Borrowed(xrp_amount)),
+                currency: Borrowed("XRP"),
+            },
+            taker_pays: Currency::IssuedCurrency {
+                amount: Some(Borrowed(usd_amount)),
+                currency: Borrowed("USD"),
+                issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
+            },
+            expiration: None,
+            offer_sequence: None,
+        };
+        assert!(offer_create.has_flag())
+    }
+
+    #[test]
+    fn test_get_transaction_type() {
+        let sequence: u32 = 1;
+        let last_ledger_sequence: u32 = 72779837;
+        let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
+        let xrp_amount = "1000000";
+        let usd_amount = "0.3";
+        let offer_create: OfferCreate = OfferCreate {
+            transaction_type: TransactionType::OfferCreate,
+            account: "rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe",
+            fee: Some("10"),
+            sequence: Some(sequence),
+            last_ledger_sequence: Some(last_ledger_sequence),
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: Some(flags),
+            memos: None,
+            signers: None,
+            taker_gets: Currency::Xrp {
+                amount: Some(Borrowed(xrp_amount)),
+                currency: Borrowed("XRP"),
+            },
+            taker_pays: Currency::IssuedCurrency {
+                amount: Some(Borrowed(usd_amount)),
+                currency: Borrowed("USD"),
+                issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
+            },
+            expiration: None,
+            offer_sequence: None,
+        };
+        let actual = offer_create.get_transaction_type();
+        let expect = TransactionType::OfferCreate;
+        assert_eq!(actual, expect)
     }
 }
