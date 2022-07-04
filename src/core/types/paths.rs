@@ -159,31 +159,28 @@ impl TryFromParser for PathStepData {
         parser: &mut BinaryParser,
         _length: Option<usize>,
     ) -> Result<PathStepData, Self::Error> {
-        let account: Option<String>;
-        let currency: Option<String>;
-        let issuer: Option<String>;
         let data_type = parser.read_uint8()?;
 
-        if data_type & _TYPE_ACCOUNT != 0 {
+        let account: Option<String> = if data_type & _TYPE_ACCOUNT != 0 {
             let data = AccountId::from_parser(parser, None)?;
-            account = Some(data.to_string());
+            Some(data.to_string())
         } else {
-            account = None;
-        }
+            None
+        };
 
-        if data_type & _TYPE_CURRENCY != 0 {
+        let currency: Option<String> = if data_type & _TYPE_CURRENCY != 0 {
             let data = Currency::from_parser(parser, None)?;
-            currency = Some(data.to_string());
+            Some(data.to_string())
         } else {
-            currency = None;
-        }
+            None
+        };
 
-        if data_type & _TYPE_ISSUER != 0 {
+        let issuer: Option<String> = if data_type & _TYPE_ISSUER != 0 {
             let data = AccountId::from_parser(parser, None)?;
-            issuer = Some(data.to_string());
+            Some(data.to_string())
         } else {
-            issuer = None;
-        }
+            None
+        };
 
         Ok(PathStepData::new(account, currency, issuer))
     }
