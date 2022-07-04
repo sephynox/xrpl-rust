@@ -6,6 +6,7 @@ pub mod transactions;
 pub mod utils;
 
 pub use requests::*;
+pub use transactions::*;
 
 use alloc::borrow::Cow;
 use alloc::borrow::Cow::Borrowed;
@@ -81,36 +82,36 @@ pub enum RequestMethod {
 pub enum AccountSetFlag {
     /// Track the ID of this account's most recent transaction
     /// Required for AccountTxnID
-    AsfAccountTxnID = 0x00000005,
+    AsfAccountTxnID,
     /// Enable to allow another account to mint non-fungible tokens (NFTokens)
     /// on this account's behalf. Specify the authorized account in the
     /// NFTokenMinter field of the AccountRoot object. This is an experimental
     /// field to enable behavior for NFToken support.
-    AsfAuthorizedNFTokenMinter = 0x0000000A,
+    AsfAuthorizedNFTokenMinter,
     /// Enable rippling on this account's trust lines by default.
-    AsfDefaultRipple = 0x00000008,
+    AsfDefaultRipple,
     /// Enable Deposit Authorization on this account.
     /// (Added by the DepositAuth amendment.)
-    AsfDepositAuth = 0x00000009,
+    AsfDepositAuth,
     /// Disallow use of the master key pair. Can only be enabled if the
     /// account has configured another way to sign transactions, such as
     /// a Regular Key or a Signer List.
-    AsfDisableMaster = 0x00000004,
+    AsfDisableMaster,
     /// XRP should not be sent to this account.
     /// (Enforced by client applications, not by rippled)
-    AsfDisallowXRP = 0x00000003,
+    AsfDisallowXRP,
     /// Freeze all assets issued by this account.
-    AsfGlobalFreeze = 0x00000007,
+    AsfGlobalFreeze,
     /// Permanently give up the ability to freeze individual
     /// trust lines or disable Global Freeze. This flag can never
     /// be disabled after being enabled.
-    AsfNoFreeze = 0x00000006,
+    AsfNoFreeze,
     /// Require authorization for users to hold balances issued by
     /// this address. Can only be enabled if the address has no
     /// trust lines connected to it.
-    AsfRequireAuth = 0x00000002,
+    AsfRequireAuth,
     /// Require a destination tag to send transactions to this account.
-    AsfRequireDest = 0x00000001,
+    AsfRequireDest,
 }
 
 /// Transactions of the NFTokenCreateOffer type support additional values
@@ -122,7 +123,7 @@ pub enum AccountSetFlag {
 pub enum NFTokenCreateOfferFlag {
     /// If enabled, indicates that the offer is a sell offer.
     /// Otherwise, it is a buy offer.
-    TfSellOffer = 0x00000001,
+    TfSellOffer,
 }
 
 /// Transactions of the NFTokenMint type support additional values
@@ -134,17 +135,17 @@ pub enum NFTokenCreateOfferFlag {
 pub enum NFTokenMintFlag {
     /// Allow the issuer (or an entity authorized by the issuer) to
     /// destroy the minted NFToken. (The NFToken's owner can always do so.)
-    TfBurnable = 0x00000001,
+    TfBurnable,
     /// The minted NFToken can only be bought or sold for XRP.
     /// This can be desirable if the token has a transfer fee and the issuer
     /// does not want to receive fees in non-XRP currencies.
-    TfOnlyXRP = 0x00000002,
+    TfOnlyXRP,
     /// Automatically create trust lines from the issuer to hold transfer
     /// fees received from transferring the minted NFToken.
-    TfTrustline = 0x00000004,
+    TfTrustline,
     /// The minted NFToken can be transferred to others. If this flag is not
     /// enabled, the token can still be transferred from or to the issuer.
-    TfTransferable = 0x00000008,
+    TfTransferable,
 }
 
 /// Transactions of the OfferCreate type support additional values
@@ -157,22 +158,22 @@ pub enum OfferCreateFlag {
     /// If enabled, the Offer does not consume Offers that exactly match it,
     /// and instead becomes an Offer object in the ledger.
     /// It still consumes Offers that cross it.
-    TfPassive = 0x00010000,
+    TfPassive,
     /// Treat the Offer as an Immediate or Cancel order. The Offer never creates
     /// an Offer object in the ledger: it only trades as much as it can by
     /// consuming existing Offers at the time the transaction is processed. If no
     /// Offers match, it executes "successfully" without trading anything.
     /// In this case, the transaction still uses the result code tesSUCCESS.
-    TfImmediateOrCancel = 0x00020000,
+    TfImmediateOrCancel,
     /// Treat the offer as a Fill or Kill order . The Offer never creates an Offer
     /// object in the ledger, and is canceled if it cannot be fully filled at the
     /// time of execution. By default, this means that the owner must receive the
     /// full TakerPays amount; if the tfSell flag is enabled, the owner must be
     /// able to spend the entire TakerGets amount instead.
-    TfFillOrKill = 0x00040000,
+    TfFillOrKill,
     /// Exchange the entire TakerGets amount, even if it means obtaining more than
     /// the TakerPays amount in exchange.
-    TfSell = 0x00080000,
+    TfSell,
 }
 
 /// Transactions of the Payment type support additional values
@@ -185,15 +186,15 @@ pub enum PaymentFlag {
     /// Do not use the default path; only use paths included in the Paths field.
     /// This is intended to force the transaction to take arbitrage opportunities.
     /// Most clients do not need this.
-    TfNoDirectRipple = 0x00010000,
+    TfNoDirectRipple,
     /// If the specified Amount cannot be sent without spending more than SendMax,
     /// reduce the received amount instead of failing outright.
     /// See Partial Payments for more details.
-    TfPartialPayment = 0x00020000,
+    TfPartialPayment,
     /// Only take paths where all the conversions have an input:output ratio that
     /// is equal or better than the ratio of Amount:SendMax.
     /// See Limit Quality for details.
-    TfLimitQuality = 0x00040000,
+    TfLimitQuality,
 }
 
 /// Transactions of the PaymentChannelClaim type support additional values
@@ -206,7 +207,7 @@ pub enum PaymentChannelClaimFlag {
     /// Clear the channel's Expiration time. (Expiration is different from the
     /// channel's immutable CancelAfter time.) Only the source address of the
     /// payment channel can use this flag.
-    TfRenew = 0x00010000,
+    TfRenew,
     /// Request to close the channel. Only the channel source and destination
     /// addresses can use this flag. This flag closes the channel immediately if
     /// it has no more XRP allocated to it after processing the current claim,
@@ -217,7 +218,7 @@ pub enum PaymentChannelClaimFlag {
     /// SettleDelay time, unless the channel already has an earlier Expiration time.)
     /// If the destination address uses this flag when the channel still holds XRP,
     /// any XRP that remains after processing the claim is returned to the source address.
-    TfClose = 0x00020000,
+    TfClose,
 }
 
 /// Transactions of the TrustSet type support additional values
@@ -229,16 +230,16 @@ pub enum PaymentChannelClaimFlag {
 pub enum TrustSetFlag {
     /// Authorize the other party to hold currency issued by this account.
     /// (No effect unless using the asfRequireAuth AccountSet flag.) Cannot be unset.
-    TfSetAuth = 0x00010000,
+    TfSetAuth,
     /// Enable the No Ripple flag, which blocks rippling between two trust lines
     /// of the same currency if this flag is enabled on both.
-    TfSetNoRipple = 0x00020000,
+    TfSetNoRipple,
     /// Disable the No Ripple flag, allowing rippling on this trust line.)
-    TfClearNoRipple = 0x00040000,
+    TfClearNoRipple,
     /// Freeze the trust line.
-    TfSetFreeze = 0x00100000,
+    TfSetFreeze,
     /// Unfreeze the trust line.
-    TfClearFreeze = 0x00200000,
+    TfClearFreeze,
 }
 
 /// Pseudo-Transaction of the EnableAmendment type support additional values
@@ -250,10 +251,10 @@ pub enum TrustSetFlag {
 pub enum EnableAmendmentFlag {
     /// Support for this amendment increased to at least 80% of trusted
     /// validators starting with this ledger version.
-    TfGotMajority = 0x00010000,
+    TfGotMajority,
     /// Support for this amendment decreased to less than 80% of trusted
     /// validators starting with this ledger version.
-    TfLostMajority = 0x00020000,
+    TfLostMajority,
 }
 
 /// Represents the object types that an AccountObjects
@@ -294,7 +295,7 @@ pub enum Currency {
 }
 
 /// Enum containing the different Transaction types.
-#[derive(Debug, Clone, Serialize, Deserialize, Display)]
+#[derive(Debug, Clone, Serialize, Deserialize, Display, PartialEq)]
 #[serde(tag = "transaction_type")]
 pub enum TransactionType {
     AccountDelete,
