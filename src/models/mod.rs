@@ -285,13 +285,13 @@ pub enum AccountObjectType {
 pub enum Currency {
     /// Specifies an amount in an issued currency.
     IssuedCurrency {
-        amount: Option<Cow<'static, str>>,
+        value: Option<Cow<'static, str>>,
         currency: Cow<'static, str>,
         issuer: Cow<'static, str>,
     },
     /// Specifies an amount in XRP.
     Xrp {
-        amount: Option<Cow<'static, str>>,
+        value: Option<Cow<'static, str>>,
         currency: Cow<'static, str>,
     },
 }
@@ -501,7 +501,7 @@ pub struct UnsubscribeBook {
 /// Returns a Currency as XRP for the currency, without a value.
 pub fn default_xrp_currency() -> Currency {
     Currency::Xrp {
-        amount: None,
+        value: None,
         currency: Borrowed("XRP"),
     }
 }
@@ -660,16 +660,33 @@ pub trait Transaction {
 }
 
 pub trait AccountSetError {
-    #[doc(hidden)]
     fn get_tick_size_error(&self) -> Option<&str>;
-    #[doc(hidden)]
     fn get_transfer_rate_error(&self) -> Option<&str>;
-    #[doc(hidden)]
     fn get_domain_error(&self) -> Option<&str>;
-    #[doc(hidden)]
     fn get_clear_flag_error(&self) -> Option<&str>;
-    #[doc(hidden)]
     fn get_nftoken_minter_error(&self) -> Option<&str>;
+}
+
+pub trait CheckCashError {
+    fn get_amount_and_deliver_min_error(&self) -> Option<&str>;
+}
+
+pub trait DepositPreauthError {
+    fn get_authorize_and_unauthorize_error(&self) -> Option<&str>;
+}
+
+pub trait EscrowCreateError {
+    fn get_finish_after_error(&self) -> Option<&str>;
+}
+
+pub trait EscrowFinishError {
+    fn get_condition_and_fulfillment_error(&self) -> Option<&str>;
+}
+
+pub trait NFTokenAcceptOfferError {
+    fn get_nftoken_sell_offer_error(&self) -> Option<&str>;
+    fn get_nftoken_buy_offer_error(&self) -> Option<&str>;
+    fn get_nftoken_broker_fee_error(&self) -> Option<&str>;
 }
 
 /// For use with serde defaults.
