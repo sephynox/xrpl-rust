@@ -1,10 +1,12 @@
 //! Top-level modules for the models package.
 
+pub mod base;
 pub mod exceptions;
 pub mod requests;
 pub mod transactions;
 pub mod utils;
 
+pub use base::Base;
 pub use requests::*;
 pub use transactions::*;
 
@@ -650,11 +652,24 @@ impl RequestMethod {
     }
 }
 
+/// Standard functions for transactions.
 pub trait Transaction {
-    fn to_json(&self) -> Value;
     fn iter_to_int(&self) -> u32;
     fn has_flag(&self) -> bool;
     fn get_transaction_type(&self) -> TransactionType;
+}
+
+pub trait AccountSetError {
+    #[doc(hidden)]
+    fn get_tick_size_error(&self) -> Option<&str>;
+    #[doc(hidden)]
+    fn get_transfer_rate_error(&self) -> Option<&str>;
+    #[doc(hidden)]
+    fn get_domain_error(&self) -> Option<&str>;
+    #[doc(hidden)]
+    fn get_clear_flag_error(&self) -> Option<&str>;
+    #[doc(hidden)]
+    fn get_nftoken_minter_error(&self) -> Option<&str>;
 }
 
 /// For use with serde defaults.
