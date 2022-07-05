@@ -1,9 +1,17 @@
 //! Transaction models.
 
-use crate::models::*;
+use crate::{
+    constants::{
+        DISABLE_TICK_SIZE, MAX_DOMAIN_LENGTH, MAX_TICK_SIZE, MAX_TRANSFER_RATE, MIN_TICK_SIZE,
+        MIN_TRANSFER_RATE, SPECIAL_CASE_TRANFER_RATE,
+    },
+    models::*,
+};
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+
+use base::Base;
 
 /// Transaction
 
@@ -48,14 +56,29 @@ pub struct AccountDelete<'a> {
     destination_tag: Option<u32>,
 }
 
-impl Transaction for AccountDelete<'static> {
-    fn to_json(&self) -> Value {
+impl Base for AccountDelete<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `AccountDelete` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for AccountDelete<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -117,14 +140,51 @@ pub struct AccountSet<'a> {
     nftoken_minter: Option<&'a str>,
 }
 
-impl Transaction for AccountSet<'static> {
-    fn to_json(&self) -> Value {
+impl Base for AccountSet<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json_str = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.").as_str();
+    //     transaction_json_str
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `AccountSet` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    #[doc(hidden)]
+    fn get_errors(&self) -> Vec<&str> {
+        let mut errors: Vec<&str> = Vec::new();
+        let tick_size = self.get_tick_size_error();
+        let transfer_rate = self.get_transfer_rate_error();
+        let domain = self.get_domain_error();
+        let clear_flag = self.get_clear_flag_error();
+        let nftoken_minter = self.get_nftoken_minter_error();
+        if let Some(value) = tick_size {
+            errors.push(value);
+        }
+        if let Some(value) = transfer_rate {
+            errors.push(value);
+        }
+        if let Some(value) = domain {
+            errors.push(value);
+        }
+        if let Some(value) = clear_flag {
+            errors.push(value);
+        }
+        if let Some(value) = nftoken_minter {
+            errors.push(value);
+        }
+        errors
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for AccountSet<'static> {
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
@@ -155,6 +215,67 @@ impl Transaction for AccountSet<'static> {
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl AccountSetError for AccountSet<'static> {
+    fn get_tick_size_error(&self) -> Option<&str> {
+        if self.tick_size.is_some() {
+            let tick_size = self.tick_size.unwrap();
+            if tick_size > MAX_TICK_SIZE {
+                return Some("`tick_size` is above 15");
+            } else if tick_size < MIN_TICK_SIZE && tick_size != DISABLE_TICK_SIZE {
+                return Some("`tick_size` is below 3.");
+            }
+        }
+        None
+    }
+
+    fn get_transfer_rate_error(&self) -> Option<&str> {
+        let transafer_rate = &self.transfer_rate.unwrap();
+        if self.transfer_rate.is_some() && transafer_rate > &MAX_TRANSFER_RATE {
+            return Some("`transafer_rate` is above 2000000000.");
+        }
+        if self.transfer_rate.is_some()
+            && transafer_rate < &MIN_TRANSFER_RATE
+            && transafer_rate != &SPECIAL_CASE_TRANFER_RATE
+        {
+            return Some("`transafer_rate` is below 1000000000.");
+        }
+        None
+    }
+
+    fn get_domain_error(&self) -> Option<&str> {
+        if self.domain.is_some()
+            && self.domain.unwrap().to_lowercase().as_str() != self.domain.unwrap()
+        {
+            return Some("`domain` is not lowercase");
+        }
+        if self.domain.is_some() && self.domain.unwrap().len() > MAX_DOMAIN_LENGTH {
+            return Some("`domain` must not be longer than 256 characters");
+        }
+        None
+    }
+
+    fn get_clear_flag_error(&self) -> Option<&str> {
+        if self.clear_flag.is_some() && self.clear_flag == self.set_flag {
+            return Some("`clear_flag` must not be equal to the `set_flag`");
+        }
+        None
+    }
+
+    fn get_nftoken_minter_error(&self) -> Option<&str> {
+        // TODO: `set_flag` and `clear_flag` should be typed as `AccountSetFlag`.
+        // if self.nftoken_minter.is_some() && self.set_flag.unwrap() != AccountSetFlag::AsfAuthorizedNFTokenMinter {
+        //     return Some("Will not set the minter unless AccountSetFlag.ASF_AUTHORIZED_NFTOKEN_MINTER is set.");
+        // }
+        // if self.nftoken_minter.is_none() && self.set_flag.unwrap() == AccountSetFlag::AsfAuthorizedNFTokenMinter {
+        //     return Some("`nftoken_minter` must be present if `AccountSetFlag.AsfAuthorizedNFTokenMinter` is set.");
+        // }
+        // if self.nftoken_minter.is_some() && self.clear_flag.unwrap() == AccountSetFlag::AsfAuthorizedNFTokenMinter {
+        //     return Some("`nftoken_minter` must not be present if AccountSetFlag.AsfAuthorizedNFTokenMinter is unset using `clear_flag`")
+        // }
+        None
     }
 }
 
@@ -198,14 +319,29 @@ pub struct CheckCancel<'a> {
     check_id: &'a str,
 }
 
-impl Transaction for CheckCancel<'static> {
-    fn to_json(&self) -> Value {
+impl Base for CheckCancel<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCancel` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for CheckCancel<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -264,14 +400,29 @@ pub struct CheckCash<'a> {
     deliver_min: Option<Currency>,
 }
 
-impl Transaction for CheckCash<'static> {
-    fn to_json(&self) -> Value {
+impl Base for CheckCash<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCash` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for CheckCash<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -330,14 +481,29 @@ pub struct CheckCreate<'a> {
     invoice_id: Option<&'a str>,
 }
 
-impl Transaction for CheckCreate<'static> {
-    fn to_json(&self) -> Value {
+impl Base for CheckCreate<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCreate` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for CheckCreate<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -393,14 +559,29 @@ pub struct DepositPreauth<'a> {
     unauthorize: Option<&'a str>,
 }
 
-impl Transaction for DepositPreauth<'static> {
-    fn to_json(&self) -> Value {
+impl Base for DepositPreauth<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `DepositPreauth` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for DepositPreauth<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -455,14 +636,29 @@ pub struct EscrowCancel<'a> {
     offer_sequence: u32,
 }
 
-impl Transaction for EscrowCancel<'static> {
-    fn to_json(&self) -> Value {
+impl Base for EscrowCancel<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EscrowCancel` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for EscrowCancel<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -521,14 +717,29 @@ pub struct EscrowCreate<'a> {
     condition: Option<&'a str>,
 }
 
-impl Transaction for EscrowCreate<'static> {
-    fn to_json(&self) -> Value {
+impl Base for EscrowCreate<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EscrowCreate` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for EscrowCreate<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -585,14 +796,29 @@ pub struct EscrowFinish<'a> {
     fulfillment: Option<&'a str>,
 }
 
-impl Transaction for EscrowFinish<'static> {
-    fn to_json(&self) -> Value {
+impl Base for EscrowFinish<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EscrowFinish` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for EscrowFinish<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -648,14 +874,29 @@ pub struct NFTokenAcceptOffer<'a> {
     nftoken_broker_fee: Option<Currency>,
 }
 
-impl Transaction for NFTokenAcceptOffer<'static> {
-    fn to_json(&self) -> Value {
+impl Base for NFTokenAcceptOffer<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenAcceptOffer` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for NFTokenAcceptOffer<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -711,14 +952,29 @@ pub struct NFTokenBurn<'a> {
     owner: Option<&'a str>,
 }
 
-impl Transaction for NFTokenBurn<'static> {
-    fn to_json(&self) -> Value {
+impl Base for NFTokenBurn<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenBurn` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for NFTokenBurn<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -774,14 +1030,29 @@ pub struct NFTokenCancelOffer<'a> {
     nftoken_offers: Vec<&'a str>,
 }
 
-impl Transaction for NFTokenCancelOffer<'static> {
-    fn to_json(&self) -> Value {
+impl Base for NFTokenCancelOffer<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenCancelOffer` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for NFTokenCancelOffer<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -841,14 +1112,29 @@ pub struct NFTokenCreateOffer<'a> {
     destination: Option<&'a str>,
 }
 
-impl Transaction for NFTokenCreateOffer<'static> {
-    fn to_json(&self) -> Value {
+impl Base for NFTokenCreateOffer<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenCreateOffer` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for NFTokenCreateOffer<'static> {
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
@@ -914,14 +1200,29 @@ pub struct NFTokenMint<'a> {
     uri: Option<&'a str>,
 }
 
-impl Transaction for NFTokenMint<'static> {
-    fn to_json(&self) -> Value {
+impl Base for NFTokenMint<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenMint` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for NFTokenMint<'static> {
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
@@ -986,14 +1287,29 @@ pub struct OfferCancel<'a> {
     offer_sequence: u32,
 }
 
-impl Transaction for OfferCancel<'static> {
-    fn to_json(&self) -> Value {
+impl Base for OfferCancel<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `OfferCancel` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for OfferCancel<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -1050,14 +1366,29 @@ pub struct OfferCreate<'a> {
     offer_sequence: Option<u32>,
 }
 
-impl Transaction for OfferCreate<'static> {
-    fn to_json(&self) -> Value {
+impl Base for OfferCreate<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `OfferCreate` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for OfferCreate<'static> {
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
@@ -1128,14 +1459,29 @@ pub struct Payment<'a> {
     deliver_min: Option<Currency>,
 }
 
-impl Transaction for Payment<'static> {
-    fn to_json(&self) -> Value {
+impl Base for Payment<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `Payment` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for Payment<'static> {
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
@@ -1204,14 +1550,29 @@ pub struct PaymentChannelClaim<'a> {
     public_key: Option<&'a str>,
 }
 
-impl Transaction for PaymentChannelClaim<'static> {
-    fn to_json(&self) -> Value {
+impl Base for PaymentChannelClaim<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json = serde_json::to_value(&self)
             .expect("Unable to serialize `PaymentChannelClaim` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for PaymentChannelClaim<'static> {
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
@@ -1279,14 +1640,29 @@ pub struct PaymentChannelCreate<'a> {
     destination_tag: Option<u32>,
 }
 
-impl Transaction for PaymentChannelCreate<'static> {
-    fn to_json(&self) -> Value {
+impl Base for PaymentChannelCreate<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json = serde_json::to_value(&self)
             .expect("Unable to serialize `PaymentChannelCreate` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for PaymentChannelCreate<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -1343,14 +1719,29 @@ pub struct PaymentChannelFund<'a> {
     expiration: Option<u32>,
 }
 
-impl Transaction for PaymentChannelFund<'static> {
-    fn to_json(&self) -> Value {
+impl Base for PaymentChannelFund<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `PaymentChannelFund` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for PaymentChannelFund<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -1408,14 +1799,29 @@ pub struct SetRegularKey<'a> {
     regular_key: Option<&'a str>,
 }
 
-impl Transaction for SetRegularKey<'static> {
-    fn to_json(&self) -> Value {
+impl Base for SetRegularKey<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `SetRegularKey` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for SetRegularKey<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -1472,14 +1878,29 @@ pub struct SignerListSet<'a> {
     signer_quorum: u32,
 }
 
-impl Transaction for SignerListSet<'static> {
-    fn to_json(&self) -> Value {
+impl Base for SignerListSet<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `SignerListSet` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for SignerListSet<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -1533,14 +1954,29 @@ pub struct TicketCreate<'a> {
     ticket_count: u32,
 }
 
-impl Transaction for TicketCreate<'static> {
-    fn to_json(&self) -> Value {
+impl Base for TicketCreate<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `TicketCreate` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for TicketCreate<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -1596,14 +2032,29 @@ pub struct TrustSet<'a> {
     quality_out: Option<u32>,
 }
 
-impl Transaction for TrustSet<'static> {
-    fn to_json(&self) -> Value {
+impl Base for TrustSet<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `TrustSet` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for TrustSet<'static> {
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
@@ -1665,14 +2116,29 @@ pub struct EnableAmendment<'a> {
     ledger_sequence: u32,
 }
 
-impl Transaction for EnableAmendment<'static> {
-    fn to_json(&self) -> Value {
+impl Base for EnableAmendment<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EnableAmendment` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for EnableAmendment<'static> {
     fn iter_to_int(&self) -> u32 {
         let mut flags_int: u32 = 0;
         if self.flags.is_some() {
@@ -1732,14 +2198,29 @@ pub struct SetFee<'a> {
     ledger_sequence: u32,
 }
 
-impl Transaction for SetFee<'static> {
-    fn to_json(&self) -> Value {
+impl Base for SetFee<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `SetFee` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for SetFee<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -1789,14 +2270,29 @@ pub struct UNLModify<'a> {
     unlmodify_validator: &'a str,
 }
 
-impl Transaction for UNLModify<'static> {
-    fn to_json(&self) -> Value {
+impl Base for UNLModify<'static> {
+    // fn to_json(&self) -> &str {
+    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
+    //     transaction_json
+    // }
+
+    fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `UNLModify` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
 
+    fn get_errors(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn is_valid(&self) -> bool {
+        self.get_errors().is_empty()
+    }
+}
+
+impl Transaction for UNLModify<'static> {
     fn iter_to_int(&self) -> u32 {
         0
     }
@@ -1852,7 +2348,7 @@ mod test {
             expiration: None,
             offer_sequence: None,
         };
-        let actual = offer_create.to_json();
+        let actual = offer_create.to_json_value();
         let json = r#"{"Account":"rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe","Fee":"10","Sequence":1,"LastLedgerSequence":72779837,"Flags":131072,"TakerGets":{"amount":"1000000","currency":"XRP"},"TakerPays":{"amount":"0.3","currency":"USD","issuer":"rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"}}"#;
         let expect: Value = serde_json::from_str(json).unwrap();
         assert_eq!(actual, expect)
