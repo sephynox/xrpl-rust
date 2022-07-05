@@ -69,6 +69,7 @@ impl Base for AccountDelete<'static> {
         transaction_json
     }
 
+    #[doc(hidden)]
     fn get_errors(&self) -> Vec<&str> {
         Vec::new()
     }
@@ -219,6 +220,7 @@ impl Transaction for AccountSet<'static> {
 }
 
 impl AccountSetError for AccountSet<'static> {
+    #[doc(hidden)]
     fn get_tick_size_error(&self) -> Option<&str> {
         if self.tick_size.is_some() {
             let tick_size = self.tick_size.unwrap();
@@ -231,6 +233,7 @@ impl AccountSetError for AccountSet<'static> {
         None
     }
 
+    #[doc(hidden)]
     fn get_transfer_rate_error(&self) -> Option<&str> {
         let transafer_rate = &self.transfer_rate.unwrap();
         if self.transfer_rate.is_some() && transafer_rate > &MAX_TRANSFER_RATE {
@@ -245,6 +248,7 @@ impl AccountSetError for AccountSet<'static> {
         None
     }
 
+    #[doc(hidden)]
     fn get_domain_error(&self) -> Option<&str> {
         if self.domain.is_some()
             && self.domain.unwrap().to_lowercase().as_str() != self.domain.unwrap()
@@ -257,6 +261,7 @@ impl AccountSetError for AccountSet<'static> {
         None
     }
 
+    #[doc(hidden)]
     fn get_clear_flag_error(&self) -> Option<&str> {
         if self.clear_flag.is_some() && self.clear_flag == self.set_flag {
             return Some("`clear_flag` must not be equal to the `set_flag`");
@@ -264,6 +269,7 @@ impl AccountSetError for AccountSet<'static> {
         None
     }
 
+    #[doc(hidden)]
     fn get_nftoken_minter_error(&self) -> Option<&str> {
         // TODO: `set_flag` and `clear_flag` should be typed as `AccountSetFlag`.
         // if self.nftoken_minter.is_some() && self.set_flag.unwrap() != AccountSetFlag::AsfAuthorizedNFTokenMinter {
@@ -332,6 +338,7 @@ impl Base for CheckCancel<'static> {
         transaction_json
     }
 
+    #[doc(hidden)]
     fn get_errors(&self) -> Vec<&str> {
         Vec::new()
     }
@@ -413,8 +420,14 @@ impl Base for CheckCash<'static> {
         transaction_json
     }
 
+    #[doc(hidden)]
     fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
+        let mut errors = Vec::new();
+        let amount_and_deliver_min = self.get_amount_and_deliver_min_error();
+        if let Some(value) = amount_and_deliver_min {
+            errors.push(value)
+        }
+        errors
     }
 
     fn is_valid(&self) -> bool {
@@ -436,6 +449,18 @@ impl Transaction for CheckCash<'static> {
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl CheckCashError for CheckCash<'static> {
+    #[doc(hidden)]
+    fn get_amount_and_deliver_min_error(&self) -> Option<&str> {
+        if (self.amount.is_none() && self.deliver_min.is_none())
+            || (self.amount.is_some() && self.deliver_min.is_some())
+        {
+            return Some("Either `amount` or `deliver_min` must be set but not both.");
+        }
+        None
     }
 }
 
@@ -494,6 +519,7 @@ impl Base for CheckCreate<'static> {
         transaction_json
     }
 
+    #[doc(hidden)]
     fn get_errors(&self) -> Vec<&str> {
         Vec::new()
     }
@@ -572,8 +598,14 @@ impl Base for DepositPreauth<'static> {
         transaction_json
     }
 
+    #[doc(hidden)]
     fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
+        let mut errors = Vec::new();
+        let authorize_and_unauthorize = self.get_authorize_and_unauthorize_error();
+        if let Some(value) = authorize_and_unauthorize {
+            errors.push(value)
+        }
+        errors
     }
 
     fn is_valid(&self) -> bool {
@@ -595,6 +627,18 @@ impl Transaction for DepositPreauth<'static> {
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl DepositPreauthError for DepositPreauth<'static> {
+    #[doc(hidden)]
+    fn get_authorize_and_unauthorize_error(&self) -> Option<&str> {
+        if (self.authorize.is_none() && self.unauthorize.is_none())
+            || (self.authorize.is_some() && self.unauthorize.is_some())
+        {
+            return Some("Either `authorize` or `unauthorize` must be set but not both.");
+        }
+        None
     }
 }
 
@@ -730,8 +774,14 @@ impl Base for EscrowCreate<'static> {
         transaction_json
     }
 
+    #[doc(hidden)]
     fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
+        let mut errors = Vec::new();
+        let finish_after = self.get_finish_after_error();
+        if let Some(value) = finish_after {
+            errors.push(value)
+        }
+        errors
     }
 
     fn is_valid(&self) -> bool {
@@ -753,6 +803,19 @@ impl Transaction for EscrowCreate<'static> {
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl EscrowCreateError for EscrowCreate<'static> {
+    #[doc(hidden)]
+    fn get_finish_after_error(&self) -> Option<&str> {
+        if self.cancel_after.is_some()
+            && self.finish_after.is_some()
+            && self.finish_after.unwrap() >= self.cancel_after.unwrap()
+        {
+            return Some("The `finish_after` time must be before the `cancel_after` time.");
+        }
+        None
     }
 }
 
@@ -809,8 +872,14 @@ impl Base for EscrowFinish<'static> {
         transaction_json
     }
 
+    #[doc(hidden)]
     fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
+        let mut errors = Vec::new();
+        let condition_and_fulfillment = self.get_condition_and_fulfillment_error();
+        if let Some(value) = condition_and_fulfillment {
+            errors.push(value)
+        }
+        errors
     }
 
     fn is_valid(&self) -> bool {
@@ -832,6 +901,18 @@ impl Transaction for EscrowFinish<'static> {
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl EscrowFinishError for EscrowFinish<'static> {
+    #[doc(hidden)]
+    fn get_condition_and_fulfillment_error(&self) -> Option<&str> {
+        if (self.condition.is_some() && self.fulfillment.is_none())
+            || (self.condition.is_none() && self.condition.is_some())
+        {
+            return Some("Either `condition` and `fulfillment` must be set but not just one");
+        }
+        None
     }
 }
 
@@ -887,6 +968,7 @@ impl Base for NFTokenAcceptOffer<'static> {
         transaction_json
     }
 
+    #[doc(hidden)]
     fn get_errors(&self) -> Vec<&str> {
         Vec::new()
     }
@@ -911,6 +993,43 @@ impl Transaction for NFTokenAcceptOffer<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
+}
+
+impl NFTokenAcceptOfferError for NFTokenAcceptOffer<'static> {
+    #[doc(hidden)]
+    fn get_nftoken_sell_offer_error(&self) -> Option<&str> {
+        if self.nftoken_broker_fee.is_some() && self.nftoken_sell_offer.is_none() {
+            return Some("`nftoken_sell_offer` must be set if using brokered mode");
+        }
+        if self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
+            return Some("Must set either `nftoken_buy_offer` or `nftoken_sell_offer`");
+        }
+        None
+    }
+
+    #[doc(hidden)]
+    fn get_nftoken_buy_offer_error(&self) -> Option<&str> {
+        if self.nftoken_broker_fee.is_some() && self.nftoken_buy_offer.is_none() {
+            return Some("`nftoken_buy_offer` must be set if using brokered mode");
+        }
+        if self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
+            return Some("Must set either `nftoken_buy_offer` or `nftoken_sell_offer`");
+        }
+        None
+    }
+
+    // TODO: Find a way to access the value of an amount.
+    #[doc(hidden)]
+    fn get_nftoken_broker_fee_error(&self) -> Option<&str> {
+        todo!()
+    }
+    //     if let Some(value) = self.nftoken_broker_fee {
+    //         if value::IssuedCurrency::value <= 0 {
+    //             return Some("`nftoken_broker_fee` must be greater than 0; omit if there is no broker fee");
+    //         }
+    //     }
+    //     None
+    // }
 }
 
 /// Removes a NFToken object from the NFTokenPage in which it is being held,
@@ -2337,11 +2456,11 @@ mod test {
             memos: None,
             signers: None,
             taker_gets: Currency::Xrp {
-                amount: Some(Borrowed(xrp_amount)),
+                value: Some(Borrowed(xrp_amount)),
                 currency: Borrowed("XRP"),
             },
             taker_pays: Currency::IssuedCurrency {
-                amount: Some(Borrowed(usd_amount)),
+                value: Some(Borrowed(usd_amount)),
                 currency: Borrowed("USD"),
                 issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
             },
@@ -2349,7 +2468,7 @@ mod test {
             offer_sequence: None,
         };
         let actual = offer_create.to_json_value();
-        let json = r#"{"Account":"rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe","Fee":"10","Sequence":1,"LastLedgerSequence":72779837,"Flags":131072,"TakerGets":{"amount":"1000000","currency":"XRP"},"TakerPays":{"amount":"0.3","currency":"USD","issuer":"rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"}}"#;
+        let json = r#"{"Account":"rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe","Fee":"10","Sequence":1,"LastLedgerSequence":72779837,"Flags":131072,"TakerGets":{"value":"1000000","currency":"XRP"},"TakerPays":{"value":"0.3","currency":"USD","issuer":"rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"}}"#;
         let expect: Value = serde_json::from_str(json).unwrap();
         assert_eq!(actual, expect)
     }
@@ -2376,11 +2495,11 @@ mod test {
             memos: None,
             signers: None,
             taker_gets: Currency::Xrp {
-                amount: Some(Borrowed(xrp_amount)),
+                value: Some(Borrowed(xrp_amount)),
                 currency: Borrowed("XRP"),
             },
             taker_pays: Currency::IssuedCurrency {
-                amount: Some(Borrowed(usd_amount)),
+                value: Some(Borrowed(usd_amount)),
                 currency: Borrowed("USD"),
                 issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
             },
@@ -2412,11 +2531,11 @@ mod test {
             memos: None,
             signers: None,
             taker_gets: Currency::Xrp {
-                amount: Some(Borrowed(xrp_amount)),
+                value: Some(Borrowed(xrp_amount)),
                 currency: Borrowed("XRP"),
             },
             taker_pays: Currency::IssuedCurrency {
-                amount: Some(Borrowed(usd_amount)),
+                value: Some(Borrowed(usd_amount)),
                 currency: Borrowed("USD"),
                 issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
             },
