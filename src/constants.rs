@@ -20,6 +20,9 @@ pub const MAX_TRANSFER_RATE: u32 = 2000000000;
 pub const MIN_TRANSFER_RATE: u32 = 1000000000;
 pub const SPECIAL_CASE_TRANFER_RATE: u32 = 0;
 
+pub const MAX_TRANSFER_FEE: u32 = 50000;
+pub const MAX_URI_LENGTH: usize = 512;
+
 pub const MAX_DOMAIN_LENGTH: usize = 256;
 
 /// Represents the supported cryptography algorithms.
