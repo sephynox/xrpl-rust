@@ -1,12 +1,12 @@
 //! Top-level modules for the models package.
 
-pub mod base;
 pub mod exceptions;
+pub mod model;
 pub mod requests;
 pub mod transactions;
 pub mod utils;
 
-pub use base::Base;
+pub use model::Model;
 pub use requests::*;
 pub use transactions::*;
 
@@ -17,6 +17,13 @@ use serde_json::Value;
 use serde_with::skip_serializing_none;
 use strum_macros::AsRefStr;
 use strum_macros::{Display, EnumIter};
+
+use self::exceptions::{
+    AccountSetException, CheckCashException, DepositPreauthException, EscrowCreateException,
+    EscrowFinishExeption, NFTokenAcceptOfferException, NFTokenCancelOfferException,
+    NFTokenCreateOfferException, NFTokenMintException, PaymentException, SignerListSetException,
+    UNLModifyException,
+};
 
 /// Represents the different options for the `method`
 /// field in a request.
@@ -73,6 +80,18 @@ pub enum RequestMethod {
     // Utility methods
     Ping,
     Random,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
+pub enum Flag {
+    AccountSet(AccountSetFlag),
+    NFTokenCreateOffer(NFTokenCreateOfferFlag),
+    NFTokenMint(NFTokenMintFlag),
+    OfferCreate(OfferCreateFlag),
+    Payment(PaymentFlag),
+    PaymentChannelClaim(PaymentChannelClaimFlag),
+    TrustSet(TrustSetFlag),
+    EnableAmendment(EnableAmendmentFlag),
 }
 
 /// Transactions of the AccountSet type support additional values
@@ -548,6 +567,48 @@ pub trait FromXRPL<T> {
     fn from_xrpl(value: T) -> Self;
 }
 
+impl Currency {
+    fn get_value_as_u32(&self) -> u32 {
+        match self {
+            Currency::IssuedCurrency {
+                value,
+                currency: _,
+                issuer: _,
+            } => {
+                let value_as_u32: u32 = value
+                    .as_ref()
+                    .unwrap()
+                    .as_ref()
+                    .parse()
+                    .expect("Could not parse u32 from `value`");
+                value_as_u32
+            }
+            Currency::Xrp { value, currency: _ } => {
+                let value_as_u32: u32 = value
+                    .as_ref()
+                    .unwrap()
+                    .as_ref()
+                    .parse()
+                    .expect("Could not parse u32 from `value`");
+                value_as_u32
+            }
+        }
+    }
+    fn is_xrp(&self) -> bool {
+        match self {
+            Currency::IssuedCurrency {
+                value: _,
+                currency: _,
+                issuer: _,
+            } => false,
+            Currency::Xrp {
+                value: _,
+                currency: _,
+            } => true,
+        }
+    }
+}
+
 /// For use with serde defaults.
 /// TODO Find a better way
 impl RequestMethod {
@@ -654,39 +715,83 @@ impl RequestMethod {
 
 /// Standard functions for transactions.
 pub trait Transaction {
-    fn iter_to_int(&self) -> u32;
-    fn has_flag(&self) -> bool;
+    fn iter_to_int(&self) -> u32 {
+        0
+    }
+    fn has_flag(&self, flag: Flag) -> bool {
+        let _txn_flag = &flag;
+        false
+    }
     fn get_transaction_type(&self) -> TransactionType;
 }
 
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
+pub struct SignerEntry<'a> {
+    account: &'a str,
+    signer_weight: u16,
+}
+
 pub trait AccountSetError {
-    fn get_tick_size_error(&self) -> Option<&str>;
-    fn get_transfer_rate_error(&self) -> Option<&str>;
-    fn get_domain_error(&self) -> Option<&str>;
-    fn get_clear_flag_error(&self) -> Option<&str>;
-    fn get_nftoken_minter_error(&self) -> Option<&str>;
+    fn get_tick_size_error(&self) -> Result<(), AccountSetException>;
+    fn get_transfer_rate_error(&self) -> Result<(), AccountSetException>;
+    fn get_domain_error(&self) -> Result<(), AccountSetException>;
+    fn get_clear_flag_error(&self) -> Result<(), AccountSetException>;
+    fn get_nftoken_minter_error(&self) -> Result<(), AccountSetException>;
 }
 
 pub trait CheckCashError {
-    fn get_amount_and_deliver_min_error(&self) -> Option<&str>;
+    fn get_amount_and_deliver_min_error(&self) -> Result<(), CheckCashException>;
 }
 
 pub trait DepositPreauthError {
-    fn get_authorize_and_unauthorize_error(&self) -> Option<&str>;
+    fn get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException>;
 }
 
 pub trait EscrowCreateError {
-    fn get_finish_after_error(&self) -> Option<&str>;
+    fn get_finish_after_error(&self) -> Result<(), EscrowCreateException>;
 }
 
 pub trait EscrowFinishError {
-    fn get_condition_and_fulfillment_error(&self) -> Option<&str>;
+    fn get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishExeption>;
 }
 
 pub trait NFTokenAcceptOfferError {
-    fn get_nftoken_sell_offer_error(&self) -> Option<&str>;
-    fn get_nftoken_buy_offer_error(&self) -> Option<&str>;
-    fn get_nftoken_broker_fee_error(&self) -> Option<&str>;
+    fn get_nftoken_sell_offer_error(&self) -> Result<(), NFTokenAcceptOfferException>;
+    fn get_nftoken_buy_offer_error(&self) -> Result<(), NFTokenAcceptOfferException>;
+    fn get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException>;
+}
+
+pub trait NFTokenCancelOfferError {
+    fn get_nftoken_offers_error(&self) -> Result<(), NFTokenCancelOfferException>;
+}
+
+pub trait NFTokenCreateOfferError {
+    fn get_amount_error(&self) -> Result<(), NFTokenCreateOfferException>;
+    fn get_destination_error(&self) -> Result<(), NFTokenCreateOfferException>;
+    fn get_owner_error(&self) -> Result<(), NFTokenCreateOfferException>;
+}
+
+pub trait NFTokenMintError {
+    fn get_issuer_error(&self) -> Result<(), NFTokenMintException>;
+    fn get_transfer_fee_error(&self) -> Result<(), NFTokenMintException>;
+    fn get_uri_error(&self) -> Result<(), NFTokenMintException>;
+}
+
+pub trait PaymentError {
+    fn get_xrp_transaction_error(&self) -> Result<(), PaymentException>;
+    fn get_partial_payment_error(&self) -> Result<(), PaymentException>;
+    fn get_exchange_error(&self) -> Result<(), PaymentException>;
+}
+
+pub trait SignerListSetError {
+    fn get_signer_entries_error(&self) -> Result<(), SignerListSetException>;
+    fn get_signer_quorum_error(&self) -> Result<(), SignerListSetException>;
+}
+
+pub trait UNLModifyError {
+    fn get_unl_modify_error(&self) -> Result<(), UNLModifyException>;
 }
 
 /// For use with serde defaults.

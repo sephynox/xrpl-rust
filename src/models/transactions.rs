@@ -2,8 +2,8 @@
 
 use crate::{
     constants::{
-        DISABLE_TICK_SIZE, MAX_DOMAIN_LENGTH, MAX_TICK_SIZE, MAX_TRANSFER_RATE, MIN_TICK_SIZE,
-        MIN_TRANSFER_RATE, SPECIAL_CASE_TRANFER_RATE,
+        DISABLE_TICK_SIZE, MAX_DOMAIN_LENGTH, MAX_TICK_SIZE, MAX_TRANSFER_FEE, MAX_TRANSFER_RATE,
+        MAX_URI_LENGTH, MIN_TICK_SIZE, MIN_TRANSFER_RATE, SPECIAL_CASE_TRANFER_RATE,
     },
     models::*,
 };
@@ -11,7 +11,12 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use base::Base;
+use model::Model;
+
+use super::exceptions::{
+    CheckCashException, DepositPreauthException, EscrowCreateException,
+    NFTokenAcceptOfferException, XRPLModelException, XRPLTransactionException,
+};
 
 /// Transaction
 
@@ -56,7 +61,7 @@ pub struct AccountDelete<'a> {
     destination_tag: Option<u32>,
 }
 
-impl Base for AccountDelete<'static> {
+impl Model for AccountDelete<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -68,29 +73,9 @@ impl Base for AccountDelete<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    #[doc(hidden)]
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for AccountDelete<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -141,7 +126,7 @@ pub struct AccountSet<'a> {
     nftoken_minter: Option<&'a str>,
 }
 
-impl Base for AccountSet<'static> {
+impl Model for AccountSet<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json_str = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.").as_str();
     //     transaction_json_str
@@ -154,34 +139,33 @@ impl Base for AccountSet<'static> {
         transaction_json
     }
 
-    #[doc(hidden)]
-    fn get_errors(&self) -> Vec<&str> {
-        let mut errors: Vec<&str> = Vec::new();
-        let tick_size = self.get_tick_size_error();
-        let transfer_rate = self.get_transfer_rate_error();
-        let domain = self.get_domain_error();
-        let clear_flag = self.get_clear_flag_error();
-        let nftoken_minter = self.get_nftoken_minter_error();
-        if let Some(value) = tick_size {
-            errors.push(value);
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_tick_size_error() {
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::AccountSetError(error),
+            )),
+            Ok(_no_error) => match self.get_transfer_rate_error() {
+                Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                    XRPLTransactionException::AccountSetError(error),
+                )),
+                Ok(_no_error) => match self.get_domain_error() {
+                    Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                        XRPLTransactionException::AccountSetError(error),
+                    )),
+                    Ok(_no_error) => match self.get_clear_flag_error() {
+                        Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                            XRPLTransactionException::AccountSetError(error),
+                        )),
+                        Ok(_no_error) => match self.get_nftoken_minter_error() {
+                            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                                XRPLTransactionException::AccountSetError(error),
+                            )),
+                            Ok(_no_error) => Ok(()),
+                        },
+                    },
+                },
+            },
         }
-        if let Some(value) = transfer_rate {
-            errors.push(value);
-        }
-        if let Some(value) = domain {
-            errors.push(value);
-        }
-        if let Some(value) = clear_flag {
-            errors.push(value);
-        }
-        if let Some(value) = nftoken_minter {
-            errors.push(value);
-        }
-        errors
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
     }
 }
 
@@ -207,11 +191,118 @@ impl Transaction for AccountSet<'static> {
         flags_int
     }
 
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
+    fn has_flag(&self, flag: Flag) -> bool {
+        let mut has_flag = false;
+        if self.iter_to_int() > 0 {
+            match flag {
+                Flag::AccountSet(account_set_flag) => {
+                    match account_set_flag {
+                        AccountSetFlag::AsfAccountTxnID => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&AccountSetFlag::AsfAccountTxnID)
+                            {
+                                has_flag = true
+                            };
+                        }
+                        AccountSetFlag::AsfAuthorizedNFTokenMinter => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&AccountSetFlag::AsfAuthorizedNFTokenMinter)
+                            {
+                                has_flag = true
+                            };
+                        }
+                        AccountSetFlag::AsfDefaultRipple => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&AccountSetFlag::AsfDefaultRipple)
+                            {
+                                has_flag = true
+                            };
+                        }
+                        AccountSetFlag::AsfDepositAuth => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&AccountSetFlag::AsfDepositAuth)
+                            {
+                                has_flag = true
+                            };
+                        }
+                        AccountSetFlag::AsfDisableMaster => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&AccountSetFlag::AsfDisableMaster)
+                            {
+                                has_flag = true
+                            };
+                        }
+                        AccountSetFlag::AsfDisallowXRP => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&AccountSetFlag::AsfDisallowXRP)
+                            {
+                                has_flag = true
+                            };
+                        }
+                        AccountSetFlag::AsfGlobalFreeze => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&AccountSetFlag::AsfGlobalFreeze)
+                            {
+                                has_flag = true
+                            };
+                        }
+                        AccountSetFlag::AsfNoFreeze => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&AccountSetFlag::AsfNoFreeze)
+                            {
+                                has_flag = true
+                            };
+                        }
+                        AccountSetFlag::AsfRequireAuth => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&AccountSetFlag::AsfRequireAuth)
+                            {
+                                has_flag = true
+                            };
+                        }
+                        AccountSetFlag::AsfRequireDest => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&AccountSetFlag::AsfRequireDest)
+                            {
+                                has_flag = true
+                            };
+                        }
+                    };
+                }
+                _ => has_flag = false,
+            }
         }
-        false
+        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -220,57 +311,73 @@ impl Transaction for AccountSet<'static> {
 }
 
 impl AccountSetError for AccountSet<'static> {
-    #[doc(hidden)]
-    fn get_tick_size_error(&self) -> Option<&str> {
-        if self.tick_size.is_some() {
-            let tick_size = self.tick_size.unwrap();
-            if tick_size > MAX_TICK_SIZE {
-                return Some("`tick_size` is above 15");
-            } else if tick_size < MIN_TICK_SIZE && tick_size != DISABLE_TICK_SIZE {
-                return Some("`tick_size` is below 3.");
-            }
+    fn get_tick_size_error(&self) -> Result<(), AccountSetException> {
+        match self.tick_size {
+            Some(tick_size) => match tick_size > MAX_TICK_SIZE {
+                true => Err(AccountSetException::InvalidTickSizeTooHigh {
+                    max: 15,
+                    found: tick_size,
+                }),
+                false => match tick_size < MIN_TICK_SIZE && tick_size != DISABLE_TICK_SIZE {
+                    true => Err(AccountSetException::InvalidTickSizeTooLow {
+                        min: 3,
+                        found: tick_size,
+                    }),
+                    false => Ok(()),
+                },
+            },
+            None => Ok(()),
         }
-        None
     }
 
-    #[doc(hidden)]
-    fn get_transfer_rate_error(&self) -> Option<&str> {
-        let transafer_rate = &self.transfer_rate.unwrap();
-        if self.transfer_rate.is_some() && transafer_rate > &MAX_TRANSFER_RATE {
-            return Some("`transafer_rate` is above 2000000000.");
+    fn get_transfer_rate_error(&self) -> Result<(), AccountSetException> {
+        match self.transfer_rate {
+            Some(transfer_rate) => match transfer_rate > MAX_TRANSFER_RATE {
+                true => Err(AccountSetException::InvalidTransferRateTooHigh {
+                    max: MAX_TRANSFER_RATE,
+                    found: transfer_rate,
+                }),
+                false => match transfer_rate < MIN_TRANSFER_RATE
+                    && transfer_rate != SPECIAL_CASE_TRANFER_RATE
+                {
+                    true => Err(AccountSetException::InvalidTransferRateTooLow {
+                        min: MAX_TRANSFER_RATE,
+                        found: transfer_rate,
+                    }),
+                    false => Ok(()),
+                },
+            },
+            None => Ok(()),
         }
-        if self.transfer_rate.is_some()
-            && transafer_rate < &MIN_TRANSFER_RATE
-            && transafer_rate != &SPECIAL_CASE_TRANFER_RATE
-        {
-            return Some("`transafer_rate` is below 1000000000.");
-        }
-        None
     }
 
-    #[doc(hidden)]
-    fn get_domain_error(&self) -> Option<&str> {
-        if self.domain.is_some()
-            && self.domain.unwrap().to_lowercase().as_str() != self.domain.unwrap()
-        {
-            return Some("`domain` is not lowercase");
+    fn get_domain_error(&self) -> Result<(), AccountSetException> {
+        match self.domain {
+            Some(domain) => match domain.to_lowercase().as_str() != domain {
+                true => Err(AccountSetException::InvalidDomainIsNotLowercase),
+                false => match domain.len() > MAX_DOMAIN_LENGTH {
+                    true => Err(AccountSetException::InvalidDomainTooLong {
+                        max: MAX_DOMAIN_LENGTH,
+                        found: domain.len(),
+                    }),
+                    false => Ok(()),
+                },
+            },
+            None => Ok(()),
         }
-        if self.domain.is_some() && self.domain.unwrap().len() > MAX_DOMAIN_LENGTH {
-            return Some("`domain` must not be longer than 256 characters");
-        }
-        None
     }
 
-    #[doc(hidden)]
-    fn get_clear_flag_error(&self) -> Option<&str> {
-        if self.clear_flag.is_some() && self.clear_flag == self.set_flag {
-            return Some("`clear_flag` must not be equal to the `set_flag`");
+    fn get_clear_flag_error(&self) -> Result<(), AccountSetException> {
+        match self.clear_flag {
+            Some(_clear_flag) => match self.clear_flag == self.set_flag {
+                true => Err(AccountSetException::InvalidClearFlagMustNotEqualSetFlag),
+                false => Ok(()),
+            },
+            None => Ok(()),
         }
-        None
     }
 
-    #[doc(hidden)]
-    fn get_nftoken_minter_error(&self) -> Option<&str> {
+    fn get_nftoken_minter_error(&self) -> Result<(), AccountSetException> {
         // TODO: `set_flag` and `clear_flag` should be typed as `AccountSetFlag`.
         // if self.nftoken_minter.is_some() && self.set_flag.unwrap() != AccountSetFlag::AsfAuthorizedNFTokenMinter {
         //     return Some("Will not set the minter unless AccountSetFlag.ASF_AUTHORIZED_NFTOKEN_MINTER is set.");
@@ -281,7 +388,7 @@ impl AccountSetError for AccountSet<'static> {
         // if self.nftoken_minter.is_some() && self.clear_flag.unwrap() == AccountSetFlag::AsfAuthorizedNFTokenMinter {
         //     return Some("`nftoken_minter` must not be present if AccountSetFlag.AsfAuthorizedNFTokenMinter is unset using `clear_flag`")
         // }
-        None
+        Ok(())
     }
 }
 
@@ -325,7 +432,7 @@ pub struct CheckCancel<'a> {
     check_id: &'a str,
 }
 
-impl Base for CheckCancel<'static> {
+impl Model for CheckCancel<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -337,29 +444,9 @@ impl Base for CheckCancel<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    #[doc(hidden)]
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for CheckCancel<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -407,7 +494,7 @@ pub struct CheckCash<'a> {
     deliver_min: Option<Currency>,
 }
 
-impl Base for CheckCash<'static> {
+impl Model for CheckCash<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -420,47 +507,31 @@ impl Base for CheckCash<'static> {
         transaction_json
     }
 
-    #[doc(hidden)]
-    fn get_errors(&self) -> Vec<&str> {
-        let mut errors = Vec::new();
-        let amount_and_deliver_min = self.get_amount_and_deliver_min_error();
-        if let Some(value) = amount_and_deliver_min {
-            errors.push(value)
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_amount_and_deliver_min_error() {
+            Ok(_no_error) => Ok(()),
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::CheckCashError(error),
+            )),
         }
-        errors
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
     }
 }
 
 impl Transaction for CheckCash<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
 
 impl CheckCashError for CheckCash<'static> {
-    #[doc(hidden)]
-    fn get_amount_and_deliver_min_error(&self) -> Option<&str> {
-        if (self.amount.is_none() && self.deliver_min.is_none())
-            || (self.amount.is_some() && self.deliver_min.is_some())
-        {
-            return Some("Either `amount` or `deliver_min` must be set but not both.");
+    fn get_amount_and_deliver_min_error(&self) -> Result<(), CheckCashException> {
+        match self.amount.is_none() && self.deliver_min.is_none() {
+            true => Err(CheckCashException::InvalidMustSetAmountOrDeliverMin),
+            false => match self.amount.is_some() && self.deliver_min.is_some() {
+                true => Err(CheckCashException::InvalidMustNotSetAmountAndDeliverMin),
+                false => Ok(()),
+            },
         }
-        None
     }
 }
 
@@ -506,7 +577,7 @@ pub struct CheckCreate<'a> {
     invoice_id: Option<&'a str>,
 }
 
-impl Base for CheckCreate<'static> {
+impl Model for CheckCreate<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -518,29 +589,9 @@ impl Base for CheckCreate<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    #[doc(hidden)]
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for CheckCreate<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -585,7 +636,7 @@ pub struct DepositPreauth<'a> {
     unauthorize: Option<&'a str>,
 }
 
-impl Base for DepositPreauth<'static> {
+impl Model for DepositPreauth<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -598,47 +649,31 @@ impl Base for DepositPreauth<'static> {
         transaction_json
     }
 
-    #[doc(hidden)]
-    fn get_errors(&self) -> Vec<&str> {
-        let mut errors = Vec::new();
-        let authorize_and_unauthorize = self.get_authorize_and_unauthorize_error();
-        if let Some(value) = authorize_and_unauthorize {
-            errors.push(value)
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_authorize_and_unauthorize_error() {
+            Ok(_no_error) => Ok(()),
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::DepositPreauthError(error),
+            )),
         }
-        errors
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
     }
 }
 
 impl Transaction for DepositPreauth<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
 
 impl DepositPreauthError for DepositPreauth<'static> {
-    #[doc(hidden)]
-    fn get_authorize_and_unauthorize_error(&self) -> Option<&str> {
-        if (self.authorize.is_none() && self.unauthorize.is_none())
-            || (self.authorize.is_some() && self.unauthorize.is_some())
-        {
-            return Some("Either `authorize` or `unauthorize` must be set but not both.");
+    fn get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException> {
+        match self.authorize.is_none() && self.unauthorize.is_none() {
+            true => Err(DepositPreauthException::InvalidMustSetAuthorizeOrUnauthorize),
+            false => match self.authorize.is_some() && self.unauthorize.is_some() {
+                true => Err(DepositPreauthException::InvalidMustNotSetAuthorizeAndUnauthorize),
+                false => Ok(()),
+            },
         }
-        None
     }
 }
 
@@ -680,7 +715,7 @@ pub struct EscrowCancel<'a> {
     offer_sequence: u32,
 }
 
-impl Base for EscrowCancel<'static> {
+impl Model for EscrowCancel<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -692,28 +727,9 @@ impl Base for EscrowCancel<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for EscrowCancel<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -761,7 +777,7 @@ pub struct EscrowCreate<'a> {
     condition: Option<&'a str>,
 }
 
-impl Base for EscrowCreate<'static> {
+impl Model for EscrowCreate<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -774,48 +790,34 @@ impl Base for EscrowCreate<'static> {
         transaction_json
     }
 
-    #[doc(hidden)]
-    fn get_errors(&self) -> Vec<&str> {
-        let mut errors = Vec::new();
-        let finish_after = self.get_finish_after_error();
-        if let Some(value) = finish_after {
-            errors.push(value)
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_finish_after_error() {
+            Ok(_no_error) => Ok(()),
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::EscrowCreateError(error),
+            )),
         }
-        errors
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
     }
 }
 
 impl Transaction for EscrowCreate<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
 
 impl EscrowCreateError for EscrowCreate<'static> {
-    #[doc(hidden)]
-    fn get_finish_after_error(&self) -> Option<&str> {
-        if self.cancel_after.is_some()
-            && self.finish_after.is_some()
-            && self.finish_after.unwrap() >= self.cancel_after.unwrap()
-        {
-            return Some("The `finish_after` time must be before the `cancel_after` time.");
+    fn get_finish_after_error(&self) -> Result<(), EscrowCreateException> {
+        match self.finish_after {
+            Some(finish_after) => match self.cancel_after {
+                Some(cancel_after) => match finish_after >= cancel_after {
+                    true => Err(EscrowCreateException::InvalidCancelAfterBeforeFinishAfter),
+                    false => Ok(()),
+                },
+                None => Ok(()),
+            },
+            None => Ok(()),
         }
-        None
     }
 }
 
@@ -859,7 +861,7 @@ pub struct EscrowFinish<'a> {
     fulfillment: Option<&'a str>,
 }
 
-impl Base for EscrowFinish<'static> {
+impl Model for EscrowFinish<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -872,47 +874,30 @@ impl Base for EscrowFinish<'static> {
         transaction_json
     }
 
-    #[doc(hidden)]
-    fn get_errors(&self) -> Vec<&str> {
-        let mut errors = Vec::new();
-        let condition_and_fulfillment = self.get_condition_and_fulfillment_error();
-        if let Some(value) = condition_and_fulfillment {
-            errors.push(value)
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_condition_and_fulfillment_error() {
+            Ok(_no_error) => Ok(()),
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::EscrowFinishError(error),
+            )),
         }
-        errors
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
     }
 }
 
 impl Transaction for EscrowFinish<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
 
 impl EscrowFinishError for EscrowFinish<'static> {
-    #[doc(hidden)]
-    fn get_condition_and_fulfillment_error(&self) -> Option<&str> {
-        if (self.condition.is_some() && self.fulfillment.is_none())
+    fn get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishExeption> {
+        match (self.condition.is_some() && self.fulfillment.is_none())
             || (self.condition.is_none() && self.condition.is_some())
         {
-            return Some("Either `condition` and `fulfillment` must be set but not just one");
+            true => Err(EscrowFinishExeption::InvalidBothConditionAndFulfillmentMustBeSet),
+            false => Ok(()),
         }
-        None
     }
 }
 
@@ -955,7 +940,7 @@ pub struct NFTokenAcceptOffer<'a> {
     nftoken_broker_fee: Option<Currency>,
 }
 
-impl Base for NFTokenAcceptOffer<'static> {
+impl Model for NFTokenAcceptOffer<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -968,68 +953,62 @@ impl Base for NFTokenAcceptOffer<'static> {
         transaction_json
     }
 
-    #[doc(hidden)]
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_nftoken_sell_offer_error() {
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::NFTokenAcceptOfferError(error),
+            )),
+            Ok(_no_error) => match self.get_nftoken_buy_offer_error() {
+                Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                    XRPLTransactionException::NFTokenAcceptOfferError(error),
+                )),
+                Ok(_no_error) => match self.get_nftoken_broker_fee_error() {
+                    Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                        XRPLTransactionException::NFTokenAcceptOfferError(error),
+                    )),
+                    Ok(_no_error) => Ok(()),
+                },
+            },
+        }
     }
 }
 
 impl Transaction for NFTokenAcceptOffer<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
 
 impl NFTokenAcceptOfferError for NFTokenAcceptOffer<'static> {
-    #[doc(hidden)]
-    fn get_nftoken_sell_offer_error(&self) -> Option<&str> {
-        if self.nftoken_broker_fee.is_some() && self.nftoken_sell_offer.is_none() {
-            return Some("`nftoken_sell_offer` must be set if using brokered mode");
+    fn get_nftoken_sell_offer_error(&self) -> Result<(), NFTokenAcceptOfferException> {
+        match self.nftoken_broker_fee.is_some() && self.nftoken_sell_offer.is_none() {
+            true => Err(NFTokenAcceptOfferException::InvalidMustSetNftokenSellOfferIfBrokeredMode),
+            false => match self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
+                true => Err(NFTokenAcceptOfferException::InvalidMustSetEitherNftokenBuyOfferOrNftokenSellOffer),
+                false => Ok(()),
+            }
         }
-        if self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
-            return Some("Must set either `nftoken_buy_offer` or `nftoken_sell_offer`");
-        }
-        None
     }
 
-    #[doc(hidden)]
-    fn get_nftoken_buy_offer_error(&self) -> Option<&str> {
-        if self.nftoken_broker_fee.is_some() && self.nftoken_buy_offer.is_none() {
-            return Some("`nftoken_buy_offer` must be set if using brokered mode");
+    fn get_nftoken_buy_offer_error(&self) -> Result<(), NFTokenAcceptOfferException> {
+        match self.nftoken_broker_fee.is_some() && self.nftoken_buy_offer.is_none() {
+            true => Err(NFTokenAcceptOfferException::InvalidMustSetNftokenBuyOfferIfBrokeredMode),
+            false => match self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
+                true => Err(NFTokenAcceptOfferException::InvalidMustSetEitherNftokenBuyOfferOrNftokenSellOffer),
+                false => Ok(()),
+            }
         }
-        if self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
-            return Some("Must set either `nftoken_buy_offer` or `nftoken_sell_offer`");
-        }
-        None
     }
 
-    // TODO: Find a way to access the value of an amount.
-    #[doc(hidden)]
-    fn get_nftoken_broker_fee_error(&self) -> Option<&str> {
-        todo!()
+    fn get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException> {
+        match self.nftoken_broker_fee.as_ref() {
+            Some(nftoken_broker_fee) => match nftoken_broker_fee.get_value_as_u32() == 0 {
+                true => Err(NFTokenAcceptOfferException::InvalidBrokerFeeMustBeGreaterZero),
+                false => Ok(()),
+            },
+            None => Ok(()),
+        }
     }
-    //     if let Some(value) = self.nftoken_broker_fee {
-    //         if value::IssuedCurrency::value <= 0 {
-    //             return Some("`nftoken_broker_fee` must be greater than 0; omit if there is no broker fee");
-    //         }
-    //     }
-    //     None
-    // }
 }
 
 /// Removes a NFToken object from the NFTokenPage in which it is being held,
@@ -1071,7 +1050,7 @@ pub struct NFTokenBurn<'a> {
     owner: Option<&'a str>,
 }
 
-impl Base for NFTokenBurn<'static> {
+impl Model for NFTokenBurn<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1083,28 +1062,9 @@ impl Base for NFTokenBurn<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for NFTokenBurn<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -1149,7 +1109,7 @@ pub struct NFTokenCancelOffer<'a> {
     nftoken_offers: Vec<&'a str>,
 }
 
-impl Base for NFTokenCancelOffer<'static> {
+impl Model for NFTokenCancelOffer<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1162,29 +1122,28 @@ impl Base for NFTokenCancelOffer<'static> {
         transaction_json
     }
 
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_nftoken_offers_error() {
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::NFTokenCancelOfferError(error),
+            )),
+            Ok(_no_error) => Ok(()),
+        }
     }
 }
 
 impl Transaction for NFTokenCancelOffer<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl NFTokenCancelOfferError for NFTokenCancelOffer<'static> {
+    fn get_nftoken_offers_error(&self) -> Result<(), NFTokenCancelOfferException> {
+        match self.nftoken_offers.is_empty() {
+            true => Err(NFTokenCancelOfferException::InvalidMustIncludeOneNFTokenOffer),
+            false => Ok(()),
+        }
     }
 }
 
@@ -1231,7 +1190,7 @@ pub struct NFTokenCreateOffer<'a> {
     destination: Option<&'a str>,
 }
 
-impl Base for NFTokenCreateOffer<'static> {
+impl Model for NFTokenCreateOffer<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1244,12 +1203,23 @@ impl Base for NFTokenCreateOffer<'static> {
         transaction_json
     }
 
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_amount_error() {
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::NFTokenCreateOfferError(error),
+            )),
+            Ok(_no_error) => match self.get_destination_error() {
+                Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                    XRPLTransactionException::NFTokenCreateOfferError(error),
+                )),
+                Ok(_no_error) => match self.get_owner_error() {
+                    Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                        XRPLTransactionException::NFTokenCreateOfferError(error),
+                    )),
+                    Ok(_no_error) => Ok(()),
+                },
+            },
+        }
     }
 }
 
@@ -1266,15 +1236,74 @@ impl Transaction for NFTokenCreateOffer<'static> {
         flags_int
     }
 
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
+    fn has_flag(&self, flag: Flag) -> bool {
+        let mut has_flag = false;
+        if self.iter_to_int() > 0 {
+            match flag {
+                Flag::NFTokenCreateOffer(nftoken_create_offer_flag) => {
+                    match nftoken_create_offer_flag {
+                        NFTokenCreateOfferFlag::TfSellOffer => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&NFTokenCreateOfferFlag::TfSellOffer)
+                            {
+                                has_flag = true
+                            };
+                        }
+                    }
+                }
+                _ => has_flag = false,
+            };
         }
-        false
+        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
+    fn get_amount_error(&self) -> Result<(), NFTokenCreateOfferException> {
+        match !self.has_flag(Flag::NFTokenCreateOffer(
+            NFTokenCreateOfferFlag::TfSellOffer,
+        )) && self.amount.get_value_as_u32() == 0
+        {
+            true => Err(NFTokenCreateOfferException::InvalidAmountMustBeGreaterZero),
+            false => Ok(()),
+        }
+    }
+
+    fn get_destination_error(&self) -> Result<(), NFTokenCreateOfferException> {
+        match self.destination {
+            Some(destination) => match destination == self.account {
+                true => Err(NFTokenCreateOfferException::InvalidDestinationMustNotEqualAccount),
+                false => Ok(()),
+            },
+            None => Ok(()),
+        }
+    }
+
+    fn get_owner_error(&self) -> Result<(), NFTokenCreateOfferException> {
+        match self.owner {
+            Some(owner) => match self.has_flag(Flag::NFTokenCreateOffer(
+                NFTokenCreateOfferFlag::TfSellOffer,
+            )) {
+                true => Err(NFTokenCreateOfferException::InvalidOwnerMustNotBeSet),
+                false => match owner == self.account {
+                    true => Err(NFTokenCreateOfferException::InvalidOwnerMustNotEqualAccount),
+                    false => Ok(()),
+                },
+            },
+            None => match !self.has_flag(Flag::NFTokenCreateOffer(
+                NFTokenCreateOfferFlag::TfSellOffer,
+            )) {
+                true => Err(NFTokenCreateOfferException::InvalidOwnerMustBeSet),
+                false => Ok(()),
+            },
+        }
     }
 }
 
@@ -1319,7 +1348,7 @@ pub struct NFTokenMint<'a> {
     uri: Option<&'a str>,
 }
 
-impl Base for NFTokenMint<'static> {
+impl Model for NFTokenMint<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1332,12 +1361,8 @@ impl Base for NFTokenMint<'static> {
         transaction_json
     }
 
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        todo!()
     }
 }
 
@@ -1357,15 +1382,98 @@ impl Transaction for NFTokenMint<'static> {
         flags_int
     }
 
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
+    fn has_flag(&self, flag: Flag) -> bool {
+        let mut has_flag = false;
+        if self.iter_to_int() > 0 {
+            match flag {
+                Flag::NFTokenMint(nftoken_mint_flag) => match nftoken_mint_flag {
+                    NFTokenMintFlag::TfBurnable => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&NFTokenMintFlag::TfBurnable)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    NFTokenMintFlag::TfOnlyXRP => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&NFTokenMintFlag::TfOnlyXRP)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    NFTokenMintFlag::TfTransferable => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&NFTokenMintFlag::TfTransferable)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    NFTokenMintFlag::TfTrustline => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&NFTokenMintFlag::TfTrustline)
+                        {
+                            has_flag = true
+                        };
+                    }
+                },
+                _ => has_flag = false,
+            };
         }
-        false
+        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl NFTokenMintError for NFTokenMint<'static> {
+    fn get_issuer_error(&self) -> Result<(), NFTokenMintException> {
+        match self.issuer {
+            Some(issuer) => match issuer == self.account {
+                true => Err(NFTokenMintException::InvalidIssuerMustNotEqualAccount),
+                false => Ok(()),
+            },
+            None => Ok(()),
+        }
+    }
+
+    fn get_transfer_fee_error(&self) -> Result<(), NFTokenMintException> {
+        match self.transfer_fee {
+            Some(transfer_fee) => match transfer_fee > MAX_TRANSFER_FEE {
+                true => Err(NFTokenMintException::InvalidTransferFeeTooHigh {
+                    max: MAX_TRANSFER_FEE,
+                    found: transfer_fee,
+                }),
+                false => Ok(()),
+            },
+            None => Ok(()),
+        }
+    }
+
+    fn get_uri_error(&self) -> Result<(), NFTokenMintException> {
+        match self.uri {
+            Some(uri) => match uri.len() > MAX_URI_LENGTH {
+                true => Err(NFTokenMintException::InvalidURITooLong {
+                    max: MAX_URI_LENGTH,
+                    found: uri.len(),
+                }),
+                false => Ok(()),
+            },
+            None => Ok(()),
+        }
     }
 }
 
@@ -1406,7 +1514,7 @@ pub struct OfferCancel<'a> {
     offer_sequence: u32,
 }
 
-impl Base for OfferCancel<'static> {
+impl Model for OfferCancel<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1418,28 +1526,9 @@ impl Base for OfferCancel<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for OfferCancel<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -1485,7 +1574,7 @@ pub struct OfferCreate<'a> {
     offer_sequence: Option<u32>,
 }
 
-impl Base for OfferCreate<'static> {
+impl Model for OfferCreate<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1496,14 +1585,6 @@ impl Base for OfferCreate<'static> {
             serde_json::to_value(&self).expect("Unable to serialize `OfferCreate` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
-    }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
     }
 }
 
@@ -1523,11 +1604,56 @@ impl Transaction for OfferCreate<'static> {
         flags_int
     }
 
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
+    fn has_flag(&self, flag: Flag) -> bool {
+        let mut has_flag = false;
+        if self.iter_to_int() > 0 {
+            match flag {
+                Flag::OfferCreate(offer_create_flag) => match offer_create_flag {
+                    OfferCreateFlag::TfFillOrKill => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&OfferCreateFlag::TfFillOrKill)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    OfferCreateFlag::TfImmediateOrCancel => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&OfferCreateFlag::TfImmediateOrCancel)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    OfferCreateFlag::TfPassive => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&OfferCreateFlag::TfPassive)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    OfferCreateFlag::TfSell => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&OfferCreateFlag::TfSell)
+                        {
+                            has_flag = true
+                        };
+                    }
+                },
+                _ => has_flag = false,
+            };
         }
-        false
+        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -1578,7 +1704,7 @@ pub struct Payment<'a> {
     deliver_min: Option<Currency>,
 }
 
-impl Base for Payment<'static> {
+impl Model for Payment<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1591,12 +1717,23 @@ impl Base for Payment<'static> {
         transaction_json
     }
 
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_xrp_transaction_error() {
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::PaymentError(error),
+            )),
+            Ok(_no_error) => match self.get_partial_payment_error() {
+                Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                    XRPLTransactionException::PaymentError(error),
+                )),
+                Ok(_no_error) => match self.get_exchange_error() {
+                    Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                        XRPLTransactionException::PaymentError(error),
+                    )),
+                    Ok(_no_error) => Ok(()),
+                },
+            },
+        }
     }
 }
 
@@ -1615,15 +1752,101 @@ impl Transaction for Payment<'static> {
         flags_int
     }
 
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
+    fn has_flag(&self, flag: Flag) -> bool {
+        let mut has_flag = false;
+        if self.iter_to_int() > 0 {
+            match flag {
+                Flag::Payment(payment_flag) => match payment_flag {
+                    PaymentFlag::TfLimitQuality => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&PaymentFlag::TfLimitQuality)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    PaymentFlag::TfNoDirectRipple => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&PaymentFlag::TfNoDirectRipple)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    PaymentFlag::TfPartialPayment => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&PaymentFlag::TfPartialPayment)
+                        {
+                            has_flag = true
+                        };
+                    }
+                },
+                _ => has_flag = false,
+            };
         }
-        false
+        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl PaymentError for Payment<'static> {
+    fn get_xrp_transaction_error(&self) -> Result<(), PaymentException> {
+        match self.send_max.as_ref() {
+            Some(_send_max) => Ok(()),
+            None => match self.amount.is_xrp() {
+                true => match self.paths.as_ref() {
+                    Some(_paths) => Err(PaymentException::InvalidXRPtoXRPPaymentsCannotContainPaths),
+                    None => match self.account == self.destination {
+                        true => Err(PaymentException::InvalidDestinationMustNotEqualAccountForRPtoXRPPayments),
+                        false => Ok(()),
+                    }
+                },
+                false => Ok(()),
+            }
+        }
+    }
+
+    fn get_partial_payment_error(&self) -> Result<(), PaymentException> {
+        match self.send_max.as_ref() {
+            Some(send_max) => match !self.has_flag(Flag::Payment(PaymentFlag::TfPartialPayment)) {
+                true => match send_max.is_xrp() && self.amount.is_xrp() {
+                    true => Err(
+                        PaymentException::InvalidSendMaxMustNotBeSetForXRPtoXRPNonPartialPayments,
+                    ),
+                    false => Ok(()),
+                },
+                false => Ok(()),
+            },
+            None => match self.has_flag(Flag::Payment(PaymentFlag::TfPartialPayment)) {
+                true => Err(PaymentException::InvalidSendMaxMustBeSetForPartialPayments),
+                false => match self.deliver_min.as_ref() {
+                    Some(_deliver_min) => {
+                        Err(PaymentException::InvalidDeliverMinMustNotBeSetForNonPartialPayments)
+                    }
+                    None => Ok(()),
+                },
+            },
+        }
+    }
+
+    fn get_exchange_error(&self) -> Result<(), PaymentException> {
+        match self.send_max.as_ref() {
+            Some(_send_max) => Ok(()),
+            None => match self.account == self.destination {
+                true => Err(PaymentException::InvalidSendMaxMustBeSetForExchanges),
+                false => Ok(()),
+            },
+        }
     }
 }
 
@@ -1669,7 +1892,7 @@ pub struct PaymentChannelClaim<'a> {
     public_key: Option<&'a str>,
 }
 
-impl Base for PaymentChannelClaim<'static> {
+impl Model for PaymentChannelClaim<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1680,14 +1903,6 @@ impl Base for PaymentChannelClaim<'static> {
             .expect("Unable to serialize `PaymentChannelClaim` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
-    }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
     }
 }
 
@@ -1705,11 +1920,38 @@ impl Transaction for PaymentChannelClaim<'static> {
         flags_int
     }
 
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
+    fn has_flag(&self, flag: Flag) -> bool {
+        let mut has_flag = false;
+        if self.iter_to_int() > 0 {
+            match flag {
+                Flag::PaymentChannelClaim(payment_channel_claim_flag) => {
+                    match payment_channel_claim_flag {
+                        PaymentChannelClaimFlag::TfClose => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&PaymentChannelClaimFlag::TfClose)
+                            {
+                                has_flag = true
+                            };
+                        }
+                        PaymentChannelClaimFlag::TfRenew => {
+                            if self
+                                .flags
+                                .as_ref()
+                                .unwrap()
+                                .contains(&PaymentChannelClaimFlag::TfRenew)
+                            {
+                                has_flag = true
+                            };
+                        }
+                    }
+                }
+                _ => has_flag = false,
+            };
         }
-        false
+        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -1759,7 +2001,7 @@ pub struct PaymentChannelCreate<'a> {
     destination_tag: Option<u32>,
 }
 
-impl Base for PaymentChannelCreate<'static> {
+impl Model for PaymentChannelCreate<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1771,28 +2013,9 @@ impl Base for PaymentChannelCreate<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for PaymentChannelCreate<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -1838,7 +2061,7 @@ pub struct PaymentChannelFund<'a> {
     expiration: Option<u32>,
 }
 
-impl Base for PaymentChannelFund<'static> {
+impl Model for PaymentChannelFund<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1850,28 +2073,9 @@ impl Base for PaymentChannelFund<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for PaymentChannelFund<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -1918,7 +2122,7 @@ pub struct SetRegularKey<'a> {
     regular_key: Option<&'a str>,
 }
 
-impl Base for SetRegularKey<'static> {
+impl Model for SetRegularKey<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -1930,28 +2134,9 @@ impl Base for SetRegularKey<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for SetRegularKey<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -1995,9 +2180,10 @@ pub struct SignerListSet<'a> {
     /// See TicketCreate fields:
     /// `<https://xrpl.org/signerlistset.html#signerlistset-fields>`
     signer_quorum: u32,
+    signer_entries: Option<Vec<SignerEntry<'a>>>,
 }
 
-impl Base for SignerListSet<'static> {
+impl Model for SignerListSet<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -2010,29 +2196,72 @@ impl Base for SignerListSet<'static> {
         transaction_json
     }
 
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_signer_entries_error() {
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::SignerListSetError(error),
+            )),
+            Ok(_no_error) => match self.get_signer_quorum_error() {
+                Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                    XRPLTransactionException::SignerListSetError(error),
+                )),
+                Ok(_no_error) => Ok(()),
+            },
+        }
     }
 }
 
 impl Transaction for SignerListSet<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl SignerListSetError for SignerListSet<'static> {
+    fn get_signer_entries_error(&self) -> Result<(), SignerListSetException> {
+        match self.signer_entries.as_ref() {
+            Some(signer_entries) => match self.signer_quorum == 0 {
+                true => Err(SignerListSetException::InvalidMustNotSetSignerEntriesIfSignerListIsBeingDeleted),
+                false => match self.signer_quorum == 0 {
+                    true => Err(SignerListSetException::InvalidSignerQuorumMustBeGreaterZero),
+                    false => match signer_entries.is_empty() {
+                        true => Err(SignerListSetException::InvalidTooFewSignerEntries { min: 1, found: signer_entries.len() }),
+                        false => match signer_entries.len() > 8 {
+                            true => Err(SignerListSetException::InvalidTooManySignerEntries { max: 8, found: signer_entries.len() }),
+                            false => Ok(())
+                        },
+                    },
+                },
+            },
+            None => Ok(())
+        }
+    }
+
+    fn get_signer_quorum_error(&self) -> Result<(), SignerListSetException> {
+        let mut accounts = Vec::new();
+        let mut signer_weight_sum: u32 = 0;
+        if self.signer_entries.is_some() {
+            for signer_entry in self.signer_entries.as_ref().unwrap() {
+                accounts.push(signer_entry.account);
+                let weight: u32 = signer_entry.signer_weight.into();
+                signer_weight_sum += weight;
+            }
+        }
+        accounts.sort_unstable();
+        accounts.dedup();
+        match self.signer_entries.as_ref() {
+            Some(_signer_entries) => match accounts.contains(&self.account) {
+                true => Err(SignerListSetException::InvalidAccountMustNotBeInSignerEntry),
+                false => match self.signer_quorum > signer_weight_sum {
+                    true => Err(SignerListSetException::InvalidMustBeLessOrEqualToSumOfSignerWeightInSignerEntries { max: signer_weight_sum, found: self.signer_quorum }),
+                    false => Ok(())
+                },
+            },
+            None => match self.signer_quorum != 0 {
+                true => Err(SignerListSetException::InvalidSignerQuorumMustBeZeroIfSignerListIsBeingDeleted),
+                false => Ok(()),
+            }
+        }
     }
 }
 
@@ -2073,7 +2302,7 @@ pub struct TicketCreate<'a> {
     ticket_count: u32,
 }
 
-impl Base for TicketCreate<'static> {
+impl Model for TicketCreate<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -2085,28 +2314,9 @@ impl Base for TicketCreate<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for TicketCreate<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -2151,7 +2361,7 @@ pub struct TrustSet<'a> {
     quality_out: Option<u32>,
 }
 
-impl Base for TrustSet<'static> {
+impl Model for TrustSet<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -2162,14 +2372,6 @@ impl Base for TrustSet<'static> {
             serde_json::to_value(&self).expect("Unable to serialize `TrustSet` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
-    }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
     }
 }
 
@@ -2190,11 +2392,66 @@ impl Transaction for TrustSet<'static> {
         flags_int
     }
 
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
+    fn has_flag(&self, flag: Flag) -> bool {
+        let mut has_flag = false;
+        if self.iter_to_int() > 0 {
+            match flag {
+                Flag::TrustSet(trust_set_flag) => match trust_set_flag {
+                    TrustSetFlag::TfClearFreeze => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&TrustSetFlag::TfClearFreeze)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    TrustSetFlag::TfClearNoRipple => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&TrustSetFlag::TfClearNoRipple)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    TrustSetFlag::TfSetAuth => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&TrustSetFlag::TfSetAuth)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    TrustSetFlag::TfSetFreeze => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&TrustSetFlag::TfSetFreeze)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    TrustSetFlag::TfSetNoRipple => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&TrustSetFlag::TfSetNoRipple)
+                        {
+                            has_flag = true
+                        };
+                    }
+                },
+                _ => has_flag = false,
+            };
         }
-        false
+        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -2235,7 +2492,7 @@ pub struct EnableAmendment<'a> {
     ledger_sequence: u32,
 }
 
-impl Base for EnableAmendment<'static> {
+impl Model for EnableAmendment<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -2246,14 +2503,6 @@ impl Base for EnableAmendment<'static> {
             serde_json::to_value(&self).expect("Unable to serialize `EnableAmendment` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
-    }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
     }
 }
 
@@ -2271,11 +2520,36 @@ impl Transaction for EnableAmendment<'static> {
         flags_int
     }
 
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
+    fn has_flag(&self, flag: Flag) -> bool {
+        let mut has_flag = false;
+        if self.iter_to_int() > 0 {
+            match flag {
+                Flag::EnableAmendment(enable_amendment_flag) => match enable_amendment_flag {
+                    EnableAmendmentFlag::TfGotMajority => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&EnableAmendmentFlag::TfGotMajority)
+                        {
+                            has_flag = true
+                        };
+                    }
+                    EnableAmendmentFlag::TfLostMajority => {
+                        if self
+                            .flags
+                            .as_ref()
+                            .unwrap()
+                            .contains(&EnableAmendmentFlag::TfLostMajority)
+                        {
+                            has_flag = true
+                        };
+                    }
+                },
+                _ => has_flag = false,
+            };
         }
-        false
+        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -2317,7 +2591,7 @@ pub struct SetFee<'a> {
     ledger_sequence: u32,
 }
 
-impl Base for SetFee<'static> {
+impl Model for SetFee<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -2329,28 +2603,9 @@ impl Base for SetFee<'static> {
         transaction_json["Flags"] = Value::from(self.iter_to_int());
         transaction_json
     }
-
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
-    }
 }
 
 impl Transaction for SetFee<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
@@ -2389,7 +2644,7 @@ pub struct UNLModify<'a> {
     unlmodify_validator: &'a str,
 }
 
-impl Base for UNLModify<'static> {
+impl Model for UNLModify<'static> {
     // fn to_json(&self) -> &str {
     //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
     //     transaction_json
@@ -2402,29 +2657,29 @@ impl Base for UNLModify<'static> {
         transaction_json
     }
 
-    fn get_errors(&self) -> Vec<&str> {
-        Vec::new()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.get_errors().is_empty()
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self.get_unl_modify_error() {
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::UNLModifyError(error),
+            )),
+            Ok(_no_error) => Ok(()),
+        }
     }
 }
 
 impl Transaction for UNLModify<'static> {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
-
-    fn has_flag(&self) -> bool {
-        if self.flags.is_some() && self.iter_to_int() > 0 {
-            return true;
-        }
-        false
-    }
-
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl UNLModifyError for UNLModify<'static> {
+    fn get_unl_modify_error(&self) -> Result<(), UNLModifyException> {
+        let possible_unlmodify_disabling: [u8; 2] = [0, 1];
+        match !possible_unlmodify_disabling.contains(&self.unlmodify_disabling) {
+            true => Err(UNLModifyException::InvalidUNLModifyDisablingMustBeOneOrTwo),
+            false => Ok(()),
+        }
     }
 }
 
@@ -2506,7 +2761,7 @@ mod test {
             expiration: None,
             offer_sequence: None,
         };
-        assert!(offer_create.has_flag())
+        assert!(offer_create.has_flag(Flag::OfferCreate(OfferCreateFlag::TfImmediateOrCancel)))
     }
 
     #[test]
@@ -2545,5 +2800,40 @@ mod test {
         let actual = offer_create.get_transaction_type();
         let expect = TransactionType::OfferCreate;
         assert_eq!(actual, expect)
+    }
+}
+
+#[cfg(test)]
+mod test_errors {
+    // use crate::models::Model;
+
+    use super::AccountSet;
+
+    #[test]
+    fn test_account_set_tick_size() {
+        let _account_set = AccountSet {
+            transaction_type: crate::models::TransactionType::AccountSet,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            clear_flag: None,
+            domain: None,
+            email_hash: None,
+            message_key: None,
+            set_flag: None,
+            transfer_rate: None,
+            tick_size: Some(2),
+            nftoken_minter: None,
+        };
+        // account_set.validate();
     }
 }
