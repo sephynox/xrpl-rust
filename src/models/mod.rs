@@ -19,10 +19,11 @@ use strum_macros::AsRefStr;
 use strum_macros::{Display, EnumIter};
 
 use self::exceptions::{
-    AccountSetException, CheckCashException, DepositPreauthException, EscrowCreateException,
-    EscrowFinishExeption, NFTokenAcceptOfferException, NFTokenCancelOfferException,
-    NFTokenCreateOfferException, NFTokenMintException, PaymentException, SignerListSetException,
-    UNLModifyException,
+    AccountSetException, ChannelAuthorizeException, CheckCashException, DepositPreauthException,
+    EscrowCreateException, EscrowFinishExeption, LedgerEntryException, NFTokenAcceptOfferException,
+    NFTokenCancelOfferException, NFTokenCreateOfferException, NFTokenMintException,
+    PaymentException, SignAndSubmitException, SignException, SignForException,
+    SignerListSetException, UNLModifyException,
 };
 
 /// Represents the different options for the `method`
@@ -792,6 +793,29 @@ pub trait SignerListSetError {
 
 pub trait UNLModifyError {
     fn get_unl_modify_error(&self) -> Result<(), UNLModifyException>;
+}
+
+pub trait ChannelAuthorizeError {
+    fn get_field_error(&self) -> Result<(), ChannelAuthorizeException>;
+}
+
+pub trait LedgerEntryError {
+    fn get_field_error(&self) -> Result<(), LedgerEntryException>;
+}
+
+pub trait SignAndSubmitError {
+    fn get_field_error(&self) -> Result<(), SignAndSubmitException>;
+    fn get_key_type_error(&self) -> Result<(), SignAndSubmitException>;
+}
+
+pub trait SignForError {
+    fn get_field_error(&self) -> Result<(), SignForException>;
+    fn get_key_type_error(&self) -> Result<(), SignForException>;
+}
+
+pub trait SignError {
+    fn get_field_error(&self) -> Result<(), SignException>;
+    fn get_key_type_error(&self) -> Result<(), SignException>;
 }
 
 /// For use with serde defaults.
