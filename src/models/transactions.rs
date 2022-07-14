@@ -116,11 +116,11 @@ pub struct AccountSet<'a> {
     ///
     /// See AccountSet fields:
     /// `<https://xrpl.org/accountset.html#accountset-fields>`
-    clear_flag: Option<u32>,
+    clear_flag: Option<AccountSetFlag>,
     domain: Option<&'a str>,
     email_hash: Option<&'a str>,
     message_key: Option<&'a str>,
-    set_flag: Option<u32>,
+    set_flag: Option<AccountSetFlag>,
     transfer_rate: Option<u32>,
     tick_size: Option<u32>,
     nftoken_minter: Option<&'a str>,
@@ -171,24 +171,35 @@ impl Model for AccountSet<'static> {
 
 impl Transaction for AccountSet<'static> {
     fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                match flag {
-                    AccountSetFlag::AsfAccountTxnID => flags_int += 0x00000005,
-                    AccountSetFlag::AsfAuthorizedNFTokenMinter => flags_int += 0x0000000A,
-                    AccountSetFlag::AsfDefaultRipple => flags_int += 0x00000008,
-                    AccountSetFlag::AsfDepositAuth => flags_int += 0x00000009,
-                    AccountSetFlag::AsfDisableMaster => flags_int += 0x00000004,
-                    AccountSetFlag::AsfDisallowXRP => flags_int += 0x00000003,
-                    AccountSetFlag::AsfGlobalFreeze => flags_int += 0x00000007,
-                    AccountSetFlag::AsfNoFreeze => flags_int += 0x00000006,
-                    AccountSetFlag::AsfRequireAuth => flags_int += 0x00000002,
-                    AccountSetFlag::AsfRequireDest => flags_int += 0x00000001,
-                }
+        if self.set_flag.is_some() {
+            match self.set_flag.as_ref().unwrap() {
+                AccountSetFlag::AsfAccountTxnID => 0x00000005,
+                AccountSetFlag::AsfAuthorizedNFTokenMinter => 0x0000000A,
+                AccountSetFlag::AsfDefaultRipple => 0x00000008,
+                AccountSetFlag::AsfDepositAuth => 0x00000009,
+                AccountSetFlag::AsfDisableMaster => 0x00000004,
+                AccountSetFlag::AsfDisallowXRP => 0x00000003,
+                AccountSetFlag::AsfGlobalFreeze => 0x00000007,
+                AccountSetFlag::AsfNoFreeze => 0x00000006,
+                AccountSetFlag::AsfRequireAuth => 0x00000002,
+                AccountSetFlag::AsfRequireDest => 0x00000001,
             }
+        } else if self.clear_flag.is_some() {
+            match self.clear_flag.as_ref().unwrap() {
+                AccountSetFlag::AsfAccountTxnID => 0x00000005,
+                AccountSetFlag::AsfAuthorizedNFTokenMinter => 0x0000000A,
+                AccountSetFlag::AsfDefaultRipple => 0x00000008,
+                AccountSetFlag::AsfDepositAuth => 0x00000009,
+                AccountSetFlag::AsfDisableMaster => 0x00000004,
+                AccountSetFlag::AsfDisallowXRP => 0x00000003,
+                AccountSetFlag::AsfGlobalFreeze => 0x00000007,
+                AccountSetFlag::AsfNoFreeze => 0x00000006,
+                AccountSetFlag::AsfRequireAuth => 0x00000002,
+                AccountSetFlag::AsfRequireDest => 0x00000001,
+            }
+        } else {
+            0
         }
-        flags_int
     }
 
     fn has_flag(&self, flag: Flag) -> bool {
@@ -368,7 +379,7 @@ impl AccountSetError for AccountSet<'static> {
     }
 
     fn get_clear_flag_error(&self) -> Result<(), AccountSetException> {
-        match self.clear_flag {
+        match self.clear_flag.as_ref() {
             Some(_clear_flag) => match self.clear_flag == self.set_flag {
                 true => Err(AccountSetException::InvalidClearFlagMustNotEqualSetFlag),
                 false => Ok(()),
@@ -378,17 +389,22 @@ impl AccountSetError for AccountSet<'static> {
     }
 
     fn get_nftoken_minter_error(&self) -> Result<(), AccountSetException> {
-        // TODO: `set_flag` and `clear_flag` should be typed as `AccountSetFlag`.
-        // if self.nftoken_minter.is_some() && self.set_flag.unwrap() != AccountSetFlag::AsfAuthorizedNFTokenMinter {
-        //     return Some("Will not set the minter unless AccountSetFlag.ASF_AUTHORIZED_NFTOKEN_MINTER is set.");
-        // }
-        // if self.nftoken_minter.is_none() && self.set_flag.unwrap() == AccountSetFlag::AsfAuthorizedNFTokenMinter {
-        //     return Some("`nftoken_minter` must be present if `AccountSetFlag.AsfAuthorizedNFTokenMinter` is set.");
-        // }
-        // if self.nftoken_minter.is_some() && self.clear_flag.unwrap() == AccountSetFlag::AsfAuthorizedNFTokenMinter {
-        //     return Some("`nftoken_minter` must not be present if AccountSetFlag.AsfAuthorizedNFTokenMinter is unset using `clear_flag`")
-        // }
-        Ok(())
+        match self.nftoken_minter {
+            Some(_nftoken_minter) => match self.set_flag.as_ref() {
+                Some(set_flag) => match set_flag {
+                    AccountSetFlag::AsfAuthorizedNFTokenMinter => Ok(()),
+                    _ => Err(AccountSetException::InvalidMustSetAsfAuthorizedNftokenMinterFlagToSetMinter),
+                },
+                None => match self.clear_flag.as_ref().unwrap() {
+                    AccountSetFlag::AsfAuthorizedNFTokenMinter => Err(AccountSetException::InvalidNftokenMinterMustBeSetIfAsfAuthorizedNftokenMinterIsSet),
+                    _ => Ok(()),
+                },
+            },
+            None => match self.set_flag.as_ref().unwrap() {
+                AccountSetFlag::AsfAuthorizedNFTokenMinter => Err(AccountSetException::InvalidNftokenMinterMustNotBeSetIfAsfAuthorizedNftokenMinterIsUnset),
+                _ => Ok(()),
+            },
+        }
     }
 }
 
@@ -1362,7 +1378,22 @@ impl Model for NFTokenMint<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        todo!()
+        match self.get_issuer_error() {
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::NFTokenMintError(error),
+            )),
+            Ok(_no_error) => match self.get_transfer_fee_error() {
+                Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                    XRPLTransactionException::NFTokenMintError(error),
+                )),
+                Ok(_no_error) => match self.get_uri_error() {
+                    Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                        XRPLTransactionException::NFTokenMintError(error),
+                    )),
+                    Ok(_no_error) => Ok(()),
+                },
+            },
+        }
     }
 }
 

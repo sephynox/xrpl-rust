@@ -37,6 +37,9 @@ pub enum AccountSetException {
     InvalidDomainIsNotLowercase,
     InvalidDomainTooLong { max: usize, found: usize },
     InvalidClearFlagMustNotEqualSetFlag,
+    InvalidMustSetAsfAuthorizedNftokenMinterFlagToSetMinter,
+    InvalidNftokenMinterMustBeSetIfAsfAuthorizedNftokenMinterIsSet,
+    InvalidNftokenMinterMustNotBeSetIfAsfAuthorizedNftokenMinterIsUnset,
 }
 
 #[derive(Debug, Clone, PartialEq, Display)]
