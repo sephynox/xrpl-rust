@@ -9,6 +9,7 @@ use strum_macros::Display;
 pub enum XRPLModelException {
     InvalidICCannotBeXRP,
     XRPLTransactionError(XRPLTransactionException),
+    XRPLRequestError(XRPLRequestException),
 }
 
 #[derive(Debug, Clone, PartialEq, Display)]
@@ -114,6 +115,43 @@ pub enum SignerListSetException {
 #[derive(Debug, Clone, PartialEq, Display)]
 pub enum UNLModifyException {
     InvalidUNLModifyDisablingMustBeOneOrTwo,
+}
+
+#[derive(Debug, Clone, PartialEq, Display)]
+pub enum XRPLRequestException {
+    ChannelAuthorizeError(ChannelAuthorizeException),
+    SignAndSubmitError(SignAndSubmitException),
+    SignForError(SignForException),
+    SignError(SignException),
+    LedgerEntryError(LedgerEntryException),
+}
+
+#[derive(Debug, Clone, PartialEq, Display)]
+pub enum ChannelAuthorizeException {
+    InvalidMustSetExactlyOneOf { fields: String },
+}
+
+#[derive(Debug, Clone, PartialEq, Display)]
+pub enum LedgerEntryException {
+    InvalidMustSetExactlyOneOf { fields: String },
+}
+
+#[derive(Debug, Clone, PartialEq, Display)]
+pub enum SignAndSubmitException {
+    InvalidMustSetExactlyOneOf { fields: String },
+    InvalidMustOmitKeyTypeIfSecretProvided,
+}
+
+#[derive(Debug, Clone, PartialEq, Display)]
+pub enum SignForException {
+    InvalidMustSetExactlyOneOf { fields: String },
+    InvalidMustOmitKeyTypeIfSecretProvided,
+}
+
+#[derive(Debug, Clone, PartialEq, Display)]
+pub enum SignException {
+    InvalidMustSetExactlyOneOf { fields: String },
+    InvalidMustOmitKeyTypeIfSecretProvided,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
