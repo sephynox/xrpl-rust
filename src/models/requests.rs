@@ -6,7 +6,10 @@ use alloc::{string::ToString, vec::Vec};
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use super::exceptions::{SignAndSubmitException, XRPLModelException, XRPLRequestException};
+use super::{
+    exceptions::{SignAndSubmitException, XRPLModelException, XRPLRequestException},
+    request_fields::*,
+};
 
 /// This request returns information about an account's Payment
 /// Channels. This includes only channels where the specified
@@ -507,11 +510,11 @@ pub struct LedgerEntry<'a> {
     check: Option<&'a str>,
     payment_channel: Option<&'a str>,
     deposit_preauth: Option<DepositPreauth<'a>>,
-    directory: Option<Directory<'a>>,
-    escrow: Option<Escrow<'a>>,
-    offer: Option<Offer<'a>>,
-    ripple_state: Option<RippleState<'a>>,
-    ticket: Option<Ticket<'a>>,
+    directory: Option<DirectoryFields<'a>>,
+    escrow: Option<EscrowFields<'a>>,
+    offer: Option<OfferFields<'a>>,
+    ripple_state: Option<RippleStateFields<'a>>,
+    ticket: Option<TicketFields<'a>>,
     #[serde(default = "default_false")]
     binary: Option<bool>,
     ledger_hash: Option<&'a str>,
@@ -694,7 +697,7 @@ pub struct PathFind<'a> {
     destination_amount: Currency,
     id: Option<u32>,
     send_max: Option<Currency>,
-    paths: Option<Vec<Vec<PathStep<'a>>>>,
+    paths: Option<Vec<Path<'a>>>,
 }
 
 impl Model for PathFind<'static> {
@@ -1165,7 +1168,7 @@ pub struct Subscribe<'a> {
     #[serde(default = "RequestMethod::subscribe")]
     method: RequestMethod,
     id: Option<u32>,
-    books: Option<Vec<SubscribeBook<'a>>>,
+    books: Option<Vec<SubscribeBookFields<'a>>>,
     streams: Option<Vec<StreamParameter>>,
     accounts: Option<Vec<&'a str>>,
     accounts_proposed: Option<Vec<&'a str>>,
@@ -1195,7 +1198,7 @@ pub struct Unsubscribe<'a> {
     #[serde(default = "RequestMethod::unsubscribe")]
     method: RequestMethod,
     id: Option<u32>,
-    books: Option<Vec<UnsubscribeBook>>,
+    books: Option<Vec<UnsubscribeBookFields>>,
     streams: Option<Vec<StreamParameter>>,
     accounts: Option<Vec<&'a str>>,
     accounts_proposed: Option<Vec<&'a str>>,
