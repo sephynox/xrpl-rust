@@ -21,10 +21,10 @@ pub trait Model {
     }
 
     /// Panics if a object is invalid.
-    fn validate(&self) {
+    fn validate(&self) -> Result<(), XRPLModelException> {
         match self.get_errors() {
-            Ok(_no_error) => (),
-            Err(_error) => panic!(),
+            Ok(_no_error) => Ok(()),
+            Err(error) => Err(error),
         }
     }
 
