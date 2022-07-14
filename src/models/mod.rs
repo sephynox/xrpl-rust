@@ -2,6 +2,7 @@
 
 pub mod exceptions;
 pub mod model;
+pub mod request_fields;
 pub mod requests;
 pub mod transactions;
 pub mod utils;
@@ -20,10 +21,10 @@ use strum_macros::{Display, EnumIter};
 
 use self::exceptions::{
     AccountSetException, ChannelAuthorizeException, CheckCashException, DepositPreauthException,
-    EscrowCreateException, EscrowFinishExeption, LedgerEntryException, NFTokenAcceptOfferException,
-    NFTokenCancelOfferException, NFTokenCreateOfferException, NFTokenMintException,
-    PaymentException, SignAndSubmitException, SignException, SignForException,
-    SignerListSetException, UNLModifyException,
+    EscrowCreateException, EscrowFinishException, LedgerEntryException,
+    NFTokenAcceptOfferException, NFTokenCancelOfferException, NFTokenCreateOfferException,
+    NFTokenMintException, PaymentException, SignAndSubmitException, SignException,
+    SignForException, SignerListSetException, UNLModifyException,
 };
 
 /// Represents the different options for the `method`
@@ -398,65 +399,6 @@ pub enum StreamParameter {
     Validations,
 }
 
-/// Required fields for requesting a DepositPreauth if not
-/// querying by object ID.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DepositPreauth<'a> {
-    owner: &'a str,
-    authorized: &'a str,
-}
-
-/// Required fields for requesting a DirectoryNode if not
-/// querying by object ID.
-#[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Directory<'a> {
-    owner: &'a str,
-    dir_root: &'a str,
-    sub_index: Option<u8>,
-}
-
-/// Required fields for requesting a Escrow if not querying
-/// by object ID.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Escrow<'a> {
-    owner: &'a str,
-    seq: u64,
-}
-
-/// Required fields for requesting a Escrow if not querying
-/// by object ID.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Offer<'a> {
-    account: &'a str,
-    seq: u64,
-}
-
-/// Required fields for requesting a RippleState.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct RippleState<'a> {
-    account: &'a str,
-    currency: &'a str,
-}
-
-/// Required fields for requesting a Ticket, if not
-/// querying by object ID.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Ticket<'a> {
-    owner: &'a str,
-    ticket_sequence: u64,
-}
-
-/// A PathStep represents an individual step along a Path.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PathStep<'a> {
-    account: Option<&'a str>,
-    currency: Option<&'a str>,
-    issuer: Option<&'a str>,
-    r#type: Option<u8>,
-    type_hex: Option<&'a str>,
-}
-
 /// An arbitrary piece of data attached to a transaction. A
 /// transaction can have multiple Memo objects as an array
 /// in the Memos field.
@@ -475,6 +417,16 @@ pub struct Memo<'a> {
     memo_type: Option<&'a str>,
 }
 
+/// A PathStep represents an individual step along a Path.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PathStep<'a> {
+    account: Option<&'a str>,
+    currency: Option<&'a str>,
+    issuer: Option<&'a str>,
+    r#type: Option<u8>,
+    type_hex: Option<&'a str>,
+}
+
 /// One Signer in a multi-signature. A multi-signed transaction
 /// can have an array of up to 8 Signers, each contributing a
 /// signature, in the Signers field.
@@ -487,35 +439,6 @@ pub struct Signer<'a> {
     account: &'a str,
     txn_signature: &'a str,
     signing_pub_key: &'a str,
-}
-
-/// Format for elements in the `books` array for Subscribe only.
-///
-/// See Subscribe:
-/// `<https://xrpl.org/subscribe.html#subscribe>`
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
-pub struct SubscribeBook<'a> {
-    taker_gets: Currency,
-    taker_pays: Currency,
-    taker: &'a str,
-    #[serde(default = "default_false")]
-    snapshot: Option<bool>,
-    #[serde(default = "default_false")]
-    both: Option<bool>,
-}
-
-/// Format for elements in the `books` array for Unsubscribe only.
-///
-/// See Unsubscribe:
-/// `<https://xrpl.org/unsubscribe.html>`
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
-pub struct UnsubscribeBook {
-    taker_gets: Currency,
-    taker_pays: Currency,
-    #[serde(default = "default_false")]
-    both: Option<bool>,
 }
 
 /// Returns a Currency as XRP for the currency, without a value.
@@ -755,12 +678,11 @@ pub trait EscrowCreateError {
 }
 
 pub trait EscrowFinishError {
-    fn get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishExeption>;
+    fn get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishException>;
 }
 
 pub trait NFTokenAcceptOfferError {
-    fn get_nftoken_sell_offer_error(&self) -> Result<(), NFTokenAcceptOfferException>;
-    fn get_nftoken_buy_offer_error(&self) -> Result<(), NFTokenAcceptOfferException>;
+    fn get_brokered_mode_error(&self) -> Result<(), NFTokenAcceptOfferException>;
     fn get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException>;
 }
 

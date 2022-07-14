@@ -18,7 +18,7 @@ pub enum XRPLTransactionException {
     CheckCashError(CheckCashException),
     DepositPreauthError(DepositPreauthException),
     EscrowCreateError(EscrowCreateException),
-    EscrowFinishError(EscrowFinishExeption),
+    EscrowFinishError(EscrowFinishException),
     NFTokenAcceptOfferError(NFTokenAcceptOfferException),
     NFTokenCancelOfferError(NFTokenCancelOfferException),
     NFTokenCreateOfferError(NFTokenCreateOfferException),
@@ -56,18 +56,16 @@ pub enum DepositPreauthException {
 
 #[derive(Debug, Clone, PartialEq, Display)]
 pub enum EscrowCreateException {
-    InvalidCancelAfterBeforeFinishAfter,
+    InvalidCancelAfterMustNotBeBeforeFinishAfter,
 }
 
 #[derive(Debug, Clone, PartialEq, Display)]
-pub enum EscrowFinishExeption {
-    InvalidBothConditionAndFulfillmentMustBeSet,
+pub enum EscrowFinishException {
+    InvalidIfOneSetBothConditionAndFulfillmentMustBeSet,
 }
 
 #[derive(Debug, Clone, PartialEq, Display)]
 pub enum NFTokenAcceptOfferException {
-    InvalidMustSetNftokenSellOfferIfBrokeredMode,
-    InvalidMustSetNftokenBuyOfferIfBrokeredMode,
     InvalidMustSetEitherNftokenBuyOfferOrNftokenSellOffer,
     InvalidBrokerFeeMustBeGreaterZero,
 }
@@ -81,8 +79,8 @@ pub enum NFTokenCancelOfferException {
 pub enum NFTokenCreateOfferException {
     InvalidAmountMustBeGreaterZero,
     InvalidDestinationMustNotEqualAccount,
-    InvalidOwnerMustBeSet,
-    InvalidOwnerMustNotBeSet,
+    InvalidOwnerMustBeSetForBuyOffer,
+    InvalidOwnerMustNotBeSetForSellOffer,
     InvalidOwnerMustNotEqualAccount,
 }
 
@@ -96,7 +94,7 @@ pub enum NFTokenMintException {
 #[derive(Debug, Clone, PartialEq, Display)]
 pub enum PaymentException {
     InvalidXRPtoXRPPaymentsCannotContainPaths,
-    InvalidDestinationMustNotEqualAccountForRPtoXRPPayments,
+    InvalidDestinationMustNotEqualAccountForXRPtoXRPPayments,
     InvalidSendMaxMustBeSetForPartialPayments,
     InvalidDeliverMinMustNotBeSetForNonPartialPayments,
     InvalidSendMaxMustNotBeSetForXRPtoXRPNonPartialPayments,

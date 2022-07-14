@@ -14,7 +14,7 @@ use serde_with::skip_serializing_none;
 use model::Model;
 
 use super::exceptions::{
-    CheckCashException, DepositPreauthException, EscrowCreateException,
+    CheckCashException, DepositPreauthException, EscrowCreateException, EscrowFinishException,
     NFTokenAcceptOfferException, XRPLModelException, XRPLTransactionException,
 };
 
@@ -827,7 +827,9 @@ impl EscrowCreateError for EscrowCreate<'static> {
         match self.finish_after {
             Some(finish_after) => match self.cancel_after {
                 Some(cancel_after) => match finish_after >= cancel_after {
-                    true => Err(EscrowCreateException::InvalidCancelAfterBeforeFinishAfter),
+                    true => {
+                        Err(EscrowCreateException::InvalidCancelAfterMustNotBeBeforeFinishAfter)
+                    }
                     false => Ok(()),
                 },
                 None => Ok(()),
@@ -907,11 +909,11 @@ impl Transaction for EscrowFinish<'static> {
 }
 
 impl EscrowFinishError for EscrowFinish<'static> {
-    fn get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishExeption> {
+    fn get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishException> {
         match (self.condition.is_some() && self.fulfillment.is_none())
             || (self.condition.is_none() && self.condition.is_some())
         {
-            true => Err(EscrowFinishExeption::InvalidBothConditionAndFulfillmentMustBeSet),
+            true => Err(EscrowFinishException::InvalidIfOneSetBothConditionAndFulfillmentMustBeSet),
             false => Ok(()),
         }
     }
@@ -970,20 +972,15 @@ impl Model for NFTokenAcceptOffer<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_nftoken_sell_offer_error() {
+        match self.get_brokered_mode_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::NFTokenAcceptOfferError(error),
             )),
-            Ok(_no_error) => match self.get_nftoken_buy_offer_error() {
+            Ok(_no_error) => match self.get_nftoken_broker_fee_error() {
                 Err(error) => Err(XRPLModelException::XRPLTransactionError(
                     XRPLTransactionException::NFTokenAcceptOfferError(error),
                 )),
-                Ok(_no_error) => match self.get_nftoken_broker_fee_error() {
-                    Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                        XRPLTransactionException::NFTokenAcceptOfferError(error),
-                    )),
-                    Ok(_no_error) => Ok(()),
-                },
+                Ok(_no_error) => Ok(()),
             },
         }
     }
@@ -996,26 +993,15 @@ impl Transaction for NFTokenAcceptOffer<'static> {
 }
 
 impl NFTokenAcceptOfferError for NFTokenAcceptOffer<'static> {
-    fn get_nftoken_sell_offer_error(&self) -> Result<(), NFTokenAcceptOfferException> {
-        match self.nftoken_broker_fee.is_some() && self.nftoken_sell_offer.is_none() {
-            true => Err(NFTokenAcceptOfferException::InvalidMustSetNftokenSellOfferIfBrokeredMode),
-            false => match self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
+    fn get_brokered_mode_error(&self) -> Result<(), NFTokenAcceptOfferException> {
+        match self.nftoken_broker_fee.as_ref() {
+            Some(_nftoken_broker_fee) => match self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
                 true => Err(NFTokenAcceptOfferException::InvalidMustSetEitherNftokenBuyOfferOrNftokenSellOffer),
                 false => Ok(()),
             }
+            None => Ok(()),
         }
     }
-
-    fn get_nftoken_buy_offer_error(&self) -> Result<(), NFTokenAcceptOfferException> {
-        match self.nftoken_broker_fee.is_some() && self.nftoken_buy_offer.is_none() {
-            true => Err(NFTokenAcceptOfferException::InvalidMustSetNftokenBuyOfferIfBrokeredMode),
-            false => match self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
-                true => Err(NFTokenAcceptOfferException::InvalidMustSetEitherNftokenBuyOfferOrNftokenSellOffer),
-                false => Ok(()),
-            }
-        }
-    }
-
     fn get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException> {
         match self.nftoken_broker_fee.as_ref() {
             Some(nftoken_broker_fee) => match nftoken_broker_fee.get_value_as_u32() == 0 {
@@ -1307,7 +1293,7 @@ impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
             Some(owner) => match self.has_flag(Flag::NFTokenCreateOffer(
                 NFTokenCreateOfferFlag::TfSellOffer,
             )) {
-                true => Err(NFTokenCreateOfferException::InvalidOwnerMustNotBeSet),
+                true => Err(NFTokenCreateOfferException::InvalidOwnerMustNotBeSetForSellOffer),
                 false => match owner == self.account {
                     true => Err(NFTokenCreateOfferException::InvalidOwnerMustNotEqualAccount),
                     false => Ok(()),
@@ -1316,7 +1302,7 @@ impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
             None => match !self.has_flag(Flag::NFTokenCreateOffer(
                 NFTokenCreateOfferFlag::TfSellOffer,
             )) {
-                true => Err(NFTokenCreateOfferException::InvalidOwnerMustBeSet),
+                true => Err(NFTokenCreateOfferException::InvalidOwnerMustBeSetForBuyOffer),
                 false => Ok(()),
             },
         }
@@ -1838,7 +1824,7 @@ impl PaymentError for Payment<'static> {
                 true => match self.paths.as_ref() {
                     Some(_paths) => Err(PaymentException::InvalidXRPtoXRPPaymentsCannotContainPaths),
                     None => match self.account == self.destination {
-                        true => Err(PaymentException::InvalidDestinationMustNotEqualAccountForRPtoXRPPayments),
+                        true => Err(PaymentException::InvalidDestinationMustNotEqualAccountForXRPtoXRPPayments),
                         false => Ok(()),
                     }
                 },
@@ -2721,7 +2707,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_to_json() {
+    fn test_to_json_error() {
         let sequence: u32 = 1;
         let last_ledger_sequence: u32 = 72779837;
         let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
@@ -2760,7 +2746,7 @@ mod test {
     }
 
     #[test]
-    fn test_has_flag() {
+    fn test_has_flag_error() {
         let sequence: u32 = 1;
         let last_ledger_sequence: u32 = 72779837;
         let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
@@ -2796,7 +2782,7 @@ mod test {
     }
 
     #[test]
-    fn test_get_transaction_type() {
+    fn test_get_transaction_type_error() {
         let sequence: u32 = 1;
         let last_ledger_sequence: u32 = 72779837;
         let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
@@ -3031,7 +3017,7 @@ mod test_account_set_errors {
     }
 
     #[test]
-    fn test_asf_authorized_nftoken_minter() {
+    fn test_asf_authorized_nftoken_minter_error() {
         let mut account_set = AccountSet {
             transaction_type: crate::models::TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
@@ -3084,6 +3070,582 @@ mod test_account_set_errors {
                 AccountSetException::InvalidNftokenMinterMustNotBeSetIfAsfAuthorizedNftokenMinterIsUnset,
             ));
         match account_set.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_check_cash_error {
+    use crate::models::{
+        exceptions::{CheckCashException, XRPLModelException, XRPLTransactionException},
+        Currency, Model, TransactionType,
+    };
+
+    use alloc::borrow::Cow;
+
+    use super::CheckCash;
+
+    #[test]
+    fn test_amount_and_deliver_min_error() {
+        let mut check_cash = CheckCash {
+            transaction_type: TransactionType::CheckCash,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            check_id: "",
+            amount: None,
+            deliver_min: None,
+        };
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::CheckCashError(
+                CheckCashException::InvalidMustSetAmountOrDeliverMin,
+            ));
+        match check_cash.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        check_cash.amount = Some(Currency::Xrp {
+            value: Some(Cow::Borrowed("1000000")),
+            currency: Cow::Borrowed("XRP"),
+        });
+        check_cash.deliver_min = Some(Currency::Xrp {
+            value: Some(Cow::Borrowed("100000")),
+            currency: Cow::Borrowed("XRP"),
+        });
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::CheckCashError(
+                CheckCashException::InvalidMustNotSetAmountAndDeliverMin,
+            ));
+        match check_cash.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_deposit_preauth_exception {
+    use crate::models::{
+        exceptions::{DepositPreauthException, XRPLModelException, XRPLTransactionException},
+        Model, TransactionType,
+    };
+
+    use super::DepositPreauth;
+
+    #[test]
+    fn test_authorize_and_unauthorize_error() {
+        let mut deposit_preauth = DepositPreauth {
+            transaction_type: TransactionType::DepositPreauth,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            authorize: None,
+            unauthorize: None,
+        };
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::DepositPreauthError(
+                DepositPreauthException::InvalidMustSetAuthorizeOrUnauthorize,
+            ),
+        );
+        match deposit_preauth.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        deposit_preauth.authorize = Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK");
+        deposit_preauth.unauthorize = Some("raQwCVAJVqjrVm1Nj5SFRcX8i22BhdC9WA");
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::DepositPreauthError(
+                DepositPreauthException::InvalidMustNotSetAuthorizeAndUnauthorize,
+            ),
+        );
+        match deposit_preauth.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_escrow_create_errors {
+    use crate::models::{
+        exceptions::{EscrowCreateException, XRPLModelException, XRPLTransactionException},
+        Currency, Model, TransactionType,
+    };
+
+    use alloc::borrow::Cow;
+
+    use super::EscrowCreate;
+
+    #[test]
+    fn test_cancel_after_error() {
+        let escrow_create = EscrowCreate {
+            transaction_type: TransactionType::EscrowCreate,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            amount: Currency::Xrp {
+                value: Some(Cow::Borrowed("100000000")),
+                currency: Cow::Borrowed("XRP"),
+            },
+            destination: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            destination_tag: None,
+            cancel_after: Some(13298498),
+            finish_after: Some(14359039),
+            condition: None,
+        };
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::EscrowCreateError(
+                EscrowCreateException::InvalidCancelAfterMustNotBeBeforeFinishAfter,
+            ));
+        match escrow_create.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_escrow_finish_errors {
+    use crate::models::{
+        exceptions::{EscrowFinishException, XRPLModelException, XRPLTransactionException},
+        Model, TransactionType,
+    };
+
+    use super::EscrowFinish;
+
+    #[test]
+    fn test_condition_and_fulfillment_error() {
+        let escrow_finish = EscrowFinish {
+            transaction_type: TransactionType::EscrowCancel,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            owner: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            offer_sequence: 10,
+            condition: Some(
+                "A0258020E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855810100",
+            ),
+            fulfillment: None,
+        };
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::EscrowFinishError(
+                EscrowFinishException::InvalidIfOneSetBothConditionAndFulfillmentMustBeSet,
+            ));
+        match escrow_finish.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_nftoken_accept_offer_error {
+    use alloc::borrow::Cow;
+
+    use crate::models::{
+        exceptions::{NFTokenAcceptOfferException, XRPLModelException, XRPLTransactionException},
+        Currency, Model, TransactionType,
+    };
+
+    use super::NFTokenAcceptOffer;
+
+    #[test]
+    fn test_brokered_mode_error() {
+        let nftoken_accept_offer = NFTokenAcceptOffer {
+            transaction_type: TransactionType::NFTokenAcceptOffer,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            nftoken_sell_offer: None,
+            nftoken_buy_offer: None,
+            nftoken_broker_fee: Some(Currency::Xrp {
+                value: Some(Cow::Borrowed("100")),
+                currency: Cow::Borrowed("XRP"),
+            }),
+        };
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::NFTokenAcceptOfferError(
+                NFTokenAcceptOfferException::InvalidMustSetEitherNftokenBuyOfferOrNftokenSellOffer,
+            ),
+        );
+        match nftoken_accept_offer.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+
+    #[test]
+    fn test_broker_fee_error() {
+        let nftoken_accept_offer = NFTokenAcceptOffer {
+            transaction_type: TransactionType::NFTokenAcceptOffer,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            nftoken_sell_offer: Some(""),
+            nftoken_buy_offer: None,
+            nftoken_broker_fee: Some(Currency::Xrp {
+                value: Some(Cow::Borrowed("0")),
+                currency: Cow::Borrowed("XRP"),
+            }),
+        };
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::NFTokenAcceptOfferError(
+                NFTokenAcceptOfferException::InvalidBrokerFeeMustBeGreaterZero,
+            ),
+        );
+        match nftoken_accept_offer.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_nftoken_cancel_offer_error {
+    use alloc::vec::Vec;
+
+    use crate::models::{
+        exceptions::{NFTokenCancelOfferException, XRPLModelException, XRPLTransactionException},
+        Model, TransactionType,
+    };
+
+    use super::NFTokenCancelOffer;
+
+    #[test]
+    fn test_nftoken_offer_error() {
+        let nftoken_cancel_offer = NFTokenCancelOffer {
+            transaction_type: TransactionType::NFTokenCancelOffer,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            nftoken_offers: Vec::new(),
+        };
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::NFTokenCancelOfferError(
+                NFTokenCancelOfferException::InvalidMustIncludeOneNFTokenOffer,
+            ),
+        );
+        match nftoken_cancel_offer.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_nftoken_create_offer_error {
+    use alloc::{borrow::Cow, vec};
+
+    use crate::models::{
+        exceptions::{NFTokenCreateOfferException, XRPLModelException, XRPLTransactionException},
+        Currency, Model, NFTokenCreateOfferFlag, TransactionType,
+    };
+
+    use super::NFTokenCreateOffer;
+
+    #[test]
+    fn test_amount_error() {
+        let nftoken_create_offer = NFTokenCreateOffer {
+            transaction_type: TransactionType::NFTokenCreateOffer,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            nftoken_id: "",
+            amount: Currency::Xrp {
+                value: Some(Cow::Borrowed("0")),
+                currency: Cow::Borrowed("XRP"),
+            },
+            owner: None,
+            expiration: None,
+            destination: None,
+        };
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::NFTokenCreateOfferError(
+                NFTokenCreateOfferException::InvalidAmountMustBeGreaterZero,
+            ),
+        );
+        match nftoken_create_offer.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+
+    #[test]
+    fn test_destination_error() {
+        let nftoken_create_offer = NFTokenCreateOffer {
+            transaction_type: TransactionType::NFTokenCreateOffer,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            nftoken_id: "",
+            amount: Currency::Xrp {
+                value: Some(Cow::Borrowed("1")),
+                currency: Cow::Borrowed("XRP"),
+            },
+            owner: None,
+            expiration: None,
+            destination: Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb"),
+        };
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::NFTokenCreateOfferError(
+                NFTokenCreateOfferException::InvalidDestinationMustNotEqualAccount,
+            ),
+        );
+        match nftoken_create_offer.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+
+    #[test]
+    fn test_owner_error() {
+        let mut nftoken_create_offer = NFTokenCreateOffer {
+            transaction_type: TransactionType::NFTokenCreateOffer,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            nftoken_id: "",
+            amount: Currency::Xrp {
+                value: Some(Cow::Borrowed("1")),
+                currency: Cow::Borrowed("XRP"),
+            },
+            owner: Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK"),
+            expiration: None,
+            destination: None,
+        };
+        let sell_flag = vec![NFTokenCreateOfferFlag::TfSellOffer];
+        nftoken_create_offer.flags = Some(sell_flag);
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::NFTokenCreateOfferError(
+                NFTokenCreateOfferException::InvalidOwnerMustNotBeSetForSellOffer,
+            ),
+        );
+        match nftoken_create_offer.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        nftoken_create_offer.flags = None;
+        nftoken_create_offer.owner = None;
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::NFTokenCreateOfferError(
+                NFTokenCreateOfferException::InvalidOwnerMustBeSetForBuyOffer,
+            ),
+        );
+        match nftoken_create_offer.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        nftoken_create_offer.owner = Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb");
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::NFTokenCreateOfferError(
+                NFTokenCreateOfferException::InvalidOwnerMustNotEqualAccount,
+            ),
+        );
+        match nftoken_create_offer.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_nftoken_mint_error {
+    use crate::models::{
+        exceptions::{NFTokenMintException, XRPLModelException, XRPLTransactionException},
+        Model, TransactionType,
+    };
+
+    use super::NFTokenMint;
+
+    #[test]
+    fn test_issuer_error() {
+        let nftoken_mint = NFTokenMint {
+            transaction_type: TransactionType::NFTokenMint,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            nftoken_taxon: 0,
+            issuer: Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb"),
+            transfer_fee: None,
+            uri: None,
+        };
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::NFTokenMintError(
+                NFTokenMintException::InvalidIssuerMustNotEqualAccount,
+            ));
+        match nftoken_mint.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+
+    #[test]
+    fn test_transfer_fee_error() {
+        let nftoken_mint = NFTokenMint {
+            transaction_type: TransactionType::NFTokenMint,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            nftoken_taxon: 0,
+            issuer: None,
+            transfer_fee: Some(50001),
+            uri: None,
+        };
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::NFTokenMintError(
+                NFTokenMintException::InvalidTransferFeeTooHigh {
+                    max: 50000,
+                    found: 50001,
+                },
+            ));
+        match nftoken_mint.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+
+    #[test]
+    fn test_uri_error() {
+        let nftoken_mint = NFTokenMint {
+            transaction_type: TransactionType::NFTokenMint,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            nftoken_taxon: 0,
+            issuer: None,
+            transfer_fee: None,
+            uri: Some("wss://xrplcluster.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+        };
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::NFTokenMintError(NFTokenMintException::InvalidURITooLong {
+                max: 512,
+                found: 513,
+            }),
+        );
+        match nftoken_mint.validate() {
             Ok(_no_error) => (),
             Err(error) => assert_eq!(error, expected_error),
         };
