@@ -705,7 +705,6 @@ pub trait NFTokenMintError {
 pub trait PaymentError {
     fn get_xrp_transaction_error(&self) -> Result<(), PaymentException>;
     fn get_partial_payment_error(&self) -> Result<(), PaymentException>;
-    fn get_exchange_error(&self) -> Result<(), PaymentException>;
 }
 
 pub trait SignerListSetError {

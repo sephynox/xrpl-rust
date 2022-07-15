@@ -1650,20 +1650,15 @@ impl Model for Payment<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_xrp_transaction_error() {
+        match self.get_partial_payment_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::PaymentError(error),
             )),
-            Ok(_no_error) => match self.get_partial_payment_error() {
+            Ok(_no_error) => match self.get_xrp_transaction_error() {
                 Err(error) => Err(XRPLModelException::XRPLTransactionError(
                     XRPLTransactionException::PaymentError(error),
                 )),
-                Ok(_no_error) => match self.get_exchange_error() {
-                    Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                        XRPLTransactionException::PaymentError(error),
-                    )),
-                    Ok(_no_error) => Ok(()),
-                },
+                Ok(_no_error) => Ok(()),
             },
         }
     }
@@ -1733,18 +1728,26 @@ impl Transaction for Payment<'static> {
 
 impl PaymentError for Payment<'static> {
     fn get_xrp_transaction_error(&self) -> Result<(), PaymentException> {
-        match self.send_max.as_ref() {
-            Some(_send_max) => Ok(()),
-            None => match self.amount.is_xrp() {
-                true => match self.paths.as_ref() {
-                    Some(_paths) => Err(PaymentException::InvalidXRPtoXRPPaymentsCannotContainPaths),
-                    None => match self.account == self.destination {
-                        true => Err(PaymentException::InvalidDestinationMustNotEqualAccountForXRPtoXRPPayments),
-                        false => Ok(()),
-                    }
+        match self.account == self.destination {
+            true => match self.send_max.as_ref() {
+                Some(send_max) => match send_max.is_xrp() && self.amount.is_xrp() {
+                    true => Err(
+                        PaymentException::InvalidDestinationMustNotEqualAccountForXRPtoXRPPayments,
+                    ),
+                    false => Ok(()),
                 },
-                false => Ok(()),
-            }
+                None => Err(PaymentException::InvalidSendMaxMustBeSetForExchanges),
+            },
+            false => match self.send_max.as_ref() {
+                Some(send_max) => match send_max.is_xrp() && self.amount.is_xrp() {
+                    true => match self.paths.as_ref().is_some() {
+                        true => Err(PaymentException::InvalidXRPtoXRPPaymentsCannotContainPaths),
+                        false => Ok(()),
+                    },
+                    false => Ok(()),
+                },
+                None => Ok(()),
+            },
         }
     }
 
@@ -1767,16 +1770,6 @@ impl PaymentError for Payment<'static> {
                     }
                     None => Ok(()),
                 },
-            },
-        }
-    }
-
-    fn get_exchange_error(&self) -> Result<(), PaymentException> {
-        match self.send_max.as_ref() {
-            Some(_send_max) => Ok(()),
-            None => match self.account == self.destination {
-                true => Err(PaymentException::InvalidSendMaxMustBeSetForExchanges),
-                false => Ok(()),
             },
         }
     }
@@ -3511,6 +3504,176 @@ mod test_nftoken_mint_error {
             }),
         );
         match nftoken_mint.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_payment_error {
+    use alloc::{borrow::Cow, vec};
+
+    use crate::models::{
+        exceptions::{PaymentException, XRPLModelException, XRPLTransactionException},
+        Currency, Model, PathStep, PaymentFlag, TransactionType,
+    };
+
+    use super::Payment;
+
+    #[test]
+    fn test_xrp_to_xrp_errors() {
+        let mut payment = Payment {
+            transaction_type: TransactionType::Payment,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            amount: Currency::Xrp {
+                value: Some(Cow::Borrowed("1000000")),
+                currency: Cow::Borrowed("XRP"),
+            },
+            destination: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            destination_tag: None,
+            invoice_id: None,
+            paths: None,
+            send_max: None,
+            deliver_min: None,
+        };
+        payment.destination = "rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK";
+        payment.paths = Some(vec![vec![PathStep {
+            account: Some("rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"),
+            currency: None,
+            issuer: None,
+            r#type: None,
+            type_hex: None,
+        }]]);
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
+                PaymentException::InvalidXRPtoXRPPaymentsCannotContainPaths,
+            ));
+        match payment.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        payment.paths = None;
+        payment.send_max = Some(Currency::Xrp {
+            value: Some(Cow::Borrowed("900000")),
+            currency: Cow::Borrowed("XRP"),
+        });
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
+                PaymentException::InvalidSendMaxMustNotBeSetForXRPtoXRPNonPartialPayments,
+            ));
+        match payment.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        payment.flags = Some(vec![PaymentFlag::TfPartialPayment]);
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
+                PaymentException::InvalidDestinationMustNotEqualAccountForXRPtoXRPPayments,
+            ));
+        match payment.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+
+    #[test]
+    fn test_partial_payments_eror() {
+        let mut payment = Payment {
+            transaction_type: TransactionType::Payment,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            amount: Currency::Xrp {
+                value: Some(Cow::Borrowed("1000000")),
+                currency: Cow::Borrowed("XRP"),
+            },
+            destination: "rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK",
+            destination_tag: None,
+            invoice_id: None,
+            paths: None,
+            send_max: None,
+            deliver_min: None,
+        };
+        payment.flags = Some(vec![PaymentFlag::TfPartialPayment]);
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
+                PaymentException::InvalidSendMaxMustBeSetForPartialPayments,
+            ));
+        match payment.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        payment.flags = None;
+        payment.deliver_min = Some(Currency::Xrp {
+            value: Some(Cow::Borrowed("900000")),
+            currency: Cow::Borrowed("XRP"),
+        });
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
+                PaymentException::InvalidDeliverMinMustNotBeSetForNonPartialPayments,
+            ));
+        match payment.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+
+    #[test]
+    fn test_exchange_error() {
+        let payment = Payment {
+            transaction_type: TransactionType::Payment,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            amount: Currency::Xrp {
+                value: Some(Cow::Borrowed("1000000")),
+                currency: Cow::Borrowed("XRP"),
+            },
+            destination: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            destination_tag: None,
+            invoice_id: None,
+            paths: None,
+            send_max: None,
+            deliver_min: None,
+        };
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
+                PaymentException::InvalidSendMaxMustBeSetForExchanges,
+            ));
+        match payment.validate() {
             Ok(_no_error) => (),
             Err(error) => assert_eq!(error, expected_error),
         };
