@@ -62,11 +62,6 @@ pub struct AccountDelete<'a> {
 }
 
 impl Model for AccountDelete<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `AccountDelete` to json.");
@@ -127,11 +122,6 @@ pub struct AccountSet<'a> {
 }
 
 impl Model for AccountSet<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json_str = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.").as_str();
-    //     transaction_json_str
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `AccountSet` to json.");
@@ -449,11 +439,6 @@ pub struct CheckCancel<'a> {
 }
 
 impl Model for CheckCancel<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCancel` to json.");
@@ -511,11 +496,6 @@ pub struct CheckCash<'a> {
 }
 
 impl Model for CheckCash<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCash` to json.");
@@ -594,11 +574,6 @@ pub struct CheckCreate<'a> {
 }
 
 impl Model for CheckCreate<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCreate` to json.");
@@ -653,11 +628,6 @@ pub struct DepositPreauth<'a> {
 }
 
 impl Model for DepositPreauth<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `DepositPreauth` to json.");
@@ -732,11 +702,6 @@ pub struct EscrowCancel<'a> {
 }
 
 impl Model for EscrowCancel<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EscrowCancel` to json.");
@@ -794,11 +759,6 @@ pub struct EscrowCreate<'a> {
 }
 
 impl Model for EscrowCreate<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EscrowCreate` to json.");
@@ -880,11 +840,6 @@ pub struct EscrowFinish<'a> {
 }
 
 impl Model for EscrowFinish<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EscrowFinish` to json.");
@@ -959,11 +914,6 @@ pub struct NFTokenAcceptOffer<'a> {
 }
 
 impl Model for NFTokenAcceptOffer<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenAcceptOffer` to json.");
@@ -1053,11 +1003,6 @@ pub struct NFTokenBurn<'a> {
 }
 
 impl Model for NFTokenBurn<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenBurn` to json.");
@@ -1112,11 +1057,6 @@ pub struct NFTokenCancelOffer<'a> {
 }
 
 impl Model for NFTokenCancelOffer<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenCancelOffer` to json.");
@@ -1193,11 +1133,6 @@ pub struct NFTokenCreateOffer<'a> {
 }
 
 impl Model for NFTokenCreateOffer<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenCreateOffer` to json.");
@@ -1351,11 +1286,6 @@ pub struct NFTokenMint<'a> {
 }
 
 impl Model for NFTokenMint<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenMint` to json.");
@@ -1532,11 +1462,6 @@ pub struct OfferCancel<'a> {
 }
 
 impl Model for OfferCancel<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `OfferCancel` to json.");
@@ -1592,11 +1517,6 @@ pub struct OfferCreate<'a> {
 }
 
 impl Model for OfferCreate<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `OfferCreate` to json.");
@@ -1722,11 +1642,6 @@ pub struct Payment<'a> {
 }
 
 impl Model for Payment<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `Payment` to json.");
@@ -1910,11 +1825,6 @@ pub struct PaymentChannelClaim<'a> {
 }
 
 impl Model for PaymentChannelClaim<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json = serde_json::to_value(&self)
             .expect("Unable to serialize `PaymentChannelClaim` to json.");
@@ -2019,11 +1929,6 @@ pub struct PaymentChannelCreate<'a> {
 }
 
 impl Model for PaymentChannelCreate<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json = serde_json::to_value(&self)
             .expect("Unable to serialize `PaymentChannelCreate` to json.");
@@ -2079,11 +1984,6 @@ pub struct PaymentChannelFund<'a> {
 }
 
 impl Model for PaymentChannelFund<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `PaymentChannelFund` to json.");
@@ -2140,11 +2040,6 @@ pub struct SetRegularKey<'a> {
 }
 
 impl Model for SetRegularKey<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `SetRegularKey` to json.");
@@ -2201,11 +2096,6 @@ pub struct SignerListSet<'a> {
 }
 
 impl Model for SignerListSet<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `SignerListSet` to json.");
@@ -2320,11 +2210,6 @@ pub struct TicketCreate<'a> {
 }
 
 impl Model for TicketCreate<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `TicketCreate` to json.");
@@ -2379,11 +2264,6 @@ pub struct TrustSet<'a> {
 }
 
 impl Model for TrustSet<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `TrustSet` to json.");
@@ -2510,11 +2390,6 @@ pub struct EnableAmendment<'a> {
 }
 
 impl Model for EnableAmendment<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EnableAmendment` to json.");
@@ -2609,11 +2484,6 @@ pub struct SetFee<'a> {
 }
 
 impl Model for SetFee<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `SetFee` to json.");
@@ -2662,11 +2532,6 @@ pub struct UNLModify<'a> {
 }
 
 impl Model for UNLModify<'static> {
-    // fn to_json(&self) -> &str {
-    //     let transaction_json = serde_json::to_string(&self).expect("Unable to convert `AccountDelete` json to string.");
-    //     transaction_json
-    // }
-
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `UNLModify` to json.");
