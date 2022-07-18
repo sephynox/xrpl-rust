@@ -105,7 +105,6 @@ pub enum PaymentException {
 pub enum SignerListSetException {
     InvalidMustNotSetSignerEntriesIfSignerListIsBeingDeleted,
     InvalidSignerQuorumMustBeZeroIfSignerListIsBeingDeleted,
-    InvalidSignerQuorumMustBeGreaterZero,
     InvalidTooFewSignerEntries { min: usize, found: usize },
     InvalidTooManySignerEntries { max: usize, found: usize },
     InvalidAccountMustNotBeInSignerEntry,

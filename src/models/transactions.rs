@@ -2122,14 +2122,11 @@ impl SignerListSetError for SignerListSet<'static> {
         match self.signer_entries.as_ref() {
             Some(signer_entries) => match self.signer_quorum == 0 {
                 true => Err(SignerListSetException::InvalidMustNotSetSignerEntriesIfSignerListIsBeingDeleted),
-                false => match self.signer_quorum == 0 {
-                    true => Err(SignerListSetException::InvalidSignerQuorumMustBeGreaterZero),
-                    false => match signer_entries.is_empty() {
-                        true => Err(SignerListSetException::InvalidTooFewSignerEntries { min: 1, found: signer_entries.len() }),
-                        false => match signer_entries.len() > 8 {
-                            true => Err(SignerListSetException::InvalidTooManySignerEntries { max: 8, found: signer_entries.len() }),
-                            false => Ok(())
-                        },
+                false => match signer_entries.is_empty() {
+                    true => Err(SignerListSetException::InvalidTooFewSignerEntries { min: 1, found: signer_entries.len() }),
+                    false => match signer_entries.len() > 8 {
+                        true => Err(SignerListSetException::InvalidTooManySignerEntries { max: 8, found: signer_entries.len() }),
+                        false => Ok(())
                     },
                 },
             },
@@ -2519,7 +2516,7 @@ pub struct UNLModify<'a> {
     ///
     /// See UNLModify fields:
     /// `<https://xrpl.org/unlmodify.html#unlmodify-fields>`
-    ledger_sequence: u16,
+    ledger_sequence: u32,
     unlmodify_disabling: u8,
     unlmodify_validator: &'a str,
 }
@@ -3522,7 +3519,7 @@ mod test_payment_error {
     use super::Payment;
 
     #[test]
-    fn test_xrp_to_xrp_errors() {
+    fn test_xrp_to_xrp_error() {
         let mut payment = Payment {
             transaction_type: TransactionType::Payment,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
@@ -3674,6 +3671,234 @@ mod test_payment_error {
                 PaymentException::InvalidSendMaxMustBeSetForExchanges,
             ));
         match payment.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_signer_list_set_error {
+    use alloc::vec;
+
+    use crate::models::{
+        exceptions::{SignerListSetException, XRPLModelException, XRPLTransactionException},
+        Model, SignerEntry, TransactionType,
+    };
+
+    use super::SignerListSet;
+
+    #[test]
+    fn test_signer_list_deleted_error() {
+        let mut signer_list_set = SignerListSet {
+            transaction_type: TransactionType::SignerListSet,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            signer_quorum: 0,
+            signer_entries: Some(vec![SignerEntry {
+                account: "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
+                signer_weight: 2,
+            }]),
+        };
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
+                SignerListSetException::InvalidMustNotSetSignerEntriesIfSignerListIsBeingDeleted,
+            ));
+        match signer_list_set.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        signer_list_set.signer_quorum = 3;
+        signer_list_set.signer_entries = None;
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
+                SignerListSetException::InvalidSignerQuorumMustBeZeroIfSignerListIsBeingDeleted,
+            ));
+        match signer_list_set.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+
+    #[test]
+    fn test_signer_entries_error() {
+        let mut signer_list_set = SignerListSet {
+            transaction_type: TransactionType::SignerListSet,
+            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            fee: None,
+            sequence: None,
+            last_ledger_sequence: None,
+            account_txn_id: None,
+            signing_pub_key: None,
+            source_tag: None,
+            ticket_sequence: None,
+            txn_signature: None,
+            flags: None,
+            memos: None,
+            signers: None,
+            signer_quorum: 3,
+            signer_entries: Some(vec![]),
+        };
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
+                SignerListSetException::InvalidTooFewSignerEntries { min: 1, found: 0 },
+            ));
+        match signer_list_set.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        signer_list_set.signer_entries = Some(vec![
+            SignerEntry {
+                account: "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
+                signer_weight: 1,
+            },
+            SignerEntry {
+                account: "rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v",
+                signer_weight: 1,
+            },
+            SignerEntry {
+                account: "rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v",
+                signer_weight: 2,
+            },
+            SignerEntry {
+                account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+                signer_weight: 2,
+            },
+            SignerEntry {
+                account: "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+                signer_weight: 1,
+            },
+            SignerEntry {
+                account: "rXTZ5g8X7mrAYEe7iFeM9fiS4ccueyurG",
+                signer_weight: 1,
+            },
+            SignerEntry {
+                account: "rPbMHxs7vy5t6e19tYfqG7XJ6Fog8EPZLk",
+                signer_weight: 2,
+            },
+            SignerEntry {
+                account: "r3rhWeE31Jt5sWmi4QiGLMZnY3ENgqw96W",
+                signer_weight: 3,
+            },
+            SignerEntry {
+                account: "rchGBxcD1A1C2tdxF6papQYZ8kjRKMYcL",
+                signer_weight: 2,
+            },
+        ]);
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
+                SignerListSetException::InvalidTooManySignerEntries { max: 8, found: 9 },
+            ));
+        match signer_list_set.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        signer_list_set.signer_entries = Some(vec![
+            SignerEntry {
+                account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+                signer_weight: 1,
+            },
+            SignerEntry {
+                account: "rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v",
+                signer_weight: 1,
+            },
+            SignerEntry {
+                account: "rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v",
+                signer_weight: 2,
+            },
+            SignerEntry {
+                account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+                signer_weight: 2,
+            },
+        ]);
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
+                SignerListSetException::InvalidAccountMustNotBeInSignerEntry,
+            ));
+        match signer_list_set.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        signer_list_set.signer_entries = Some(vec![SignerEntry {
+            account: "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
+            signer_weight: 3,
+        }]);
+        signer_list_set.signer_quorum = 10;
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
+                SignerListSetException::InvalidMustBeLessOrEqualToSumOfSignerWeightInSignerEntries { max: 3, found: 10 },
+            ));
+        match signer_list_set.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+
+        signer_list_set.signer_entries = Some(vec![
+            SignerEntry {
+                account: "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
+                signer_weight: 3,
+            },
+            SignerEntry {
+                account: "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
+                signer_weight: 2,
+            },
+        ]);
+        signer_list_set.signer_quorum = 2;
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
+                SignerListSetException::InvalidAnAccountCanNotBeInSignerEntriesTwice,
+            ));
+        match signer_list_set.validate() {
+            Ok(_no_error) => (),
+            Err(error) => assert_eq!(error, expected_error),
+        };
+    }
+}
+
+#[cfg(test)]
+mod test_unl_modify_error {
+    use crate::models::{
+        exceptions::{UNLModifyException, XRPLModelException, XRPLTransactionException},
+        Model, TransactionType,
+    };
+
+    use super::UNLModify;
+
+    #[test]
+    fn test_unlmodify_disabling_error() {
+        let unl_modify = UNLModify {
+            transaction_type: TransactionType::UNLModify,
+            account: "",
+            fee: None,
+            sequence: None,
+            signing_pub_key: None,
+            source_tag: None,
+            txn_signature: None,
+            flags: None,
+            ledger_sequence: 1600000,
+            unlmodify_disabling: 3,
+            unlmodify_validator:
+                "ED6629D456285AE3613B285F65BBFF168D695BA3921F309949AFCD2CA7AFEC16FE",
+        };
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::UNLModifyError(
+                UNLModifyException::InvalidUNLModifyDisablingMustBeOneOrTwo,
+            ));
+        match unl_modify.validate() {
             Ok(_no_error) => (),
             Err(error) => assert_eq!(error, expected_error),
         };
