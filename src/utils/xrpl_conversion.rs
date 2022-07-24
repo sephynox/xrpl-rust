@@ -58,8 +58,7 @@ fn _verify_no_decimal(decimal: Decimal) -> Result<(), XRPRangeException> {
     } else {
         decimal
             .checked_mul(decimal)
-            .or(Some(Decimal::ZERO))
-            .unwrap()
+            .unwrap_or(Decimal::ZERO)
             .to_string()
     };
 
