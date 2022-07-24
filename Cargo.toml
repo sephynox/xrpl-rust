@@ -21,28 +21,42 @@ crate-type = ["lib"]
 
 [dependencies]
 lazy_static = "1.4.0"
-sha2 = "0.9.8"
+sha2 = "0.10.2"
 rand_hc = "0.3.1"
-ripemd160 = "0.9.1"
+ripemd = "0.1.1"
 ed25519-dalek = "1.0.1"
-secp256k1 = { version = "0.20.3", default-features = false, features = ["alloc"] }
-bs58 = { version = "0.4.0", default-features = false, features = ["check", "alloc"] }
+secp256k1 = { version = "0.24.0", default-features = false, features = [
+    "alloc",
+] }
+bs58 = { version = "0.4.0", default-features = false, features = [
+    "check",
+    "alloc",
+] }
 indexmap = { version = "1.7.0", features = ["serde"] }
 regex = { version = "1.5.4", default-features = false }
-strum = { version = "0.22.0", default-features = false }
-strum_macros = { version = "0.22.0", default-features = false }
-num-bigint = { version = "0.4.2", default-features = false }
-rust_decimal = { version = "1.17.0", default-features = false, features = ["serde"] }
-chrono = { version = "0.4.19", default-features = false, features = ["alloc", "clock"] }
+strum = { version = "0.24.1", default-features = false }
+strum_macros = { version = "0.24.2", default-features = false }
+crypto-bigint = { version = "0.4.7" }
+rust_decimal = { version = "1.17.0", default-features = false, features = [
+    "serde",
+] }
+chrono = { version = "0.4.19", default-features = false, features = [
+    "alloc",
+    "clock",
+] }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 rand = { version = "0.8.4", default-features = false, features = ["getrandom"] }
 serde = { version = "1.0.130", default-features = false, features = ["derive"] }
-serde_json = { version = "1.0.68", default-features = false, features = ["alloc"] }
+serde_json = { version = "1.0.68", default-features = false, features = [
+    "alloc",
+] }
 serde_with = "1.11.0"
 
 [dev-dependencies]
 criterion = "0.3.5"
-cargo-husky = { version = "1.5.0", default-features = false, features = ["user-hooks"] }
+cargo-husky = { version = "1.5.0", default-features = false, features = [
+    "user-hooks",
+] }
 
 [[bench]]
 name = "benchmarks"
@@ -54,15 +68,14 @@ models = ["core"]
 core = ["utils"]
 utils = []
 std = [
-    "rand/std", 
+    "rand/std",
     "regex/std",
-    "chrono/std", 
-    "num-bigint/std", 
-    "rand/std_rng", 
-    "hex/std", 
-    "rust_decimal/std", 
-    "bs58/std", 
-    "serde/std", 
-    "indexmap/std", 
-    "secp256k1/std"
+    "chrono/std",
+    "rand/std_rng",
+    "hex/std",
+    "rust_decimal/std",
+    "bs58/std",
+    "serde/std",
+    "indexmap/std",
+    "secp256k1/std",
 ]
