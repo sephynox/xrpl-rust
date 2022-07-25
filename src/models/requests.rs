@@ -1289,3 +1289,214 @@ mod test {
         assert_eq!(revert.unwrap(), json);
     }
 }
+
+#[cfg(test)]
+mod test_channel_authorize_errors {
+    use alloc::string::ToString;
+
+    use crate::{
+        constants::CryptoAlgorithm,
+        models::{
+            exceptions::{ChannelAuthorizeException, XRPLModelException, XRPLRequestException},
+            Model, RequestMethod,
+        },
+    };
+
+    use super::ChannelAuthorize;
+
+    #[test]
+    fn test_fields_error() {
+        let channel_authorize = ChannelAuthorize {
+            method: RequestMethod::ChannelAuthorize,
+            channel_id: "5DB01B7FFED6B67E6B0414DED11E051D2EE2B7619CE0EAA6286D67A3A4D5BDB3",
+            amount: "1000000",
+            id: None,
+            secret: None,
+            seed: Some(""),
+            seed_hex: Some(""),
+            passphrase: None,
+            key_type: Some(CryptoAlgorithm::SECP256K1),
+        };
+        let expected_error =
+            XRPLModelException::XRPLRequestError(XRPLRequestException::ChannelAuthorizeError(
+                ChannelAuthorizeException::InvalidMustSetExactlyOneOf {
+                    fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+                },
+            ));
+        assert_eq!(channel_authorize.validate(), Err(expected_error))
+    }
+}
+
+#[cfg(test)]
+mod test_ledger_entry_errors {
+    use alloc::string::ToString;
+
+    use crate::models::{
+        exceptions::{LedgerEntryException, XRPLModelException, XRPLRequestException},
+        request_fields::OfferFields,
+        Model, RequestMethod,
+    };
+
+    use super::LedgerEntry;
+
+    #[test]
+    fn test_fields_error() {
+        let ledger_entry = LedgerEntry {
+            method: RequestMethod::LedgerEntry,
+            id: None,
+            index: None,
+            account_root: Some("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
+            check: None,
+            payment_channel: None,
+            deposit_preauth: None,
+            directory: None,
+            escrow: None,
+            offer: Some(OfferFields {
+                account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+                seq: 359,
+            }),
+            ripple_state: None,
+            ticket: None,
+            binary: None,
+            ledger_hash: None,
+            ledger_index: None,
+        };
+        let expected_error = XRPLModelException::XRPLRequestError(XRPLRequestException::LedgerEntryError(LedgerEntryException::InvalidMustSetExactlyOneOf { fields: "`index`, `account_root`, `check`, `directory`, `offer`, `ripple_state`, `escrow`, `payment_channel`, `deposit_preauth`, `ticket`".to_string() }));
+        assert_eq!(ledger_entry.validate(), Err(expected_error))
+    }
+}
+
+#[cfg(test)]
+mod test_sign_and_submit_errors {
+    use alloc::string::ToString;
+
+    use crate::{
+        constants::CryptoAlgorithm,
+        models::{
+            exceptions::{SignAndSubmitException, XRPLModelException, XRPLRequestException},
+            Model, RequestMethod,
+        },
+    };
+
+    use super::SignAndSubmit;
+
+    #[test]
+    fn test_fields_error() {
+        let mut sign_and_submit = SignAndSubmit {
+            method: RequestMethod::Submit,
+            id: None,
+            secret: Some(""),
+            seed: Some(""),
+            seed_hex: None,
+            passphrase: None,
+            key_type: None,
+            offline: None,
+            build_path: None,
+            fee_mult_max: None,
+            fee_div_max: None,
+        };
+        let expected_error =
+            XRPLModelException::XRPLRequestError(XRPLRequestException::SignAndSubmitError(
+                SignAndSubmitException::InvalidMustSetExactlyOneOf {
+                    fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+                },
+            ));
+        assert_eq!(sign_and_submit.validate(), Err(expected_error));
+
+        sign_and_submit.seed = None;
+        sign_and_submit.key_type = Some(CryptoAlgorithm::SECP256K1);
+        let expected_error =
+            XRPLModelException::XRPLRequestError(XRPLRequestException::SignAndSubmitError(
+                SignAndSubmitException::InvalidMustOmitKeyTypeIfSecretProvided,
+            ));
+        assert_eq!(sign_and_submit.validate(), Err(expected_error));
+    }
+}
+
+#[cfg(test)]
+mod test_sign_for_errors {
+    use alloc::string::ToString;
+
+    use crate::{
+        constants::CryptoAlgorithm,
+        models::{
+            exceptions::{SignForException, XRPLModelException, XRPLRequestException},
+            Model, RequestMethod,
+        },
+    };
+
+    use super::SignFor;
+
+    #[test]
+    fn test_fields_error() {
+        let mut sign_for = SignFor {
+            method: RequestMethod::SignFor,
+            account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            id: None,
+            secret: Some(""),
+            seed: Some(""),
+            seed_hex: None,
+            passphrase: None,
+            key_type: None,
+        };
+        let expected_error = XRPLModelException::XRPLRequestError(
+            XRPLRequestException::SignForError(SignForException::InvalidMustSetExactlyOneOf {
+                fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+            }),
+        );
+        assert_eq!(sign_for.validate(), Err(expected_error));
+
+        sign_for.seed = None;
+        sign_for.key_type = Some(CryptoAlgorithm::SECP256K1);
+        let expected_error =
+            XRPLModelException::XRPLRequestError(XRPLRequestException::SignForError(
+                SignForException::InvalidMustOmitKeyTypeIfSecretProvided,
+            ));
+        assert_eq!(sign_for.validate(), Err(expected_error));
+    }
+}
+
+#[cfg(test)]
+mod test_sign_errors {
+    use alloc::string::ToString;
+
+    use crate::{
+        constants::CryptoAlgorithm,
+        models::{
+            exceptions::{SignException, XRPLModelException, XRPLRequestException},
+            Model, RequestMethod,
+        },
+    };
+
+    use super::Sign;
+
+    #[test]
+    fn test_fields_error() {
+        let mut sign = Sign {
+            method: RequestMethod::Sign,
+            id: None,
+            secret: Some(""),
+            seed: Some(""),
+            seed_hex: None,
+            passphrase: None,
+            key_type: None,
+            offline: None,
+            build_path: None,
+            fee_mult_max: None,
+            fee_div_max: None,
+        };
+        let expected_error = XRPLModelException::XRPLRequestError(XRPLRequestException::SignError(
+            SignException::InvalidMustSetExactlyOneOf {
+                fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+            },
+        ));
+        assert_eq!(sign.validate(), Err(expected_error));
+
+        sign.seed = None;
+        sign.key_type = Some(CryptoAlgorithm::SECP256K1);
+        let expected_error = XRPLModelException::XRPLRequestError(XRPLRequestException::SignError(
+            SignException::InvalidMustOmitKeyTypeIfSecretProvided,
+        ));
+        assert_eq!(sign.validate(), Err(expected_error));
+    }
+}
