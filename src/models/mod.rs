@@ -642,8 +642,8 @@ pub trait Transaction {
     fn iter_to_int(&self) -> u32 {
         0
     }
-    fn has_flag(&self, flag: Flag) -> bool {
-        let _txn_flag = &flag;
+    fn has_flag(&self, flag: &Flag) -> bool {
+        let _txn_flag = flag;
         false
     }
     fn get_transaction_type(&self) -> TransactionType;
@@ -705,6 +705,7 @@ pub trait NFTokenMintError {
 pub trait PaymentError {
     fn get_xrp_transaction_error(&self) -> Result<(), PaymentException>;
     fn get_partial_payment_error(&self) -> Result<(), PaymentException>;
+    fn get_exchange_error(&self) -> Result<(), PaymentException>;
 }
 
 pub trait SignerListSetError {

@@ -10,8 +10,10 @@ pub trait Model {
     fn to_json(&self) -> String {
         serde_json::to_string(&self.to_json_value()).expect("Unable to serialize to json string.")
     }
+
     /// Returns the json representation of a model as a `serde_json::Value`.
     fn to_json_value(&self) -> Value;
+
     /// Extended in structures to define custom validation logic.
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         Ok(())

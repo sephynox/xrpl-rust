@@ -7,7 +7,7 @@ use crate::{
     },
     models::*,
 };
-use alloc::vec::Vec;
+use alloc::{string::ToString, vec::Vec};
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -31,33 +31,74 @@ use super::exceptions::{
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct AccountDelete<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
-    #[serde(default = "TransactionType::account_delete")]
+    #[serde(default = "TransactionType::account_set")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
-    flags: Option<Vec<u32>>,
+    /// Set of bit-flags for this transaction.
+    flags: Option<Vec<AccountSetFlag>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
-    /// The custom fields for the AccountDelete model.
-    ///
-    /// See AccountDelete fields:
-    /// `<https://xrpl.org/accountdelete.html#accountdelete-fields>`
+    // The custom fields for the AccountDelete model.
+    //
+    // See AccountDelete fields:
+    // `<https://xrpl.org/accountdelete.html#accountdelete-fields>`
+    /// The address of an account to receive any leftover XRP after
+    /// deleting the sending account. Must be a funded account in
+    /// the ledger, and must not be the sending account.
     destination: &'a str,
+    /// Arbitrary destination tag that identifies a hosted
+    /// recipient or other information for the recipient
+    /// of the deleted account's leftover XRP.
     destination_tag: Option<u32>,
 }
 
@@ -85,40 +126,100 @@ impl Transaction for AccountDelete<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct AccountSet<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::account_set")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<AccountSetFlag>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
-    /// The custom fields for the AccountSet model.
-    ///
-    /// See AccountSet fields:
-    /// `<https://xrpl.org/accountset.html#accountset-fields>`
+    // The custom fields for the AccountSet model.
+    //
+    // See AccountSet fields:
+    // `<https://xrpl.org/accountset.html#accountset-fields>`
+    /// Unique identifier of a flag to disable for this account.
     clear_flag: Option<AccountSetFlag>,
+    /// The domain that owns this account, as a string of hex
+    /// representing the ASCII for the domain in lowercase.
+    /// Cannot be more than 256 bytes in length.
     domain: Option<&'a str>,
+    /// Hash of an email address to be used for generating an
+    /// avatar image. Conventionally, clients use Gravatar
+    /// to display this image.
     email_hash: Option<&'a str>,
+    /// Public key for sending encrypted messages to this account.
+    /// To set the key, it must be exactly 33 bytes, with the
+    /// first byte indicating the key type: 0x02 or 0x03 for
+    /// secp256k1 keys, 0xED for Ed25519 keys. To remove the
+    /// key, use an empty value.
     message_key: Option<&'a str>,
-    set_flag: Option<AccountSetFlag>,
-    transfer_rate: Option<u32>,
-    tick_size: Option<u32>,
+    /// Sets an alternate account that is allowed to mint NFTokens
+    /// on this account's behalf using NFTokenMint's Issuer field.
+    /// This field is part of the experimental XLS-20 standard
+    /// for non-fungible tokens.
     nftoken_minter: Option<&'a str>,
+    /// Flag to enable for this account.
+    set_flag: Option<AccountSetFlag>,
+    /// The fee to charge when users transfer this account's tokens,
+    /// represented as billionths of a unit. Cannot be more than
+    /// 2000000000 or less than 1000000000, except for the special
+    /// case 0 meaning no fee.
+    transfer_rate: Option<u32>,
+    /// Tick size to use for offers involving a currency issued by
+    /// this address. The exchange rates of those offers is rounded
+    /// to this many significant digits. Valid values are 3 to 15
+    /// inclusive, or 0 to disable.
+    tick_size: Option<u32>,
 }
 
 impl Model for AccountSet<'static> {
@@ -192,7 +293,7 @@ impl Transaction for AccountSet<'static> {
         }
     }
 
-    fn has_flag(&self, flag: Flag) -> bool {
+    fn has_flag(&self, flag: &Flag) -> bool {
         let mut has_flag = false;
         if self.iter_to_int() > 0 {
             match flag {
@@ -409,32 +510,67 @@ impl AccountSetError for AccountSet<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct CheckCancel<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::check_cancel")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
-    /// The custom fields for the CheckCancel model.
-    ///
-    /// See CheckCancel fields:
-    /// `<https://xrpl.org/checkcancel.html#checkcancel-fields>`
+    // The custom fields for the CheckCancel model.
+    //
+    // See CheckCancel fields:
+    // `<https://xrpl.org/checkcancel.html#checkcancel-fields>`
     check_id: &'a str,
 }
 
@@ -464,27 +600,62 @@ impl Transaction for CheckCancel<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct CheckCash<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::check_cash")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the CheckCash model.
     ///
@@ -500,6 +671,18 @@ impl Model for CheckCash<'static> {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCash` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
+        if let Some(amount) = &self.amount {
+            if amount.is_xrp() {
+                transaction_json["Amount"] =
+                    Value::from(amount.get_value_as_u32().to_string().as_str());
+            }
+        }
+        if let Some(deliver_min) = &self.deliver_min {
+            if deliver_min.is_xrp() {
+                transaction_json["DeliverMin"] =
+                    Value::from(deliver_min.get_value_as_u32().to_string().as_str());
+            }
+        }
         transaction_json
     }
 
@@ -540,27 +723,62 @@ impl CheckCashError for CheckCash<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct CheckCreate<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::check_create")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the CheckCreate model.
     ///
@@ -578,6 +796,10 @@ impl Model for CheckCreate<'static> {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCreate` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
+        if self.send_max.is_xrp() {
+            transaction_json["SendMax"] =
+                Value::from(self.send_max.get_value_as_u32().to_string().as_str());
+        }
         transaction_json
     }
 }
@@ -597,27 +819,62 @@ impl Transaction for CheckCreate<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct DepositPreauth<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::deposit_preauth")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the DepositPreauth model.
     ///
@@ -671,27 +928,62 @@ impl DepositPreauthError for DepositPreauth<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct EscrowCancel<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::escrow_cancel")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the EscrowCancel model.
     ///
@@ -724,27 +1016,62 @@ impl Transaction for EscrowCancel<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct EscrowCreate<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::escrow_create")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the EscrowCreate model.
     ///
@@ -763,6 +1090,10 @@ impl Model for EscrowCreate<'static> {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EscrowCreate` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
+        if self.amount.is_xrp() {
+            transaction_json["Amount"] =
+                Value::from(self.amount.get_value_as_u32().to_string().as_str());
+        }
         transaction_json
     }
 
@@ -807,27 +1138,62 @@ impl EscrowCreateError for EscrowCreate<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct EscrowFinish<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::escrow_finish")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the EscrowFinish model.
     ///
@@ -882,27 +1248,62 @@ impl EscrowFinishError for EscrowFinish<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct NFTokenAcceptOffer<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::nftoken_accept_offer")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the NFTokenAcceptOffer model.
     ///
@@ -918,6 +1319,12 @@ impl Model for NFTokenAcceptOffer<'static> {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenAcceptOffer` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
+        if let Some(nftoken_broker_fee) = &self.nftoken_broker_fee {
+            if nftoken_broker_fee.is_xrp() {
+                transaction_json["NFTokenBrokerFee"] =
+                    Value::from(nftoken_broker_fee.get_value_as_u32().to_string().as_str());
+            }
+        }
         transaction_json
     }
 
@@ -972,27 +1379,62 @@ impl NFTokenAcceptOfferError for NFTokenAcceptOffer<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct NFTokenBurn<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::nftoken_burn")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the NFTokenBurn model.
     ///
@@ -1025,27 +1467,62 @@ impl Transaction for NFTokenBurn<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct NFTokenCancelOffer<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::nftoken_cancel_offer")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the NFTokenCancelOffer model.
     ///
@@ -1099,27 +1576,62 @@ impl NFTokenCancelOfferError for NFTokenCancelOffer<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct NFTokenCreateOffer<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::nftoken_create_offer")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<NFTokenCreateOfferFlag>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the NFTokenCreateOffer model.
     ///
@@ -1137,6 +1649,10 @@ impl Model for NFTokenCreateOffer<'static> {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenCreateOffer` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
+        if self.amount.is_xrp() {
+            transaction_json["Amount"] =
+                Value::from(self.amount.get_value_as_u32().to_string().as_str());
+        }
         transaction_json
     }
 
@@ -1173,7 +1689,7 @@ impl Transaction for NFTokenCreateOffer<'static> {
         flags_int
     }
 
-    fn has_flag(&self, flag: Flag) -> bool {
+    fn has_flag(&self, flag: &Flag) -> bool {
         let mut has_flag = false;
         if self.iter_to_int() > 0 {
             match flag {
@@ -1204,7 +1720,7 @@ impl Transaction for NFTokenCreateOffer<'static> {
 
 impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
     fn get_amount_error(&self) -> Result<(), NFTokenCreateOfferException> {
-        match !self.has_flag(Flag::NFTokenCreateOffer(
+        match !self.has_flag(&Flag::NFTokenCreateOffer(
             NFTokenCreateOfferFlag::TfSellOffer,
         )) && self.amount.get_value_as_u32() == 0
         {
@@ -1225,7 +1741,7 @@ impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
 
     fn get_owner_error(&self) -> Result<(), NFTokenCreateOfferException> {
         match self.owner {
-            Some(owner) => match self.has_flag(Flag::NFTokenCreateOffer(
+            Some(owner) => match self.has_flag(&Flag::NFTokenCreateOffer(
                 NFTokenCreateOfferFlag::TfSellOffer,
             )) {
                 true => Err(NFTokenCreateOfferException::InvalidOwnerMustNotBeSetForSellOffer),
@@ -1234,7 +1750,7 @@ impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
                     false => Ok(()),
                 },
             },
-            None => match !self.has_flag(Flag::NFTokenCreateOffer(
+            None => match !self.has_flag(&Flag::NFTokenCreateOffer(
                 NFTokenCreateOfferFlag::TfSellOffer,
             )) {
                 true => Err(NFTokenCreateOfferException::InvalidOwnerMustBeSetForBuyOffer),
@@ -1253,27 +1769,62 @@ impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct NFTokenMint<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::nftoken_mint")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<NFTokenMintFlag>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the NFTokenMint model.
     ///
@@ -1329,7 +1880,7 @@ impl Transaction for NFTokenMint<'static> {
         flags_int
     }
 
-    fn has_flag(&self, flag: Flag) -> bool {
+    fn has_flag(&self, flag: &Flag) -> bool {
         let mut has_flag = false;
         if self.iter_to_int() > 0 {
             match flag {
@@ -1432,27 +1983,62 @@ impl NFTokenMintError for NFTokenMint<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct OfferCancel<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::offer_cancel")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the OfferCancel model.
     ///
@@ -1484,27 +2070,62 @@ impl Transaction for OfferCancel<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct OfferCreate<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::offer_create")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<OfferCreateFlag>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the OfferCreate model.
     ///
@@ -1521,6 +2142,14 @@ impl Model for OfferCreate<'static> {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `OfferCreate` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
+        if self.taker_gets.is_xrp() {
+            transaction_json["TakerGets"] =
+                Value::from(self.taker_gets.get_value_as_u32().to_string().as_str());
+        }
+        if self.taker_pays.is_xrp() {
+            transaction_json["TakerPays"] =
+                Value::from(self.taker_pays.get_value_as_u32().to_string().as_str());
+        }
         transaction_json
     }
 }
@@ -1541,7 +2170,7 @@ impl Transaction for OfferCreate<'static> {
         flags_int
     }
 
-    fn has_flag(&self, flag: Flag) -> bool {
+    fn has_flag(&self, flag: &Flag) -> bool {
         let mut has_flag = false;
         if self.iter_to_int() > 0 {
             match flag {
@@ -1606,27 +2235,62 @@ impl Transaction for OfferCreate<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct Payment<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::payment")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<PaymentFlag>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the Payment model.
     ///
@@ -1646,19 +2310,40 @@ impl Model for Payment<'static> {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `Payment` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
+        if self.amount.is_xrp() {
+            transaction_json["Amount"] =
+                Value::from(self.amount.get_value_as_u32().to_string().as_str());
+        }
+        if let Some(send_max) = &self.send_max {
+            if send_max.is_xrp() {
+                transaction_json["SendMax"] =
+                    Value::from(send_max.get_value_as_u32().to_string().as_str());
+            }
+        }
+        if let Some(deliver_min) = &self.deliver_min {
+            if deliver_min.is_xrp() {
+                transaction_json["DeliverMin"] =
+                    Value::from(deliver_min.get_value_as_u32().to_string().as_str());
+            }
+        }
         transaction_json
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_partial_payment_error() {
+        match self.get_xrp_transaction_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::PaymentError(error),
             )),
-            Ok(_no_error) => match self.get_xrp_transaction_error() {
+            Ok(_no_error) => match self.get_partial_payment_error() {
                 Err(error) => Err(XRPLModelException::XRPLTransactionError(
                     XRPLTransactionException::PaymentError(error),
                 )),
-                Ok(_no_error) => Ok(()),
+                Ok(_no_error) => match self.get_exchange_error() {
+                    Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                        XRPLTransactionException::PaymentError(error),
+                    )),
+                    Ok(_no_error) => Ok(()),
+                },
             },
         }
     }
@@ -1679,7 +2364,7 @@ impl Transaction for Payment<'static> {
         flags_int
     }
 
-    fn has_flag(&self, flag: Flag) -> bool {
+    fn has_flag(&self, flag: &Flag) -> bool {
         let mut has_flag = false;
         if self.iter_to_int() > 0 {
             match flag {
@@ -1728,32 +2413,23 @@ impl Transaction for Payment<'static> {
 
 impl PaymentError for Payment<'static> {
     fn get_xrp_transaction_error(&self) -> Result<(), PaymentException> {
-        match self.account == self.destination {
-            true => match self.send_max.as_ref() {
-                Some(send_max) => match send_max.is_xrp() && self.amount.is_xrp() {
+        match self.amount.is_xrp() && self.send_max.is_none() {
+            true => match self.paths.is_some() {
+                true => Err(PaymentException::InvalidXRPtoXRPPaymentsCannotContainPaths),
+                false => match self.account == self.destination {
                     true => Err(
                         PaymentException::InvalidDestinationMustNotEqualAccountForXRPtoXRPPayments,
                     ),
                     false => Ok(()),
                 },
-                None => Err(PaymentException::InvalidSendMaxMustBeSetForExchanges),
             },
-            false => match self.send_max.as_ref() {
-                Some(send_max) => match send_max.is_xrp() && self.amount.is_xrp() {
-                    true => match self.paths.as_ref().is_some() {
-                        true => Err(PaymentException::InvalidXRPtoXRPPaymentsCannotContainPaths),
-                        false => Ok(()),
-                    },
-                    false => Ok(()),
-                },
-                None => Ok(()),
-            },
+            false => Ok(()),
         }
     }
 
     fn get_partial_payment_error(&self) -> Result<(), PaymentException> {
         match self.send_max.as_ref() {
-            Some(send_max) => match !self.has_flag(Flag::Payment(PaymentFlag::TfPartialPayment)) {
+            Some(send_max) => match !self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment)) {
                 true => match send_max.is_xrp() && self.amount.is_xrp() {
                     true => Err(
                         PaymentException::InvalidSendMaxMustNotBeSetForXRPtoXRPNonPartialPayments,
@@ -1762,7 +2438,7 @@ impl PaymentError for Payment<'static> {
                 },
                 false => Ok(()),
             },
-            None => match self.has_flag(Flag::Payment(PaymentFlag::TfPartialPayment)) {
+            None => match self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment)) {
                 true => Err(PaymentException::InvalidSendMaxMustBeSetForPartialPayments),
                 false => match self.deliver_min.as_ref() {
                     Some(_deliver_min) => {
@@ -1771,6 +2447,16 @@ impl PaymentError for Payment<'static> {
                     None => Ok(()),
                 },
             },
+        }
+    }
+
+    fn get_exchange_error(&self) -> Result<(), PaymentException> {
+        match self.account == self.destination {
+            true => match self.send_max.as_ref() {
+                Some(_send_max) => Ok(()),
+                None => Err(PaymentException::InvalidSendMaxMustBeSetForExchanges),
+            },
+            false => Ok(()),
         }
     }
 }
@@ -1784,27 +2470,62 @@ impl PaymentError for Payment<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct PaymentChannelClaim<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::payment_channel_claim")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<PaymentChannelClaimFlag>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the PaymentChannelClaim model.
     ///
@@ -1840,7 +2561,7 @@ impl Transaction for PaymentChannelClaim<'static> {
         flags_int
     }
 
-    fn has_flag(&self, flag: Flag) -> bool {
+    fn has_flag(&self, flag: &Flag) -> bool {
         let mut has_flag = false;
         if self.iter_to_int() > 0 {
             match flag {
@@ -1887,27 +2608,62 @@ impl Transaction for PaymentChannelClaim<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct PaymentChannelCreate<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::payment_channel_create")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the PaymentChannelCreate model.
     ///
@@ -1926,6 +2682,10 @@ impl Model for PaymentChannelCreate<'static> {
         let mut transaction_json = serde_json::to_value(&self)
             .expect("Unable to serialize `PaymentChannelCreate` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
+        if self.amount.is_xrp() {
+            transaction_json["Amount"] =
+                Value::from(self.amount.get_value_as_u32().to_string().as_str());
+        }
         transaction_json
     }
 }
@@ -1945,27 +2705,62 @@ impl Transaction for PaymentChannelCreate<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct PaymentChannelFund<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::payment_channel_fund")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the PaymentChannelFund model.
     ///
@@ -2003,27 +2798,62 @@ impl Transaction for PaymentChannelFund<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct SetRegularKey<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::set_regular_key")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the SetRegularKey model.
     ///
@@ -2058,27 +2888,62 @@ impl Transaction for SetRegularKey<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct SignerListSet<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
-    #[serde(default = "TransactionType::ticket_create")]
+    #[serde(default = "TransactionType::signer_list_set")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the TicketCreate model.
     ///
@@ -2145,7 +3010,17 @@ impl SignerListSetError for SignerListSet<'static> {
             }
         }
         accounts.sort_unstable();
-        accounts.dedup();
+        let mut check_account = Vec::new();
+        for account in accounts.clone() {
+            match &check_account.contains(&account) {
+                true => {
+                    return Err(
+                        SignerListSetException::InvalidAnAccountCanNotBeInSignerEntriesTwice,
+                    )
+                }
+                false => check_account.push(account),
+            }
+        }
         match self.signer_entries.as_ref() {
             Some(_signer_entries) => match accounts.contains(&self.account) {
                 true => Err(SignerListSetException::InvalidAccountMustNotBeInSignerEntry),
@@ -2170,27 +3045,62 @@ impl SignerListSetError for SignerListSet<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct TicketCreate<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::ticket_create")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the TicketCreate model.
     ///
@@ -2222,27 +3132,62 @@ impl Transaction for TicketCreate<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct TrustSet<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::trust_set")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
     last_ledger_sequence: Option<u32>,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
     account_txn_id: Option<&'a str>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
     ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<TrustSetFlag>>,
+    /// Additional arbitrary information used to identify this transaction.
     memos: Option<Vec<Memo<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     signers: Option<Vec<Signer<'a>>>,
     /// The custom fields for the TrustSet model.
     ///
@@ -2258,6 +3203,10 @@ impl Model for TrustSet<'static> {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `TrustSet` to json.");
         transaction_json["Flags"] = Value::from(self.iter_to_int());
+        if self.limit_amount.is_xrp() {
+            transaction_json["LimitAmount"] =
+                Value::from(self.limit_amount.get_value_as_u32().to_string().as_str());
+        }
         transaction_json
     }
 }
@@ -2279,7 +3228,7 @@ impl Transaction for TrustSet<'static> {
         flags_int
     }
 
-    fn has_flag(&self, flag: Flag) -> bool {
+    fn has_flag(&self, flag: &Flag) -> bool {
         let mut has_flag = false;
         if self.iter_to_int() > 0 {
             match flag {
@@ -2354,22 +3303,42 @@ impl Transaction for TrustSet<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct EnableAmendment<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::enable_amendment")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<EnableAmendmentFlag>>,
     /// The custom fields for the EnableAmendment model.
     ///
@@ -2402,7 +3371,7 @@ impl Transaction for EnableAmendment<'static> {
         flags_int
     }
 
-    fn has_flag(&self, flag: Flag) -> bool {
+    fn has_flag(&self, flag: &Flag) -> bool {
         let mut has_flag = false;
         if self.iter_to_int() > 0 {
             match flag {
@@ -2445,22 +3414,42 @@ impl Transaction for EnableAmendment<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct SetFee<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::set_fee")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
     /// The custom fields for the SetFee model.
     ///
@@ -2494,23 +3483,43 @@ impl Transaction for SetFee<'static> {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct UNLModify<'a> {
-    /// The base fields for all transaction models.
-    ///
-    /// See Transaction Types:
-    /// `<https://xrpl.org/transaction-types.html>`
-    ///
-    /// See Transaction Common Fields:
-    /// `<https://xrpl.org/transaction-common-fields.html>`
+    // The base fields for all transaction models.
+    //
+    // See Transaction Types:
+    // `<https://xrpl.org/transaction-types.html>`
+    //
+    // See Transaction Common Fields:
+    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The type of transaction.
     #[serde(skip_serializing)]
     #[serde(default = "TransactionType::unl_modify")]
     transaction_type: TransactionType,
+    /// The unique address of the account that initiated the transaction.
     #[serde(default = "default_account_zero")]
     account: &'a str,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
     fee: Option<&'a str>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
     sequence: Option<u32>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
     signing_pub_key: Option<&'a str>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
     source_tag: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
     txn_signature: Option<&'a str>,
+    /// Set of bit-flags for this transaction.
     flags: Option<Vec<u32>>,
     /// The custom fields for the UNLModify model.
     ///
@@ -2562,7 +3571,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_to_json_error() {
+    fn test_to_json() {
         let sequence: u32 = 1;
         let last_ledger_sequence: u32 = 72779837;
         let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
@@ -2595,13 +3604,13 @@ mod test {
             offer_sequence: None,
         };
         let actual = offer_create.to_json_value();
-        let json = r#"{"Account":"rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe","Fee":"10","Sequence":1,"LastLedgerSequence":72779837,"Flags":131072,"TakerGets":{"value":"1000000","currency":"XRP"},"TakerPays":{"value":"0.3","currency":"USD","issuer":"rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"}}"#;
+        let json = r#"{"Account":"rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe","Fee":"10","Sequence":1,"LastLedgerSequence":72779837,"Flags":131072,"TakerGets":"1000000","TakerPays":{"value":"0.3","currency":"USD","issuer":"rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"}}"#;
         let expect: Value = serde_json::from_str(json).unwrap();
         assert_eq!(actual, expect)
     }
 
     #[test]
-    fn test_has_flag_error() {
+    fn test_has_flag() {
         let sequence: u32 = 1;
         let last_ledger_sequence: u32 = 72779837;
         let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
@@ -2633,11 +3642,12 @@ mod test {
             expiration: None,
             offer_sequence: None,
         };
-        assert!(offer_create.has_flag(Flag::OfferCreate(OfferCreateFlag::TfImmediateOrCancel)))
+        assert!(offer_create.has_flag(&Flag::OfferCreate(OfferCreateFlag::TfImmediateOrCancel)));
+        assert!(!offer_create.has_flag(&Flag::OfferCreate(OfferCreateFlag::TfPassive)));
     }
 
     #[test]
-    fn test_get_transaction_type_error() {
+    fn test_get_transaction_type() {
         let sequence: u32 = 1;
         let last_ledger_sequence: u32 = 72779837;
         let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
@@ -2715,10 +3725,7 @@ mod test_account_set_errors {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::AccountSetError(
                 AccountSetException::InvalidTickSizeTooLow { min: 3, found: 2 },
             ));
-        match account_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(account_set.validate(), Err(expected_error));
 
         let tick_size_too_high = Some(16);
         account_set.tick_size = tick_size_too_high;
@@ -2726,10 +3733,7 @@ mod test_account_set_errors {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::AccountSetError(
                 AccountSetException::InvalidTickSizeTooHigh { max: 15, found: 16 },
             ));
-        match account_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(account_set.validate(), Err(expected_error));
     }
 
     #[test]
@@ -2766,10 +3770,7 @@ mod test_account_set_errors {
                     found: 999999999,
                 },
             ));
-        match account_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(account_set.validate(), Err(expected_error));
 
         let tick_size_too_high = Some(2000000001);
         account_set.transfer_rate = tick_size_too_high;
@@ -2780,10 +3781,7 @@ mod test_account_set_errors {
                     found: 2000000001,
                 },
             ));
-        match account_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(account_set.validate(), Err(expected_error));
     }
 
     #[test]
@@ -2817,10 +3815,7 @@ mod test_account_set_errors {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::AccountSetError(
                 AccountSetException::InvalidDomainIsNotLowercase,
             ));
-        match account_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(account_set.validate(), Err(expected_error));
 
         let domain_too_long = Some("https://example.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         account_set.domain = domain_too_long;
@@ -2830,10 +3825,7 @@ mod test_account_set_errors {
                 found: 270,
             }),
         );
-        match account_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(account_set.validate(), Err(expected_error));
     }
 
     #[test]
@@ -2865,10 +3857,7 @@ mod test_account_set_errors {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::AccountSetError(
                 AccountSetException::InvalidClearFlagMustNotEqualSetFlag,
             ));
-        match account_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(account_set.validate(), Err(expected_error));
     }
 
     #[test]
@@ -2901,33 +3890,24 @@ mod test_account_set_errors {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::AccountSetError(
                 AccountSetException::InvalidMustSetAsfAuthorizedNftokenMinterFlagToSetMinter,
             ));
-        match account_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
-        account_set.nftoken_minter = None;
+        assert_eq!(account_set.validate(), Err(expected_error));
 
+        account_set.nftoken_minter = None;
         account_set.set_flag = Some(AccountSetFlag::AsfAuthorizedNFTokenMinter);
         let expected_error =
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::AccountSetError(
                 AccountSetException::InvalidNftokenMinterMustBeSetIfAsfAuthorizedNftokenMinterIsSet,
             ));
-        match account_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
-        account_set.set_flag = None;
+        assert_eq!(account_set.validate(), Err(expected_error));
 
+        account_set.set_flag = None;
         account_set.nftoken_minter = Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK");
         account_set.clear_flag = Some(AccountSetFlag::AsfAuthorizedNFTokenMinter);
         let expected_error =
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::AccountSetError(
                 AccountSetException::InvalidNftokenMinterMustNotBeSetIfAsfAuthorizedNftokenMinterIsUnset,
             ));
-        match account_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(account_set.validate(), Err(expected_error));
     }
 }
 
@@ -2966,10 +3946,7 @@ mod test_check_cash_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::CheckCashError(
                 CheckCashException::InvalidMustSetAmountOrDeliverMin,
             ));
-        match check_cash.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(check_cash.validate(), Err(expected_error));
 
         check_cash.amount = Some(Currency::Xrp {
             value: Some(Cow::Borrowed("1000000")),
@@ -2983,10 +3960,7 @@ mod test_check_cash_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::CheckCashError(
                 CheckCashException::InvalidMustNotSetAmountAndDeliverMin,
             ));
-        match check_cash.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(check_cash.validate(), Err(expected_error));
     }
 }
 
@@ -3023,10 +3997,7 @@ mod test_deposit_preauth_exception {
                 DepositPreauthException::InvalidMustSetAuthorizeOrUnauthorize,
             ),
         );
-        match deposit_preauth.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(deposit_preauth.validate(), Err(expected_error));
 
         deposit_preauth.authorize = Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK");
         deposit_preauth.unauthorize = Some("raQwCVAJVqjrVm1Nj5SFRcX8i22BhdC9WA");
@@ -3035,10 +4006,7 @@ mod test_deposit_preauth_exception {
                 DepositPreauthException::InvalidMustNotSetAuthorizeAndUnauthorize,
             ),
         );
-        match deposit_preauth.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(deposit_preauth.validate(), Err(expected_error));
     }
 }
 
@@ -3083,10 +4051,7 @@ mod test_escrow_create_errors {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::EscrowCreateError(
                 EscrowCreateException::InvalidCancelAfterMustNotBeBeforeFinishAfter,
             ));
-        match escrow_create.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(escrow_create.validate(), Err(expected_error));
     }
 }
 
@@ -3126,10 +4091,7 @@ mod test_escrow_finish_errors {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::EscrowFinishError(
                 EscrowFinishException::InvalidIfOneSetBothConditionAndFulfillmentMustBeSet,
             ));
-        match escrow_finish.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(escrow_finish.validate(), Err(expected_error));
     }
 }
 
@@ -3172,10 +4134,7 @@ mod test_nftoken_accept_offer_error {
                 NFTokenAcceptOfferException::InvalidMustSetEitherNftokenBuyOfferOrNftokenSellOffer,
             ),
         );
-        match nftoken_accept_offer.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_accept_offer.validate(), Err(expected_error));
     }
 
     #[test]
@@ -3206,10 +4165,7 @@ mod test_nftoken_accept_offer_error {
                 NFTokenAcceptOfferException::InvalidBrokerFeeMustBeGreaterZero,
             ),
         );
-        match nftoken_accept_offer.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_accept_offer.validate(), Err(expected_error));
     }
 }
 
@@ -3247,10 +4203,7 @@ mod test_nftoken_cancel_offer_error {
                 NFTokenCancelOfferException::InvalidMustIncludeOneNFTokenOffer,
             ),
         );
-        match nftoken_cancel_offer.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_cancel_offer.validate(), Err(expected_error));
     }
 }
 
@@ -3295,10 +4248,7 @@ mod test_nftoken_create_offer_error {
                 NFTokenCreateOfferException::InvalidAmountMustBeGreaterZero,
             ),
         );
-        match nftoken_create_offer.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
     }
 
     #[test]
@@ -3331,10 +4281,7 @@ mod test_nftoken_create_offer_error {
                 NFTokenCreateOfferException::InvalidDestinationMustNotEqualAccount,
             ),
         );
-        match nftoken_create_offer.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
     }
 
     #[test]
@@ -3369,10 +4316,7 @@ mod test_nftoken_create_offer_error {
                 NFTokenCreateOfferException::InvalidOwnerMustNotBeSetForSellOffer,
             ),
         );
-        match nftoken_create_offer.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
 
         nftoken_create_offer.flags = None;
         nftoken_create_offer.owner = None;
@@ -3381,10 +4325,7 @@ mod test_nftoken_create_offer_error {
                 NFTokenCreateOfferException::InvalidOwnerMustBeSetForBuyOffer,
             ),
         );
-        match nftoken_create_offer.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
 
         nftoken_create_offer.owner = Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb");
         let expected_error = XRPLModelException::XRPLTransactionError(
@@ -3392,10 +4333,7 @@ mod test_nftoken_create_offer_error {
                 NFTokenCreateOfferException::InvalidOwnerMustNotEqualAccount,
             ),
         );
-        match nftoken_create_offer.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
     }
 }
 
@@ -3433,10 +4371,7 @@ mod test_nftoken_mint_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::NFTokenMintError(
                 NFTokenMintException::InvalidIssuerMustNotEqualAccount,
             ));
-        match nftoken_mint.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_mint.validate(), Err(expected_error));
     }
 
     #[test]
@@ -3467,10 +4402,7 @@ mod test_nftoken_mint_error {
                     found: 50001,
                 },
             ));
-        match nftoken_mint.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_mint.validate(), Err(expected_error));
     }
 
     #[test]
@@ -3500,10 +4432,7 @@ mod test_nftoken_mint_error {
                 found: 513,
             }),
         );
-        match nftoken_mint.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(nftoken_mint.validate(), Err(expected_error));
     }
 }
 
@@ -3538,53 +4467,43 @@ mod test_payment_error {
                 value: Some(Cow::Borrowed("1000000")),
                 currency: Cow::Borrowed("XRP"),
             },
-            destination: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
+            destination: "rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK",
             destination_tag: None,
             invoice_id: None,
-            paths: None,
+            paths: Some(vec![vec![PathStep {
+                account: Some("rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"),
+                currency: None,
+                issuer: None,
+                r#type: None,
+                type_hex: None,
+            }]]),
             send_max: None,
             deliver_min: None,
         };
-        payment.destination = "rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK";
-        payment.paths = Some(vec![vec![PathStep {
-            account: Some("rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"),
-            currency: None,
-            issuer: None,
-            r#type: None,
-            type_hex: None,
-        }]]);
         let expected_error =
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
                 PaymentException::InvalidXRPtoXRPPaymentsCannotContainPaths,
             ));
-        match payment.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(payment.validate(), Err(expected_error));
 
         payment.paths = None;
         payment.send_max = Some(Currency::Xrp {
-            value: Some(Cow::Borrowed("900000")),
+            value: Some(Cow::Borrowed("99999")),
             currency: Cow::Borrowed("XRP"),
         });
         let expected_error =
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
                 PaymentException::InvalidSendMaxMustNotBeSetForXRPtoXRPNonPartialPayments,
             ));
-        match payment.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(payment.validate(), Err(expected_error));
 
-        payment.flags = Some(vec![PaymentFlag::TfPartialPayment]);
+        payment.send_max = None;
+        payment.destination = "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb";
         let expected_error =
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
                 PaymentException::InvalidDestinationMustNotEqualAccountForXRPtoXRPPayments,
             ));
-        match payment.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(payment.validate(), Err(expected_error));
     }
 
     #[test]
@@ -3619,10 +4538,7 @@ mod test_payment_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
                 PaymentException::InvalidSendMaxMustBeSetForPartialPayments,
             ));
-        match payment.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(payment.validate(), Err(expected_error));
 
         payment.flags = None;
         payment.deliver_min = Some(Currency::Xrp {
@@ -3633,10 +4549,7 @@ mod test_payment_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
                 PaymentException::InvalidDeliverMinMustNotBeSetForNonPartialPayments,
             ));
-        match payment.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(payment.validate(), Err(expected_error));
     }
 
     #[test]
@@ -3655,9 +4568,10 @@ mod test_payment_error {
             flags: None,
             memos: None,
             signers: None,
-            amount: Currency::Xrp {
-                value: Some(Cow::Borrowed("1000000")),
-                currency: Cow::Borrowed("XRP"),
+            amount: Currency::IssuedCurrency {
+                value: Some(Cow::Borrowed("10")),
+                currency: Cow::Borrowed("USD"),
+                issuer: Cow::Borrowed("rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"),
             },
             destination: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             destination_tag: None,
@@ -3670,10 +4584,7 @@ mod test_payment_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::PaymentError(
                 PaymentException::InvalidSendMaxMustBeSetForExchanges,
             ));
-        match payment.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(payment.validate(), Err(expected_error));
     }
 }
 
@@ -3714,10 +4625,7 @@ mod test_signer_list_set_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
                 SignerListSetException::InvalidMustNotSetSignerEntriesIfSignerListIsBeingDeleted,
             ));
-        match signer_list_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(signer_list_set.validate(), Err(expected_error));
 
         signer_list_set.signer_quorum = 3;
         signer_list_set.signer_entries = None;
@@ -3725,10 +4633,7 @@ mod test_signer_list_set_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
                 SignerListSetException::InvalidSignerQuorumMustBeZeroIfSignerListIsBeingDeleted,
             ));
-        match signer_list_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(signer_list_set.validate(), Err(expected_error));
     }
 
     #[test]
@@ -3754,10 +4659,7 @@ mod test_signer_list_set_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
                 SignerListSetException::InvalidTooFewSignerEntries { min: 1, found: 0 },
             ));
-        match signer_list_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(signer_list_set.validate(), Err(expected_error));
 
         signer_list_set.signer_entries = Some(vec![
             SignerEntry {
@@ -3801,18 +4703,11 @@ mod test_signer_list_set_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
                 SignerListSetException::InvalidTooManySignerEntries { max: 8, found: 9 },
             ));
-        match signer_list_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(signer_list_set.validate(), Err(expected_error));
 
         signer_list_set.signer_entries = Some(vec![
             SignerEntry {
                 account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
-                signer_weight: 1,
-            },
-            SignerEntry {
-                account: "rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v",
                 signer_weight: 1,
             },
             SignerEntry {
@@ -3828,10 +4723,7 @@ mod test_signer_list_set_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
                 SignerListSetException::InvalidAccountMustNotBeInSignerEntry,
             ));
-        match signer_list_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(signer_list_set.validate(), Err(expected_error));
 
         signer_list_set.signer_entries = Some(vec![SignerEntry {
             account: "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
@@ -3842,10 +4734,7 @@ mod test_signer_list_set_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
                 SignerListSetException::InvalidMustBeLessOrEqualToSumOfSignerWeightInSignerEntries { max: 3, found: 10 },
             ));
-        match signer_list_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(signer_list_set.validate(), Err(expected_error));
 
         signer_list_set.signer_entries = Some(vec![
             SignerEntry {
@@ -3862,10 +4751,7 @@ mod test_signer_list_set_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::SignerListSetError(
                 SignerListSetException::InvalidAnAccountCanNotBeInSignerEntriesTwice,
             ));
-        match signer_list_set.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(signer_list_set.validate(), Err(expected_error));
     }
 }
 
@@ -3898,9 +4784,6 @@ mod test_unl_modify_error {
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::UNLModifyError(
                 UNLModifyException::InvalidUNLModifyDisablingMustBeOneOrTwo,
             ));
-        match unl_modify.validate() {
-            Ok(_no_error) => (),
-            Err(error) => assert_eq!(error, expected_error),
-        };
+        assert_eq!(unl_modify.validate(), Err(expected_error));
     }
 }
