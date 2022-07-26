@@ -231,23 +231,23 @@ impl Model for AccountSet<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_tick_size_error() {
+        match self._get_tick_size_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::AccountSetError(error),
             )),
-            Ok(_no_error) => match self.get_transfer_rate_error() {
+            Ok(_no_error) => match self._get_transfer_rate_error() {
                 Err(error) => Err(XRPLModelException::XRPLTransactionError(
                     XRPLTransactionException::AccountSetError(error),
                 )),
-                Ok(_no_error) => match self.get_domain_error() {
+                Ok(_no_error) => match self._get_domain_error() {
                     Err(error) => Err(XRPLModelException::XRPLTransactionError(
                         XRPLTransactionException::AccountSetError(error),
                     )),
-                    Ok(_no_error) => match self.get_clear_flag_error() {
+                    Ok(_no_error) => match self._get_clear_flag_error() {
                         Err(error) => Err(XRPLModelException::XRPLTransactionError(
                             XRPLTransactionException::AccountSetError(error),
                         )),
-                        Ok(_no_error) => match self.get_nftoken_minter_error() {
+                        Ok(_no_error) => match self._get_nftoken_minter_error() {
                             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                                 XRPLTransactionException::AccountSetError(error),
                             )),
@@ -413,7 +413,7 @@ impl Transaction for AccountSet<'static> {
 }
 
 impl AccountSetError for AccountSet<'static> {
-    fn get_tick_size_error(&self) -> Result<(), AccountSetException> {
+    fn _get_tick_size_error(&self) -> Result<(), AccountSetException> {
         match self.tick_size {
             Some(tick_size) => match tick_size > MAX_TICK_SIZE {
                 true => Err(AccountSetException::InvalidTickSizeTooHigh {
@@ -432,7 +432,7 @@ impl AccountSetError for AccountSet<'static> {
         }
     }
 
-    fn get_transfer_rate_error(&self) -> Result<(), AccountSetException> {
+    fn _get_transfer_rate_error(&self) -> Result<(), AccountSetException> {
         match self.transfer_rate {
             Some(transfer_rate) => match transfer_rate > MAX_TRANSFER_RATE {
                 true => Err(AccountSetException::InvalidTransferRateTooHigh {
@@ -453,7 +453,7 @@ impl AccountSetError for AccountSet<'static> {
         }
     }
 
-    fn get_domain_error(&self) -> Result<(), AccountSetException> {
+    fn _get_domain_error(&self) -> Result<(), AccountSetException> {
         match self.domain {
             Some(domain) => match domain.to_lowercase().as_str() != domain {
                 true => Err(AccountSetException::InvalidDomainIsNotLowercase),
@@ -469,7 +469,7 @@ impl AccountSetError for AccountSet<'static> {
         }
     }
 
-    fn get_clear_flag_error(&self) -> Result<(), AccountSetException> {
+    fn _get_clear_flag_error(&self) -> Result<(), AccountSetException> {
         match self.clear_flag.as_ref() {
             Some(_clear_flag) => match self.clear_flag == self.set_flag {
                 true => Err(AccountSetException::InvalidClearFlagMustNotEqualSetFlag),
@@ -479,7 +479,7 @@ impl AccountSetError for AccountSet<'static> {
         }
     }
 
-    fn get_nftoken_minter_error(&self) -> Result<(), AccountSetException> {
+    fn _get_nftoken_minter_error(&self) -> Result<(), AccountSetException> {
         match self.nftoken_minter {
             Some(_nftoken_minter) => match self.set_flag.as_ref() {
                 Some(_set_flag) => Ok(()),
@@ -687,7 +687,7 @@ impl Model for CheckCash<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_amount_and_deliver_min_error() {
+        match self._get_amount_and_deliver_min_error() {
             Ok(_no_error) => Ok(()),
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::CheckCashError(error),
@@ -703,7 +703,7 @@ impl Transaction for CheckCash<'static> {
 }
 
 impl CheckCashError for CheckCash<'static> {
-    fn get_amount_and_deliver_min_error(&self) -> Result<(), CheckCashException> {
+    fn _get_amount_and_deliver_min_error(&self) -> Result<(), CheckCashException> {
         match self.amount.is_none() && self.deliver_min.is_none() {
             true => Err(CheckCashException::InvalidMustSetAmountOrDeliverMin),
             false => match self.amount.is_some() && self.deliver_min.is_some() {
@@ -893,7 +893,7 @@ impl Model for DepositPreauth<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_authorize_and_unauthorize_error() {
+        match self._get_authorize_and_unauthorize_error() {
             Ok(_no_error) => Ok(()),
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::DepositPreauthError(error),
@@ -909,7 +909,7 @@ impl Transaction for DepositPreauth<'static> {
 }
 
 impl DepositPreauthError for DepositPreauth<'static> {
-    fn get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException> {
+    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException> {
         match self.authorize.is_none() && self.unauthorize.is_none() {
             true => Err(DepositPreauthException::InvalidMustSetAuthorizeOrUnauthorize),
             false => match self.authorize.is_some() && self.unauthorize.is_some() {
@@ -1098,7 +1098,7 @@ impl Model for EscrowCreate<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_finish_after_error() {
+        match self._get_finish_after_error() {
             Ok(_no_error) => Ok(()),
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::EscrowCreateError(error),
@@ -1114,7 +1114,7 @@ impl Transaction for EscrowCreate<'static> {
 }
 
 impl EscrowCreateError for EscrowCreate<'static> {
-    fn get_finish_after_error(&self) -> Result<(), EscrowCreateException> {
+    fn _get_finish_after_error(&self) -> Result<(), EscrowCreateException> {
         match self.finish_after {
             Some(finish_after) => match self.cancel_after {
                 Some(cancel_after) => match finish_after >= cancel_after {
@@ -1214,7 +1214,7 @@ impl Model for EscrowFinish<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_condition_and_fulfillment_error() {
+        match self._get_condition_and_fulfillment_error() {
             Ok(_no_error) => Ok(()),
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::EscrowFinishError(error),
@@ -1230,7 +1230,7 @@ impl Transaction for EscrowFinish<'static> {
 }
 
 impl EscrowFinishError for EscrowFinish<'static> {
-    fn get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishException> {
+    fn _get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishException> {
         match (self.condition.is_some() && self.fulfillment.is_none())
             || (self.condition.is_none() && self.condition.is_some())
         {
@@ -1329,11 +1329,11 @@ impl Model for NFTokenAcceptOffer<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_brokered_mode_error() {
+        match self._get_brokered_mode_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::NFTokenAcceptOfferError(error),
             )),
-            Ok(_no_error) => match self.get_nftoken_broker_fee_error() {
+            Ok(_no_error) => match self._get_nftoken_broker_fee_error() {
                 Err(error) => Err(XRPLModelException::XRPLTransactionError(
                     XRPLTransactionException::NFTokenAcceptOfferError(error),
                 )),
@@ -1350,7 +1350,7 @@ impl Transaction for NFTokenAcceptOffer<'static> {
 }
 
 impl NFTokenAcceptOfferError for NFTokenAcceptOffer<'static> {
-    fn get_brokered_mode_error(&self) -> Result<(), NFTokenAcceptOfferException> {
+    fn _get_brokered_mode_error(&self) -> Result<(), NFTokenAcceptOfferException> {
         match self.nftoken_broker_fee.as_ref() {
             Some(_nftoken_broker_fee) => match self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
                 true => Err(NFTokenAcceptOfferException::InvalidMustSetEitherNftokenBuyOfferOrNftokenSellOffer),
@@ -1359,7 +1359,7 @@ impl NFTokenAcceptOfferError for NFTokenAcceptOffer<'static> {
             None => Ok(()),
         }
     }
-    fn get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException> {
+    fn _get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException> {
         match self.nftoken_broker_fee.as_ref() {
             Some(nftoken_broker_fee) => match nftoken_broker_fee.get_value_as_u32() == 0 {
                 true => Err(NFTokenAcceptOfferException::InvalidBrokerFeeMustBeGreaterZero),
@@ -1542,7 +1542,7 @@ impl Model for NFTokenCancelOffer<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_nftoken_offers_error() {
+        match self._get_nftoken_offers_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::NFTokenCancelOfferError(error),
             )),
@@ -1558,7 +1558,7 @@ impl Transaction for NFTokenCancelOffer<'static> {
 }
 
 impl NFTokenCancelOfferError for NFTokenCancelOffer<'static> {
-    fn get_nftoken_offers_error(&self) -> Result<(), NFTokenCancelOfferException> {
+    fn _get_nftoken_offers_error(&self) -> Result<(), NFTokenCancelOfferException> {
         match self.nftoken_offers.is_empty() {
             true => Err(NFTokenCancelOfferException::InvalidMustIncludeOneNFTokenOffer),
             false => Ok(()),
@@ -1657,15 +1657,15 @@ impl Model for NFTokenCreateOffer<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_amount_error() {
+        match self._get_amount_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::NFTokenCreateOfferError(error),
             )),
-            Ok(_no_error) => match self.get_destination_error() {
+            Ok(_no_error) => match self._get_destination_error() {
                 Err(error) => Err(XRPLModelException::XRPLTransactionError(
                     XRPLTransactionException::NFTokenCreateOfferError(error),
                 )),
-                Ok(_no_error) => match self.get_owner_error() {
+                Ok(_no_error) => match self._get_owner_error() {
                     Err(error) => Err(XRPLModelException::XRPLTransactionError(
                         XRPLTransactionException::NFTokenCreateOfferError(error),
                     )),
@@ -1719,7 +1719,7 @@ impl Transaction for NFTokenCreateOffer<'static> {
 }
 
 impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
-    fn get_amount_error(&self) -> Result<(), NFTokenCreateOfferException> {
+    fn _get_amount_error(&self) -> Result<(), NFTokenCreateOfferException> {
         match !self.has_flag(&Flag::NFTokenCreateOffer(
             NFTokenCreateOfferFlag::TfSellOffer,
         )) && self.amount.get_value_as_u32() == 0
@@ -1729,7 +1729,7 @@ impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
         }
     }
 
-    fn get_destination_error(&self) -> Result<(), NFTokenCreateOfferException> {
+    fn _get_destination_error(&self) -> Result<(), NFTokenCreateOfferException> {
         match self.destination {
             Some(destination) => match destination == self.account {
                 true => Err(NFTokenCreateOfferException::InvalidDestinationMustNotEqualAccount),
@@ -1739,7 +1739,7 @@ impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
         }
     }
 
-    fn get_owner_error(&self) -> Result<(), NFTokenCreateOfferException> {
+    fn _get_owner_error(&self) -> Result<(), NFTokenCreateOfferException> {
         match self.owner {
             Some(owner) => match self.has_flag(&Flag::NFTokenCreateOffer(
                 NFTokenCreateOfferFlag::TfSellOffer,
@@ -1845,15 +1845,15 @@ impl Model for NFTokenMint<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_issuer_error() {
+        match self._get_issuer_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::NFTokenMintError(error),
             )),
-            Ok(_no_error) => match self.get_transfer_fee_error() {
+            Ok(_no_error) => match self._get_transfer_fee_error() {
                 Err(error) => Err(XRPLModelException::XRPLTransactionError(
                     XRPLTransactionException::NFTokenMintError(error),
                 )),
-                Ok(_no_error) => match self.get_uri_error() {
+                Ok(_no_error) => match self._get_uri_error() {
                     Err(error) => Err(XRPLModelException::XRPLTransactionError(
                         XRPLTransactionException::NFTokenMintError(error),
                     )),
@@ -1938,7 +1938,7 @@ impl Transaction for NFTokenMint<'static> {
 }
 
 impl NFTokenMintError for NFTokenMint<'static> {
-    fn get_issuer_error(&self) -> Result<(), NFTokenMintException> {
+    fn _get_issuer_error(&self) -> Result<(), NFTokenMintException> {
         match self.issuer {
             Some(issuer) => match issuer == self.account {
                 true => Err(NFTokenMintException::InvalidIssuerMustNotEqualAccount),
@@ -1948,7 +1948,7 @@ impl NFTokenMintError for NFTokenMint<'static> {
         }
     }
 
-    fn get_transfer_fee_error(&self) -> Result<(), NFTokenMintException> {
+    fn _get_transfer_fee_error(&self) -> Result<(), NFTokenMintException> {
         match self.transfer_fee {
             Some(transfer_fee) => match transfer_fee > MAX_TRANSFER_FEE {
                 true => Err(NFTokenMintException::InvalidTransferFeeTooHigh {
@@ -1961,7 +1961,7 @@ impl NFTokenMintError for NFTokenMint<'static> {
         }
     }
 
-    fn get_uri_error(&self) -> Result<(), NFTokenMintException> {
+    fn _get_uri_error(&self) -> Result<(), NFTokenMintException> {
         match self.uri {
             Some(uri) => match uri.len() > MAX_URI_LENGTH {
                 true => Err(NFTokenMintException::InvalidURITooLong {
@@ -2330,15 +2330,15 @@ impl Model for Payment<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_xrp_transaction_error() {
+        match self._get_xrp_transaction_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::PaymentError(error),
             )),
-            Ok(_no_error) => match self.get_partial_payment_error() {
+            Ok(_no_error) => match self._get_partial_payment_error() {
                 Err(error) => Err(XRPLModelException::XRPLTransactionError(
                     XRPLTransactionException::PaymentError(error),
                 )),
-                Ok(_no_error) => match self.get_exchange_error() {
+                Ok(_no_error) => match self._get_exchange_error() {
                     Err(error) => Err(XRPLModelException::XRPLTransactionError(
                         XRPLTransactionException::PaymentError(error),
                     )),
@@ -2412,7 +2412,7 @@ impl Transaction for Payment<'static> {
 }
 
 impl PaymentError for Payment<'static> {
-    fn get_xrp_transaction_error(&self) -> Result<(), PaymentException> {
+    fn _get_xrp_transaction_error(&self) -> Result<(), PaymentException> {
         match self.amount.is_xrp() && self.send_max.is_none() {
             true => match self.paths.is_some() {
                 true => Err(PaymentException::InvalidXRPtoXRPPaymentsCannotContainPaths),
@@ -2427,7 +2427,7 @@ impl PaymentError for Payment<'static> {
         }
     }
 
-    fn get_partial_payment_error(&self) -> Result<(), PaymentException> {
+    fn _get_partial_payment_error(&self) -> Result<(), PaymentException> {
         match self.send_max.as_ref() {
             Some(send_max) => match !self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment)) {
                 true => match send_max.is_xrp() && self.amount.is_xrp() {
@@ -2450,7 +2450,7 @@ impl PaymentError for Payment<'static> {
         }
     }
 
-    fn get_exchange_error(&self) -> Result<(), PaymentException> {
+    fn _get_exchange_error(&self) -> Result<(), PaymentException> {
         match self.account == self.destination {
             true => match self.send_max.as_ref() {
                 Some(_send_max) => Ok(()),
@@ -2962,11 +2962,11 @@ impl Model for SignerListSet<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_signer_entries_error() {
+        match self._get_signer_entries_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::SignerListSetError(error),
             )),
-            Ok(_no_error) => match self.get_signer_quorum_error() {
+            Ok(_no_error) => match self._get_signer_quorum_error() {
                 Err(error) => Err(XRPLModelException::XRPLTransactionError(
                     XRPLTransactionException::SignerListSetError(error),
                 )),
@@ -2983,7 +2983,7 @@ impl Transaction for SignerListSet<'static> {
 }
 
 impl SignerListSetError for SignerListSet<'static> {
-    fn get_signer_entries_error(&self) -> Result<(), SignerListSetException> {
+    fn _get_signer_entries_error(&self) -> Result<(), SignerListSetException> {
         match self.signer_entries.as_ref() {
             Some(signer_entries) => match self.signer_quorum == 0 {
                 true => Err(SignerListSetException::InvalidMustNotSetSignerEntriesIfSignerListIsBeingDeleted),
@@ -2999,7 +2999,7 @@ impl SignerListSetError for SignerListSet<'static> {
         }
     }
 
-    fn get_signer_quorum_error(&self) -> Result<(), SignerListSetException> {
+    fn _get_signer_quorum_error(&self) -> Result<(), SignerListSetException> {
         let mut accounts = Vec::new();
         let mut signer_weight_sum: u32 = 0;
         if self.signer_entries.is_some() {
@@ -3539,7 +3539,7 @@ impl Model for UNLModify<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_unl_modify_error() {
+        match self._get_unl_modify_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
                 XRPLTransactionException::UNLModifyError(error),
             )),
@@ -3555,7 +3555,7 @@ impl Transaction for UNLModify<'static> {
 }
 
 impl UNLModifyError for UNLModify<'static> {
-    fn get_unl_modify_error(&self) -> Result<(), UNLModifyException> {
+    fn _get_unl_modify_error(&self) -> Result<(), UNLModifyException> {
         let possible_unlmodify_disabling: [u8; 2] = [0, 1];
         match !possible_unlmodify_disabling.contains(&self.unlmodify_disabling) {
             true => Err(UNLModifyException::InvalidUNLModifyDisablingMustBeOneOrTwo),

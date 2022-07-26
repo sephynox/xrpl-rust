@@ -296,7 +296,7 @@ impl Model for ChannelAuthorize<'static> {
     }
 
     fn get_errors(&self) -> Result<(), exceptions::XRPLModelException> {
-        match self.get_field_error() {
+        match self._get_field_error() {
             Err(error) => Err(XRPLModelException::XRPLRequestError(
                 XRPLRequestException::ChannelAuthorizeError(error),
             )),
@@ -306,7 +306,7 @@ impl Model for ChannelAuthorize<'static> {
 }
 
 impl ChannelAuthorizeError for ChannelAuthorize<'static> {
-    fn get_field_error(&self) -> Result<(), ChannelAuthorizeException> {
+    fn _get_field_error(&self) -> Result<(), ChannelAuthorizeException> {
         let mut signing_methods = Vec::new();
         for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {
             if method.is_some() {
@@ -527,7 +527,7 @@ impl Model for LedgerEntry<'static> {
     }
 
     fn get_errors(&self) -> Result<(), exceptions::XRPLModelException> {
-        match self.get_field_error() {
+        match self._get_field_error() {
             Err(error) => Err(XRPLModelException::XRPLRequestError(
                 XRPLRequestException::LedgerEntryError(error),
             )),
@@ -537,7 +537,7 @@ impl Model for LedgerEntry<'static> {
 }
 
 impl LedgerEntryError for LedgerEntry<'static> {
-    fn get_field_error(&self) -> Result<(), LedgerEntryException> {
+    fn _get_field_error(&self) -> Result<(), LedgerEntryException> {
         let mut signing_methods: u32 = 0;
         for method in [self.index, self.account_root, self.check] {
             if method.is_some() {
@@ -887,11 +887,11 @@ impl Model for SignAndSubmit<'static> {
     }
 
     fn get_errors(&self) -> Result<(), exceptions::XRPLModelException> {
-        match self.get_field_error() {
+        match self._get_field_error() {
             Err(error) => Err(XRPLModelException::XRPLRequestError(
                 XRPLRequestException::SignAndSubmitError(error),
             )),
-            Ok(_no_error) => match self.get_key_type_error() {
+            Ok(_no_error) => match self._get_key_type_error() {
                 Err(error) => Err(XRPLModelException::XRPLRequestError(
                     XRPLRequestException::SignAndSubmitError(error),
                 )),
@@ -902,7 +902,7 @@ impl Model for SignAndSubmit<'static> {
 }
 
 impl SignAndSubmitError for SignAndSubmit<'static> {
-    fn get_field_error(&self) -> Result<(), SignAndSubmitException> {
+    fn _get_field_error(&self) -> Result<(), SignAndSubmitException> {
         let mut signing_methods = Vec::new();
         for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {
             if method.is_some() {
@@ -917,7 +917,7 @@ impl SignAndSubmitError for SignAndSubmit<'static> {
         }
     }
 
-    fn get_key_type_error(&self) -> Result<(), SignAndSubmitException> {
+    fn _get_key_type_error(&self) -> Result<(), SignAndSubmitException> {
         match self.secret.is_some() && self.key_type.is_some() {
             true => Err(SignAndSubmitException::InvalidMustOmitKeyTypeIfSecretProvided),
             false => Ok(()),
@@ -1002,11 +1002,11 @@ impl Model for SignFor<'static> {
     }
 
     fn get_errors(&self) -> Result<(), exceptions::XRPLModelException> {
-        match self.get_field_error() {
+        match self._get_field_error() {
             Err(error) => Err(XRPLModelException::XRPLRequestError(
                 XRPLRequestException::SignForError(error),
             )),
-            Ok(_no_error) => match self.get_key_type_error() {
+            Ok(_no_error) => match self._get_key_type_error() {
                 Err(error) => Err(XRPLModelException::XRPLRequestError(
                     XRPLRequestException::SignForError(error),
                 )),
@@ -1017,7 +1017,7 @@ impl Model for SignFor<'static> {
 }
 
 impl SignForError for SignFor<'static> {
-    fn get_field_error(&self) -> Result<(), SignForException> {
+    fn _get_field_error(&self) -> Result<(), SignForException> {
         let mut signing_methods = Vec::new();
         for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {
             if method.is_some() {
@@ -1032,7 +1032,7 @@ impl SignForError for SignFor<'static> {
         }
     }
 
-    fn get_key_type_error(&self) -> Result<(), SignForException> {
+    fn _get_key_type_error(&self) -> Result<(), SignForException> {
         match self.secret.is_some() && self.key_type.is_some() {
             true => Err(SignForException::InvalidMustOmitKeyTypeIfSecretProvided),
             false => Ok(()),
@@ -1085,11 +1085,11 @@ impl Model for Sign<'static> {
     }
 
     fn get_errors(&self) -> Result<(), XRPLModelException> {
-        match self.get_field_error() {
+        match self._get_field_error() {
             Err(error) => Err(XRPLModelException::XRPLRequestError(
                 XRPLRequestException::SignError(error),
             )),
-            Ok(_no_error) => match self.get_key_type_error() {
+            Ok(_no_error) => match self._get_key_type_error() {
                 Err(error) => Err(XRPLModelException::XRPLRequestError(
                     XRPLRequestException::SignError(error),
                 )),
@@ -1100,7 +1100,7 @@ impl Model for Sign<'static> {
 }
 
 impl SignError for Sign<'static> {
-    fn get_field_error(&self) -> Result<(), SignException> {
+    fn _get_field_error(&self) -> Result<(), SignException> {
         let mut signing_methods = Vec::new();
         for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {
             if method.is_some() {
@@ -1115,7 +1115,7 @@ impl SignError for Sign<'static> {
         }
     }
 
-    fn get_key_type_error(&self) -> Result<(), SignException> {
+    fn _get_key_type_error(&self) -> Result<(), SignException> {
         match self.secret.is_some() && self.key_type.is_some() {
             true => Err(SignException::InvalidMustOmitKeyTypeIfSecretProvided),
             false => Ok(()),

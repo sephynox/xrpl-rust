@@ -5,6 +5,7 @@ use serde_json::Value;
 
 use super::exceptions::XRPLModelException;
 
+/// A trait that implements basic functions to every model.
 pub trait Model {
     /// Returns the json representation of a model as a string.
     fn to_json(&self) -> String {
