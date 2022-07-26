@@ -2,9 +2,14 @@
 
 use crate::constants::CryptoAlgorithm;
 use crate::models::*;
-use alloc::vec::Vec;
+use alloc::{string::ToString, vec::Vec};
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+
+use super::{
+    exceptions::{SignAndSubmitException, XRPLModelException, XRPLRequestException},
+    request_fields::*,
+};
 
 /// This request returns information about an account's Payment
 /// Channels. This includes only channels where the specified
@@ -47,6 +52,12 @@ pub struct AccountChannels<'a> {
     marker: Option<&'a str>,
 }
 
+impl Model for AccountChannels<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `AccountChannels` to json.")
+    }
+}
+
 /// This request retrieves a list of currencies that an account
 /// can send or receive, based on its trust lines. This is not
 /// a thoroughly confirmed list, but it can be used to populate
@@ -67,6 +78,12 @@ pub struct AccountCurrencies<'a> {
     destination_account: Option<&'a str>,
     #[serde(default = "default_false")]
     strict: Option<bool>,
+}
+
+impl Model for AccountCurrencies<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `AccountCurrencies` to json.")
+    }
 }
 
 /// This request retrieves information about an account, its
@@ -93,6 +110,12 @@ pub struct AccountInfo<'a> {
     signer_lists: Option<bool>,
 }
 
+impl Model for AccountInfo<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `AccountInfo` to json.")
+    }
+}
+
 /// This request returns information about an account's trust
 /// lines, including balances in all non-XRP currencies and
 /// assets. All information retrieved is relative to a particular
@@ -113,6 +136,12 @@ pub struct AccountLines<'a> {
     limit: Option<u16>,
     peer: Option<&'a str>,
     marker: Option<&'a str>,
+}
+
+impl Model for AccountLines<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `AccountLines` to json.")
+    }
 }
 
 /// This request returns the raw ledger format for all objects
@@ -138,6 +167,12 @@ pub struct AccountObjects<'a> {
     marker: Option<&'a str>,
 }
 
+impl Model for AccountObjects<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `AccountObjects` to json.")
+    }
+}
+
 /// This request retrieves a list of offers made by a given account
 /// that are outstanding as of a particular ledger version.
 ///
@@ -157,6 +192,12 @@ pub struct AccountOffers<'a> {
     #[serde(default = "default_false")]
     strict: Option<bool>,
     marker: Option<&'a str>,
+}
+
+impl Model for AccountOffers<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `AccountOffers` to json.")
+    }
 }
 
 /// This request retrieves from the ledger a list of
@@ -184,6 +225,12 @@ pub struct AccountTx<'a> {
     marker: Option<&'a str>,
 }
 
+impl Model for AccountTx<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `AccountTx` to json.")
+    }
+}
+
 /// The book_offers method retrieves a list of offers, also known
 /// as the order book, between two currencies.
 ///
@@ -202,6 +249,12 @@ pub struct BookOffers<'a> {
     ledger_index: Option<&'a str>,
     limit: Option<u16>,
     taker: Option<&'a str>,
+}
+
+impl Model for BookOffers<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `BookOffers` to json.")
+    }
 }
 
 /// The channel_authorize method creates a signature that can  be
@@ -237,6 +290,38 @@ pub struct ChannelAuthorize<'a> {
     key_type: Option<CryptoAlgorithm>,
 }
 
+impl Model for ChannelAuthorize<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `ChannelAuthorize` to json.")
+    }
+
+    fn get_errors(&self) -> Result<(), exceptions::XRPLModelException> {
+        match self._get_field_error() {
+            Err(error) => Err(XRPLModelException::XRPLRequestError(
+                XRPLRequestException::ChannelAuthorizeError(error),
+            )),
+            Ok(_no_error) => Ok(()),
+        }
+    }
+}
+
+impl ChannelAuthorizeError for ChannelAuthorize<'static> {
+    fn _get_field_error(&self) -> Result<(), ChannelAuthorizeException> {
+        let mut signing_methods = Vec::new();
+        for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {
+            if method.is_some() {
+                signing_methods.push(method)
+            }
+        }
+        match signing_methods.len() != 1 {
+            true => Err(ChannelAuthorizeException::InvalidMustSetExactlyOneOf {
+                fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+            }),
+            false => Ok(()),
+        }
+    }
+}
+
 /// The channel_verify method checks the validity of a signature
 /// that can be used to redeem a specific amount of XRP from a
 /// payment channel.
@@ -251,6 +336,12 @@ pub struct ChannelVerify<'a> {
     public_key: &'a str,
     signature: &'a str,
     id: Option<u32>,
+}
+
+impl Model for ChannelVerify<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `ChannelVerify` to json.")
+    }
 }
 
 /// The deposit_authorized command indicates whether one account
@@ -271,6 +362,12 @@ pub struct DepositAuthorized<'a> {
     ledger_index: Option<&'a str>,
 }
 
+impl Model for DepositAuthorized<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `DepositAuthorized` to json.")
+    }
+}
+
 /// The fee command reports the current state of the open-ledger
 /// requirements for the transaction cost. This requires the
 /// FeeEscalation amendment to be enabled. This is a public
@@ -285,6 +382,12 @@ pub struct Fee {
     #[serde(default = "RequestMethod::fee")]
     method: RequestMethod,
     id: Option<u32>,
+}
+
+impl Model for Fee {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `Fee` to json.")
+    }
 }
 
 /// This request calculates the total balances issued by a
@@ -308,6 +411,12 @@ pub struct GatewayBalances<'a> {
     hotwallet: Option<Vec<&'a str>>,
 }
 
+impl Model for GatewayBalances<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `GatewayBalances` to json.")
+    }
+}
+
 /// The ledger_closed method returns the unique identifiers of
 /// the most recently closed ledger. (This ledger is not
 /// necessarily validated and immutable yet.)
@@ -325,6 +434,12 @@ pub struct LedgerClosed<'a> {
     ledger_index: Option<&'a str>,
 }
 
+impl Model for LedgerClosed<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `LedgerClosed` to json.")
+    }
+}
+
 /// The ledger_closed method returns the unique identifiers of
 /// the most recently closed ledger. (This ledger is not
 /// necessarily validated and immutable yet.)
@@ -338,6 +453,12 @@ pub struct LedgerCurrent {
     #[serde(default = "RequestMethod::ledger_current")]
     method: RequestMethod,
     id: Option<u32>,
+}
+
+impl Model for LedgerCurrent {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `LedgerCurrent` to json.")
+    }
 }
 
 /// The ledger_data method retrieves contents of the specified
@@ -359,6 +480,12 @@ pub struct LedgerData<'a> {
     binary: Option<bool>,
     limit: Option<u16>,
     marker: Option<&'a str>,
+}
+
+impl Model for LedgerData<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `LedgerData` to json.")
+    }
 }
 
 /// The ledger_entry method returns a single ledger object
@@ -383,15 +510,66 @@ pub struct LedgerEntry<'a> {
     check: Option<&'a str>,
     payment_channel: Option<&'a str>,
     deposit_preauth: Option<DepositPreauth<'a>>,
-    directory: Option<Directory<'a>>,
-    escrow: Option<Escrow<'a>>,
-    offer: Option<Offer<'a>>,
-    ripple_state: Option<RippleState<'a>>,
-    ticket: Option<Ticket<'a>>,
+    directory: Option<DirectoryFields<'a>>,
+    escrow: Option<EscrowFields<'a>>,
+    offer: Option<OfferFields<'a>>,
+    ripple_state: Option<RippleStateFields<'a>>,
+    ticket: Option<TicketFields<'a>>,
     #[serde(default = "default_false")]
     binary: Option<bool>,
     ledger_hash: Option<&'a str>,
     ledger_index: Option<&'a str>,
+}
+
+impl Model for LedgerEntry<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `LedgerEntry` to json.")
+    }
+
+    fn get_errors(&self) -> Result<(), exceptions::XRPLModelException> {
+        match self._get_field_error() {
+            Err(error) => Err(XRPLModelException::XRPLRequestError(
+                XRPLRequestException::LedgerEntryError(error),
+            )),
+            Ok(_no_error) => Ok(()),
+        }
+    }
+}
+
+impl LedgerEntryError for LedgerEntry<'static> {
+    fn _get_field_error(&self) -> Result<(), LedgerEntryException> {
+        let mut signing_methods: u32 = 0;
+        for method in [self.index, self.account_root, self.check] {
+            if method.is_some() {
+                signing_methods += 1
+            }
+        }
+        if self.directory.is_some() {
+            signing_methods += 1
+        }
+        if self.offer.is_some() {
+            signing_methods += 1
+        }
+        if self.ripple_state.is_some() {
+            signing_methods += 1
+        }
+        if self.escrow.is_some() {
+            signing_methods += 1
+        }
+        if self.payment_channel.is_some() {
+            signing_methods += 1
+        }
+        if self.deposit_preauth.is_some() {
+            signing_methods += 1
+        }
+        if self.ticket.is_some() {
+            signing_methods += 1
+        }
+        match signing_methods != 1 {
+            true => Err(LedgerEntryException::InvalidMustSetExactlyOneOf { fields: "`index`, `account_root`, `check`, `directory`, `offer`, `ripple_state`, `escrow`, `payment_channel`, `deposit_preauth`, `ticket`".to_string() }),
+            false => Ok(()),
+        }
+    }
 }
 
 /// Retrieve information about the public ledger.
@@ -423,6 +601,12 @@ pub struct Ledger<'a> {
     queue: Option<bool>,
 }
 
+impl Model for Ledger<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `Ledger` to json.")
+    }
+}
+
 /// The manifest method reports the current "manifest"
 /// information for a given validator public key. The
 /// "manifest" is the public portion of that validator's
@@ -438,6 +622,12 @@ pub struct Manifest<'a> {
     method: RequestMethod,
     public_key: &'a str,
     id: Option<u32>,
+}
+
+impl Model for Manifest<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `Manifest` to json.")
+    }
 }
 
 /// This request provides a quick way to check the status of
@@ -460,6 +650,12 @@ pub struct NoRippleCheck<'a> {
     ledger_index: Option<&'a str>,
     transactions: Option<bool>,
     limit: Option<u16>,
+}
+
+impl Model for NoRippleCheck<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `NoRippleCheck` to json.")
+    }
 }
 
 /// WebSocket API only! The path_find method searches for
@@ -501,7 +697,13 @@ pub struct PathFind<'a> {
     destination_amount: Currency,
     id: Option<u32>,
     send_max: Option<Currency>,
-    paths: Option<Vec<Vec<PathStep<'a>>>>,
+    paths: Option<Vec<Path<'a>>>,
+}
+
+impl Model for PathFind<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `PathFind` to json.")
+    }
 }
 
 /// The ripple_path_find method is a simplified version of
@@ -537,6 +739,12 @@ pub struct RipplePathFind<'a> {
     paths: Option<Vec<Vec<PathStep<'a>>>>,
 }
 
+impl Model for RipplePathFind<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `RipplePathFind` to json.")
+    }
+}
+
 /// The ping command returns an acknowledgement, so that
 /// clients can test the connection status and latency.
 ///
@@ -549,6 +757,12 @@ pub struct Ping {
     #[serde(default = "RequestMethod::ping")]
     method: RequestMethod,
     id: Option<u32>,
+}
+
+impl Model for Ping {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `Ping` to json.")
+    }
 }
 
 /// The random command provides a random number to be used
@@ -566,6 +780,12 @@ pub struct Random {
     id: Option<u32>,
 }
 
+impl Model for Random {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `Random` to json.")
+    }
+}
+
 /// The server_info command asks the server for a
 /// human-readable version of various information about the
 /// rippled server being queried.
@@ -579,6 +799,12 @@ pub struct ServerInfo {
     #[serde(default = "RequestMethod::server_info")]
     method: RequestMethod,
     id: Option<u32>,
+}
+
+impl Model for ServerInfo {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `ServerInfo` to json.")
+    }
 }
 
 /// The server_state command asks the server for various
@@ -599,6 +825,12 @@ pub struct ServerState {
     #[serde(default = "RequestMethod::server_state")]
     method: RequestMethod,
     id: Option<u32>,
+}
+
+impl Model for ServerState {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `ServerState` to json.")
+    }
 }
 
 /// The submit method applies a transaction and sends it to the
@@ -649,6 +881,50 @@ pub struct SignAndSubmit<'a> {
     fee_div_max: Option<u32>,
 }
 
+impl Model for SignAndSubmit<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `SignAndSubmit` to json.")
+    }
+
+    fn get_errors(&self) -> Result<(), exceptions::XRPLModelException> {
+        match self._get_field_error() {
+            Err(error) => Err(XRPLModelException::XRPLRequestError(
+                XRPLRequestException::SignAndSubmitError(error),
+            )),
+            Ok(_no_error) => match self._get_key_type_error() {
+                Err(error) => Err(XRPLModelException::XRPLRequestError(
+                    XRPLRequestException::SignAndSubmitError(error),
+                )),
+                Ok(_no_error) => Ok(()),
+            },
+        }
+    }
+}
+
+impl SignAndSubmitError for SignAndSubmit<'static> {
+    fn _get_field_error(&self) -> Result<(), SignAndSubmitException> {
+        let mut signing_methods = Vec::new();
+        for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {
+            if method.is_some() {
+                signing_methods.push(method)
+            }
+        }
+        match signing_methods.len() != 1 {
+            true => Err(SignAndSubmitException::InvalidMustSetExactlyOneOf {
+                fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+            }),
+            false => Ok(()),
+        }
+    }
+
+    fn _get_key_type_error(&self) -> Result<(), SignAndSubmitException> {
+        match self.secret.is_some() && self.key_type.is_some() {
+            true => Err(SignAndSubmitException::InvalidMustOmitKeyTypeIfSecretProvided),
+            false => Ok(()),
+        }
+    }
+}
+
 /// The submit method applies a transaction and sends it to
 /// the network to be confirmed and included in future ledgers.
 ///
@@ -688,6 +964,12 @@ pub struct SubmitOnly<'a> {
     fail_hard: Option<bool>,
 }
 
+impl Model for SubmitOnly<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `SubmitOnly` to json.")
+    }
+}
+
 /// The sign_for command provides one signature for a multi-signed
 /// transaction. By default, this method is admin-only. It can be
 /// used as a public method if the server has enabled public
@@ -712,6 +994,50 @@ pub struct SignFor<'a> {
     seed_hex: Option<&'a str>,
     passphrase: Option<&'a str>,
     key_type: Option<CryptoAlgorithm>,
+}
+
+impl Model for SignFor<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `SignFor` to json.")
+    }
+
+    fn get_errors(&self) -> Result<(), exceptions::XRPLModelException> {
+        match self._get_field_error() {
+            Err(error) => Err(XRPLModelException::XRPLRequestError(
+                XRPLRequestException::SignForError(error),
+            )),
+            Ok(_no_error) => match self._get_key_type_error() {
+                Err(error) => Err(XRPLModelException::XRPLRequestError(
+                    XRPLRequestException::SignForError(error),
+                )),
+                Ok(_no_error) => Ok(()),
+            },
+        }
+    }
+}
+
+impl SignForError for SignFor<'static> {
+    fn _get_field_error(&self) -> Result<(), SignForException> {
+        let mut signing_methods = Vec::new();
+        for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {
+            if method.is_some() {
+                signing_methods.push(method)
+            }
+        }
+        match signing_methods.len() != 1 {
+            true => Err(SignForException::InvalidMustSetExactlyOneOf {
+                fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+            }),
+            false => Ok(()),
+        }
+    }
+
+    fn _get_key_type_error(&self) -> Result<(), SignForException> {
+        match self.secret.is_some() && self.key_type.is_some() {
+            true => Err(SignForException::InvalidMustOmitKeyTypeIfSecretProvided),
+            false => Ok(()),
+        }
+    }
 }
 
 /// The sign method takes a transaction in JSON format and a seed
@@ -753,6 +1079,50 @@ pub struct Sign<'a> {
     fee_div_max: Option<u32>,
 }
 
+impl Model for Sign<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `Sign` to json.")
+    }
+
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self._get_field_error() {
+            Err(error) => Err(XRPLModelException::XRPLRequestError(
+                XRPLRequestException::SignError(error),
+            )),
+            Ok(_no_error) => match self._get_key_type_error() {
+                Err(error) => Err(XRPLModelException::XRPLRequestError(
+                    XRPLRequestException::SignError(error),
+                )),
+                Ok(_no_error) => Ok(()),
+            },
+        }
+    }
+}
+
+impl SignError for Sign<'static> {
+    fn _get_field_error(&self) -> Result<(), SignException> {
+        let mut signing_methods = Vec::new();
+        for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {
+            if method.is_some() {
+                signing_methods.push(method)
+            }
+        }
+        match signing_methods.len() != 1 {
+            true => Err(SignException::InvalidMustSetExactlyOneOf {
+                fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+            }),
+            false => Ok(()),
+        }
+    }
+
+    fn _get_key_type_error(&self) -> Result<(), SignException> {
+        match self.secret.is_some() && self.key_type.is_some() {
+            true => Err(SignException::InvalidMustOmitKeyTypeIfSecretProvided),
+            false => Ok(()),
+        }
+    }
+}
+
 /// The server_state command asks the server for various
 /// machine-readable information about the rippled server's
 /// current state. The response is almost the same as the
@@ -778,6 +1148,12 @@ pub struct SubmitMultisigned {
     fail_hard: Option<bool>,
 }
 
+impl Model for SubmitMultisigned {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `SubmitMultisigned` to json.")
+    }
+}
+
 /// The subscribe method requests periodic notifications
 /// from the server when certain events happen.
 ///
@@ -792,13 +1168,19 @@ pub struct Subscribe<'a> {
     #[serde(default = "RequestMethod::subscribe")]
     method: RequestMethod,
     id: Option<u32>,
-    books: Option<Vec<SubscribeBook<'a>>>,
+    books: Option<Vec<SubscribeBookFields<'a>>>,
     streams: Option<Vec<StreamParameter>>,
     accounts: Option<Vec<&'a str>>,
     accounts_proposed: Option<Vec<&'a str>>,
     url: Option<&'a str>,
     url_username: Option<&'a str>,
     url_password: Option<&'a str>,
+}
+
+impl Model for Subscribe<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `Subscribe` to json.")
+    }
 }
 
 /// The unsubscribe command tells the server to stop
@@ -816,13 +1198,19 @@ pub struct Unsubscribe<'a> {
     #[serde(default = "RequestMethod::unsubscribe")]
     method: RequestMethod,
     id: Option<u32>,
-    books: Option<Vec<UnsubscribeBook>>,
+    books: Option<Vec<UnsubscribeBookFields>>,
     streams: Option<Vec<StreamParameter>>,
     accounts: Option<Vec<&'a str>>,
     accounts_proposed: Option<Vec<&'a str>>,
     // TODO Lifetime issue
     #[serde(skip_serializing)]
     broken: Option<&'a str>,
+}
+
+impl Model for Unsubscribe<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `Unsubscribe` to json.")
+    }
 }
 
 /// The transaction_entry method retrieves information on a
@@ -845,6 +1233,12 @@ pub struct TransactionEntry<'a> {
     ledger_index: Option<&'a str>,
 }
 
+impl Model for TransactionEntry<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `TransactionEntry` to json.")
+    }
+}
+
 /// The tx method retrieves information on a single transaction.
 ///
 /// See Tx:
@@ -863,6 +1257,12 @@ pub struct Tx {
     binary: Option<bool>,
     min_ledger: Option<u32>,
     max_ledger: Option<u32>,
+}
+
+impl Model for Tx {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `Tx` to json.")
+    }
 }
 
 #[cfg(test)]
@@ -887,5 +1287,216 @@ mod test {
 
         assert_eq!(test, expect);
         assert_eq!(revert.unwrap(), json);
+    }
+}
+
+#[cfg(test)]
+mod test_channel_authorize_errors {
+    use alloc::string::ToString;
+
+    use crate::{
+        constants::CryptoAlgorithm,
+        models::{
+            exceptions::{ChannelAuthorizeException, XRPLModelException, XRPLRequestException},
+            Model, RequestMethod,
+        },
+    };
+
+    use super::ChannelAuthorize;
+
+    #[test]
+    fn test_fields_error() {
+        let channel_authorize = ChannelAuthorize {
+            method: RequestMethod::ChannelAuthorize,
+            channel_id: "5DB01B7FFED6B67E6B0414DED11E051D2EE2B7619CE0EAA6286D67A3A4D5BDB3",
+            amount: "1000000",
+            id: None,
+            secret: None,
+            seed: Some(""),
+            seed_hex: Some(""),
+            passphrase: None,
+            key_type: Some(CryptoAlgorithm::SECP256K1),
+        };
+        let expected_error =
+            XRPLModelException::XRPLRequestError(XRPLRequestException::ChannelAuthorizeError(
+                ChannelAuthorizeException::InvalidMustSetExactlyOneOf {
+                    fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+                },
+            ));
+        assert_eq!(channel_authorize.validate(), Err(expected_error))
+    }
+}
+
+#[cfg(test)]
+mod test_ledger_entry_errors {
+    use alloc::string::ToString;
+
+    use crate::models::{
+        exceptions::{LedgerEntryException, XRPLModelException, XRPLRequestException},
+        request_fields::OfferFields,
+        Model, RequestMethod,
+    };
+
+    use super::LedgerEntry;
+
+    #[test]
+    fn test_fields_error() {
+        let ledger_entry = LedgerEntry {
+            method: RequestMethod::LedgerEntry,
+            id: None,
+            index: None,
+            account_root: Some("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
+            check: None,
+            payment_channel: None,
+            deposit_preauth: None,
+            directory: None,
+            escrow: None,
+            offer: Some(OfferFields {
+                account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+                seq: 359,
+            }),
+            ripple_state: None,
+            ticket: None,
+            binary: None,
+            ledger_hash: None,
+            ledger_index: None,
+        };
+        let expected_error = XRPLModelException::XRPLRequestError(XRPLRequestException::LedgerEntryError(LedgerEntryException::InvalidMustSetExactlyOneOf { fields: "`index`, `account_root`, `check`, `directory`, `offer`, `ripple_state`, `escrow`, `payment_channel`, `deposit_preauth`, `ticket`".to_string() }));
+        assert_eq!(ledger_entry.validate(), Err(expected_error))
+    }
+}
+
+#[cfg(test)]
+mod test_sign_and_submit_errors {
+    use alloc::string::ToString;
+
+    use crate::{
+        constants::CryptoAlgorithm,
+        models::{
+            exceptions::{SignAndSubmitException, XRPLModelException, XRPLRequestException},
+            Model, RequestMethod,
+        },
+    };
+
+    use super::SignAndSubmit;
+
+    #[test]
+    fn test_fields_error() {
+        let mut sign_and_submit = SignAndSubmit {
+            method: RequestMethod::Submit,
+            id: None,
+            secret: Some(""),
+            seed: Some(""),
+            seed_hex: None,
+            passphrase: None,
+            key_type: None,
+            offline: None,
+            build_path: None,
+            fee_mult_max: None,
+            fee_div_max: None,
+        };
+        let expected_error =
+            XRPLModelException::XRPLRequestError(XRPLRequestException::SignAndSubmitError(
+                SignAndSubmitException::InvalidMustSetExactlyOneOf {
+                    fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+                },
+            ));
+        assert_eq!(sign_and_submit.validate(), Err(expected_error));
+
+        sign_and_submit.seed = None;
+        sign_and_submit.key_type = Some(CryptoAlgorithm::SECP256K1);
+        let expected_error =
+            XRPLModelException::XRPLRequestError(XRPLRequestException::SignAndSubmitError(
+                SignAndSubmitException::InvalidMustOmitKeyTypeIfSecretProvided,
+            ));
+        assert_eq!(sign_and_submit.validate(), Err(expected_error));
+    }
+}
+
+#[cfg(test)]
+mod test_sign_for_errors {
+    use alloc::string::ToString;
+
+    use crate::{
+        constants::CryptoAlgorithm,
+        models::{
+            exceptions::{SignForException, XRPLModelException, XRPLRequestException},
+            Model, RequestMethod,
+        },
+    };
+
+    use super::SignFor;
+
+    #[test]
+    fn test_fields_error() {
+        let mut sign_for = SignFor {
+            method: RequestMethod::SignFor,
+            account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            id: None,
+            secret: Some(""),
+            seed: Some(""),
+            seed_hex: None,
+            passphrase: None,
+            key_type: None,
+        };
+        let expected_error = XRPLModelException::XRPLRequestError(
+            XRPLRequestException::SignForError(SignForException::InvalidMustSetExactlyOneOf {
+                fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+            }),
+        );
+        assert_eq!(sign_for.validate(), Err(expected_error));
+
+        sign_for.seed = None;
+        sign_for.key_type = Some(CryptoAlgorithm::SECP256K1);
+        let expected_error =
+            XRPLModelException::XRPLRequestError(XRPLRequestException::SignForError(
+                SignForException::InvalidMustOmitKeyTypeIfSecretProvided,
+            ));
+        assert_eq!(sign_for.validate(), Err(expected_error));
+    }
+}
+
+#[cfg(test)]
+mod test_sign_errors {
+    use alloc::string::ToString;
+
+    use crate::{
+        constants::CryptoAlgorithm,
+        models::{
+            exceptions::{SignException, XRPLModelException, XRPLRequestException},
+            Model, RequestMethod,
+        },
+    };
+
+    use super::Sign;
+
+    #[test]
+    fn test_fields_error() {
+        let mut sign = Sign {
+            method: RequestMethod::Sign,
+            id: None,
+            secret: Some(""),
+            seed: Some(""),
+            seed_hex: None,
+            passphrase: None,
+            key_type: None,
+            offline: None,
+            build_path: None,
+            fee_mult_max: None,
+            fee_div_max: None,
+        };
+        let expected_error = XRPLModelException::XRPLRequestError(XRPLRequestException::SignError(
+            SignException::InvalidMustSetExactlyOneOf {
+                fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
+            },
+        ));
+        assert_eq!(sign.validate(), Err(expected_error));
+
+        sign.seed = None;
+        sign.key_type = Some(CryptoAlgorithm::SECP256K1);
+        let expected_error = XRPLModelException::XRPLRequestError(XRPLRequestException::SignError(
+            SignException::InvalidMustOmitKeyTypeIfSecretProvided,
+        ));
+        assert_eq!(sign.validate(), Err(expected_error));
     }
 }

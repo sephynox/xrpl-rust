@@ -1,10 +1,13 @@
 //! Top-level modules for the models package.
 
 pub mod exceptions;
+pub mod model;
+pub mod request_fields;
 pub mod requests;
 pub mod transactions;
 pub mod utils;
 
+pub use model::Model;
 pub use requests::*;
 pub use transactions::*;
 
@@ -15,6 +18,14 @@ use serde_json::Value;
 use serde_with::skip_serializing_none;
 use strum_macros::AsRefStr;
 use strum_macros::{Display, EnumIter};
+
+use self::exceptions::{
+    AccountSetException, ChannelAuthorizeException, CheckCashException, DepositPreauthException,
+    EscrowCreateException, EscrowFinishException, LedgerEntryException,
+    NFTokenAcceptOfferException, NFTokenCancelOfferException, NFTokenCreateOfferException,
+    NFTokenMintException, PaymentException, SignAndSubmitException, SignException,
+    SignForException, SignerListSetException, UNLModifyException,
+};
 
 /// Represents the different options for the `method`
 /// field in a request.
@@ -71,6 +82,18 @@ pub enum RequestMethod {
     // Utility methods
     Ping,
     Random,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
+pub enum Flag {
+    AccountSet(AccountSetFlag),
+    NFTokenCreateOffer(NFTokenCreateOfferFlag),
+    NFTokenMint(NFTokenMintFlag),
+    OfferCreate(OfferCreateFlag),
+    Payment(PaymentFlag),
+    PaymentChannelClaim(PaymentChannelClaimFlag),
+    TrustSet(TrustSetFlag),
+    EnableAmendment(EnableAmendmentFlag),
 }
 
 /// Transactions of the AccountSet type support additional values
@@ -283,13 +306,13 @@ pub enum AccountObjectType {
 pub enum Currency {
     /// Specifies an amount in an issued currency.
     IssuedCurrency {
-        amount: Option<Cow<'static, str>>,
+        value: Option<Cow<'static, str>>,
         currency: Cow<'static, str>,
         issuer: Cow<'static, str>,
     },
     /// Specifies an amount in XRP.
     Xrp {
-        amount: Option<Cow<'static, str>>,
+        value: Option<Cow<'static, str>>,
         currency: Cow<'static, str>,
     },
 }
@@ -376,65 +399,6 @@ pub enum StreamParameter {
     Validations,
 }
 
-/// Required fields for requesting a DepositPreauth if not
-/// querying by object ID.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DepositPreauth<'a> {
-    owner: &'a str,
-    authorized: &'a str,
-}
-
-/// Required fields for requesting a DirectoryNode if not
-/// querying by object ID.
-#[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Directory<'a> {
-    owner: &'a str,
-    dir_root: &'a str,
-    sub_index: Option<u8>,
-}
-
-/// Required fields for requesting a Escrow if not querying
-/// by object ID.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Escrow<'a> {
-    owner: &'a str,
-    seq: u64,
-}
-
-/// Required fields for requesting a Escrow if not querying
-/// by object ID.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Offer<'a> {
-    account: &'a str,
-    seq: u64,
-}
-
-/// Required fields for requesting a RippleState.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct RippleState<'a> {
-    account: &'a str,
-    currency: &'a str,
-}
-
-/// Required fields for requesting a Ticket, if not
-/// querying by object ID.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Ticket<'a> {
-    owner: &'a str,
-    ticket_sequence: u64,
-}
-
-/// A PathStep represents an individual step along a Path.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PathStep<'a> {
-    account: Option<&'a str>,
-    currency: Option<&'a str>,
-    issuer: Option<&'a str>,
-    r#type: Option<u8>,
-    type_hex: Option<&'a str>,
-}
-
 /// An arbitrary piece of data attached to a transaction. A
 /// transaction can have multiple Memo objects as an array
 /// in the Memos field.
@@ -453,6 +417,16 @@ pub struct Memo<'a> {
     memo_type: Option<&'a str>,
 }
 
+/// A PathStep represents an individual step along a Path.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PathStep<'a> {
+    account: Option<&'a str>,
+    currency: Option<&'a str>,
+    issuer: Option<&'a str>,
+    r#type: Option<u8>,
+    type_hex: Option<&'a str>,
+}
+
 /// One Signer in a multi-signature. A multi-signed transaction
 /// can have an array of up to 8 Signers, each contributing a
 /// signature, in the Signers field.
@@ -467,39 +441,10 @@ pub struct Signer<'a> {
     signing_pub_key: &'a str,
 }
 
-/// Format for elements in the `books` array for Subscribe only.
-///
-/// See Subscribe:
-/// `<https://xrpl.org/subscribe.html#subscribe>`
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
-pub struct SubscribeBook<'a> {
-    taker_gets: Currency,
-    taker_pays: Currency,
-    taker: &'a str,
-    #[serde(default = "default_false")]
-    snapshot: Option<bool>,
-    #[serde(default = "default_false")]
-    both: Option<bool>,
-}
-
-/// Format for elements in the `books` array for Unsubscribe only.
-///
-/// See Unsubscribe:
-/// `<https://xrpl.org/unsubscribe.html>`
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
-pub struct UnsubscribeBook {
-    taker_gets: Currency,
-    taker_pays: Currency,
-    #[serde(default = "default_false")]
-    both: Option<bool>,
-}
-
 /// Returns a Currency as XRP for the currency, without a value.
 pub fn default_xrp_currency() -> Currency {
     Currency::Xrp {
-        amount: None,
+        value: None,
         currency: Borrowed("XRP"),
     }
 }
@@ -544,6 +489,48 @@ fn default_account_zero() -> &'static str {
 /// codec, or an actual JSON string representing the same data.
 pub trait FromXRPL<T> {
     fn from_xrpl(value: T) -> Self;
+}
+
+impl Currency {
+    fn get_value_as_u32(&self) -> u32 {
+        match self {
+            Currency::IssuedCurrency {
+                value,
+                currency: _,
+                issuer: _,
+            } => {
+                let value_as_u32: u32 = value
+                    .as_ref()
+                    .unwrap()
+                    .as_ref()
+                    .parse()
+                    .expect("Could not parse u32 from `value`");
+                value_as_u32
+            }
+            Currency::Xrp { value, currency: _ } => {
+                let value_as_u32: u32 = value
+                    .as_ref()
+                    .unwrap()
+                    .as_ref()
+                    .parse()
+                    .expect("Could not parse u32 from `value`");
+                value_as_u32
+            }
+        }
+    }
+    fn is_xrp(&self) -> bool {
+        match self {
+            Currency::IssuedCurrency {
+                value: _,
+                currency: _,
+                issuer: _,
+            } => false,
+            Currency::Xrp {
+                value: _,
+                currency: _,
+            } => true,
+        }
+    }
 }
 
 /// For use with serde defaults.
@@ -650,11 +637,107 @@ impl RequestMethod {
     }
 }
 
+/// Standard functions for transactions.
 pub trait Transaction {
-    fn to_json(&self) -> Value;
-    fn iter_to_int(&self) -> u32;
-    fn has_flag(&self) -> bool;
+    fn iter_to_int(&self) -> u32 {
+        0
+    }
+    fn has_flag(&self, flag: &Flag) -> bool {
+        let _txn_flag = flag;
+        false
+    }
     fn get_transaction_type(&self) -> TransactionType;
+}
+
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
+pub struct SignerEntry<'a> {
+    account: &'a str,
+    signer_weight: u16,
+}
+
+pub trait AccountSetError {
+    fn _get_tick_size_error(&self) -> Result<(), AccountSetException>;
+    fn _get_transfer_rate_error(&self) -> Result<(), AccountSetException>;
+    fn _get_domain_error(&self) -> Result<(), AccountSetException>;
+    fn _get_clear_flag_error(&self) -> Result<(), AccountSetException>;
+    fn _get_nftoken_minter_error(&self) -> Result<(), AccountSetException>;
+}
+
+pub trait CheckCashError {
+    fn _get_amount_and_deliver_min_error(&self) -> Result<(), CheckCashException>;
+}
+
+pub trait DepositPreauthError {
+    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException>;
+}
+
+pub trait EscrowCreateError {
+    fn _get_finish_after_error(&self) -> Result<(), EscrowCreateException>;
+}
+
+pub trait EscrowFinishError {
+    fn _get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishException>;
+}
+
+pub trait NFTokenAcceptOfferError {
+    fn _get_brokered_mode_error(&self) -> Result<(), NFTokenAcceptOfferException>;
+    fn _get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException>;
+}
+
+pub trait NFTokenCancelOfferError {
+    fn _get_nftoken_offers_error(&self) -> Result<(), NFTokenCancelOfferException>;
+}
+
+pub trait NFTokenCreateOfferError {
+    fn _get_amount_error(&self) -> Result<(), NFTokenCreateOfferException>;
+    fn _get_destination_error(&self) -> Result<(), NFTokenCreateOfferException>;
+    fn _get_owner_error(&self) -> Result<(), NFTokenCreateOfferException>;
+}
+
+pub trait NFTokenMintError {
+    fn _get_issuer_error(&self) -> Result<(), NFTokenMintException>;
+    fn _get_transfer_fee_error(&self) -> Result<(), NFTokenMintException>;
+    fn _get_uri_error(&self) -> Result<(), NFTokenMintException>;
+}
+
+pub trait PaymentError {
+    fn _get_xrp_transaction_error(&self) -> Result<(), PaymentException>;
+    fn _get_partial_payment_error(&self) -> Result<(), PaymentException>;
+    fn _get_exchange_error(&self) -> Result<(), PaymentException>;
+}
+
+pub trait SignerListSetError {
+    fn _get_signer_entries_error(&self) -> Result<(), SignerListSetException>;
+    fn _get_signer_quorum_error(&self) -> Result<(), SignerListSetException>;
+}
+
+pub trait UNLModifyError {
+    fn _get_unl_modify_error(&self) -> Result<(), UNLModifyException>;
+}
+
+pub trait ChannelAuthorizeError {
+    fn _get_field_error(&self) -> Result<(), ChannelAuthorizeException>;
+}
+
+pub trait LedgerEntryError {
+    fn _get_field_error(&self) -> Result<(), LedgerEntryException>;
+}
+
+pub trait SignAndSubmitError {
+    fn _get_field_error(&self) -> Result<(), SignAndSubmitException>;
+    fn _get_key_type_error(&self) -> Result<(), SignAndSubmitException>;
+}
+
+pub trait SignForError {
+    fn _get_field_error(&self) -> Result<(), SignForException>;
+    fn _get_key_type_error(&self) -> Result<(), SignForException>;
+}
+
+pub trait SignError {
+    fn _get_field_error(&self) -> Result<(), SignException>;
+    fn _get_key_type_error(&self) -> Result<(), SignException>;
 }
 
 /// For use with serde defaults.
