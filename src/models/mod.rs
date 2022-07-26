@@ -658,86 +658,86 @@ pub struct SignerEntry<'a> {
 }
 
 pub trait AccountSetError {
-    fn get_tick_size_error(&self) -> Result<(), AccountSetException>;
-    fn get_transfer_rate_error(&self) -> Result<(), AccountSetException>;
-    fn get_domain_error(&self) -> Result<(), AccountSetException>;
-    fn get_clear_flag_error(&self) -> Result<(), AccountSetException>;
-    fn get_nftoken_minter_error(&self) -> Result<(), AccountSetException>;
+    fn _get_tick_size_error(&self) -> Result<(), AccountSetException>;
+    fn _get_transfer_rate_error(&self) -> Result<(), AccountSetException>;
+    fn _get_domain_error(&self) -> Result<(), AccountSetException>;
+    fn _get_clear_flag_error(&self) -> Result<(), AccountSetException>;
+    fn _get_nftoken_minter_error(&self) -> Result<(), AccountSetException>;
 }
 
 pub trait CheckCashError {
-    fn get_amount_and_deliver_min_error(&self) -> Result<(), CheckCashException>;
+    fn _get_amount_and_deliver_min_error(&self) -> Result<(), CheckCashException>;
 }
 
 pub trait DepositPreauthError {
-    fn get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException>;
+    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException>;
 }
 
 pub trait EscrowCreateError {
-    fn get_finish_after_error(&self) -> Result<(), EscrowCreateException>;
+    fn _get_finish_after_error(&self) -> Result<(), EscrowCreateException>;
 }
 
 pub trait EscrowFinishError {
-    fn get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishException>;
+    fn _get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishException>;
 }
 
 pub trait NFTokenAcceptOfferError {
-    fn get_brokered_mode_error(&self) -> Result<(), NFTokenAcceptOfferException>;
-    fn get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException>;
+    fn _get_brokered_mode_error(&self) -> Result<(), NFTokenAcceptOfferException>;
+    fn _get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException>;
 }
 
 pub trait NFTokenCancelOfferError {
-    fn get_nftoken_offers_error(&self) -> Result<(), NFTokenCancelOfferException>;
+    fn _get_nftoken_offers_error(&self) -> Result<(), NFTokenCancelOfferException>;
 }
 
 pub trait NFTokenCreateOfferError {
-    fn get_amount_error(&self) -> Result<(), NFTokenCreateOfferException>;
-    fn get_destination_error(&self) -> Result<(), NFTokenCreateOfferException>;
-    fn get_owner_error(&self) -> Result<(), NFTokenCreateOfferException>;
+    fn _get_amount_error(&self) -> Result<(), NFTokenCreateOfferException>;
+    fn _get_destination_error(&self) -> Result<(), NFTokenCreateOfferException>;
+    fn _get_owner_error(&self) -> Result<(), NFTokenCreateOfferException>;
 }
 
 pub trait NFTokenMintError {
-    fn get_issuer_error(&self) -> Result<(), NFTokenMintException>;
-    fn get_transfer_fee_error(&self) -> Result<(), NFTokenMintException>;
-    fn get_uri_error(&self) -> Result<(), NFTokenMintException>;
+    fn _get_issuer_error(&self) -> Result<(), NFTokenMintException>;
+    fn _get_transfer_fee_error(&self) -> Result<(), NFTokenMintException>;
+    fn _get_uri_error(&self) -> Result<(), NFTokenMintException>;
 }
 
 pub trait PaymentError {
-    fn get_xrp_transaction_error(&self) -> Result<(), PaymentException>;
-    fn get_partial_payment_error(&self) -> Result<(), PaymentException>;
-    fn get_exchange_error(&self) -> Result<(), PaymentException>;
+    fn _get_xrp_transaction_error(&self) -> Result<(), PaymentException>;
+    fn _get_partial_payment_error(&self) -> Result<(), PaymentException>;
+    fn _get_exchange_error(&self) -> Result<(), PaymentException>;
 }
 
 pub trait SignerListSetError {
-    fn get_signer_entries_error(&self) -> Result<(), SignerListSetException>;
-    fn get_signer_quorum_error(&self) -> Result<(), SignerListSetException>;
+    fn _get_signer_entries_error(&self) -> Result<(), SignerListSetException>;
+    fn _get_signer_quorum_error(&self) -> Result<(), SignerListSetException>;
 }
 
 pub trait UNLModifyError {
-    fn get_unl_modify_error(&self) -> Result<(), UNLModifyException>;
+    fn _get_unl_modify_error(&self) -> Result<(), UNLModifyException>;
 }
 
 pub trait ChannelAuthorizeError {
-    fn get_field_error(&self) -> Result<(), ChannelAuthorizeException>;
+    fn _get_field_error(&self) -> Result<(), ChannelAuthorizeException>;
 }
 
 pub trait LedgerEntryError {
-    fn get_field_error(&self) -> Result<(), LedgerEntryException>;
+    fn _get_field_error(&self) -> Result<(), LedgerEntryException>;
 }
 
 pub trait SignAndSubmitError {
-    fn get_field_error(&self) -> Result<(), SignAndSubmitException>;
-    fn get_key_type_error(&self) -> Result<(), SignAndSubmitException>;
+    fn _get_field_error(&self) -> Result<(), SignAndSubmitException>;
+    fn _get_key_type_error(&self) -> Result<(), SignAndSubmitException>;
 }
 
 pub trait SignForError {
-    fn get_field_error(&self) -> Result<(), SignForException>;
-    fn get_key_type_error(&self) -> Result<(), SignForException>;
+    fn _get_field_error(&self) -> Result<(), SignForException>;
+    fn _get_key_type_error(&self) -> Result<(), SignForException>;
 }
 
 pub trait SignError {
-    fn get_field_error(&self) -> Result<(), SignException>;
-    fn get_key_type_error(&self) -> Result<(), SignException>;
+    fn _get_field_error(&self) -> Result<(), SignException>;
+    fn _get_key_type_error(&self) -> Result<(), SignException>;
 }
 
 /// For use with serde defaults.
