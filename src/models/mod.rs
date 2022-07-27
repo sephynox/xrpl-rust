@@ -38,6 +38,7 @@ pub enum RequestMethod {
     AccountCurrencies,
     AccountInfo,
     AccountLines,
+    AccountNfts,
     AccountObjects,
     AccountOffers,
     AccountTx,
@@ -59,6 +60,8 @@ pub enum RequestMethod {
     // Path methods
     BookOffers,
     DepositAuthorized,
+    NftBuyOffers,
+    NftSellOffers,
     PathFind,
     RipplePathFind,
 
@@ -548,6 +551,9 @@ impl RequestMethod {
     fn account_lines() -> Self {
         RequestMethod::AccountLines
     }
+    fn account_nfts() -> Self {
+        RequestMethod::AccountNfts
+    }
     fn account_objects() -> Self {
         RequestMethod::AccountObjects
     }
@@ -589,6 +595,12 @@ impl RequestMethod {
     }
     fn manifest() -> Self {
         RequestMethod::Manifest
+    }
+    fn nft_buy_offers() -> Self {
+        RequestMethod::NftBuyOffers
+    }
+    fn nft_sell_offers() -> Self {
+        RequestMethod::NftSellOffers
     }
     fn no_ripple_check() -> Self {
         RequestMethod::NoRippleCheck

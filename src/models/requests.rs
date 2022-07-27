@@ -40,15 +40,30 @@ use super::{
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct AccountChannels<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::account_channels")]
     method: RequestMethod,
+    /// The unique identifier of an account, typically the
+    /// account's Address. The request returns channels where
+    /// this account is the channel's owner/source.
     account: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
+    /// Limit the number of transactions to retrieve. Cannot
+    /// be less than 10 or more than 400. The default is 200.
     limit: Option<u16>,
+    /// The unique identifier of an account, typically the
+    /// account's Address. If provided, filter results to
+    /// payment channels whose destination is this account.
     destination_account: Option<&'a str>,
+    /// Value from a previous paginated response.
+    /// Resume retrieving data where that response left off.
     marker: Option<&'a str>,
 }
 
@@ -68,14 +83,24 @@ impl Model for AccountChannels<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AccountCurrencies<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::account_currencies")]
     method: RequestMethod,
+    /// A unique identifier for the account, most commonly
+    /// the account's Address.
     account: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
-    destination_account: Option<&'a str>,
+    /// If true, then the account field only accepts a public
+    /// key or XRP Ledger address. Otherwise, account can be
+    /// a secret or passphrase (not recommended).
+    /// The default is false.
     #[serde(default = "default_false")]
     strict: Option<bool>,
 }
@@ -95,17 +120,35 @@ impl Model for AccountCurrencies<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AccountInfo<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::account_info")]
     method: RequestMethod,
+    /// A unique identifier for the account, most commonly the
+    /// account's Address.
     account: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
+    /// If true, then the account field only accepts a public
+    /// key or XRP Ledger address. Otherwise, account can be
+    /// a secret or passphrase (not recommended).
+    /// The default is false.
     #[serde(default = "default_false")]
     strict: Option<bool>,
+    /// If true, and the FeeEscalation amendment is enabled,
+    /// also returns stats about queued transactions associated
+    /// with this account. Can only be used when querying for the
+    /// data from the current open ledger. New in: rippled 0.33.0
+    /// Not available from servers in Reporting Mode.
     #[serde(default = "default_false")]
     queue: Option<bool>,
+    /// If true, and the MultiSign amendment is enabled, also
+    /// returns any SignerList objects associated with this account.
     #[serde(default = "default_false")]
     signer_lists: Option<bool>,
 }
@@ -126,21 +169,65 @@ impl Model for AccountInfo<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AccountLines<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::account_lines")]
     method: RequestMethod,
+    /// A unique identifier for the account, most commonly the
+    /// account's Address.
     account: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
+    /// Limit the number of trust lines to retrieve. The server
+    /// is not required to honor this value. Must be within the
+    /// inclusive range 10 to 400.
     limit: Option<u16>,
+    /// The Address of a second account. If provided, show only
+    /// lines of trust connecting the two accounts.
     peer: Option<&'a str>,
+    /// Value from a previous paginated response. Resume retrieving
+    /// data where that response left off.
     marker: Option<&'a str>,
 }
 
 impl Model for AccountLines<'static> {
     fn to_json_value(&self) -> Value {
         serde_json::to_value(self).expect("Unable to serialize `AccountLines` to json.")
+    }
+}
+
+/// This method retrieves all of the NFTs currently owned
+/// by the specified account.
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AccountNfts<'a> {
+    /// The request method.
+    #[serde(skip_serializing)]
+    #[serde(default = "RequestMethod::account_nfts")]
+    method: RequestMethod,
+    /// The unique identifier of an account, typically the
+    /// account's Address. The request returns a list of
+    /// NFTs owned by this account.
+    account: &'a str,
+    /// The unique request id.
+    id: Option<u32>,
+    /// Limit the number of token pages to retrieve. Each page
+    /// can contain up to 32 NFTs. The limit value cannot be
+    /// lower than 20 or more than 400. The default is 100.
+    limit: Option<u32>,
+    /// Value from a previous paginated response. Resume
+    /// retrieving data where that response left off.
+    marker: Option<&'a str>,
+}
+
+impl Model for AccountNfts<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `AccountNfts` to json.")
     }
 }
 
@@ -153,17 +240,35 @@ impl Model for AccountLines<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AccountObjects<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::account_objects")]
     method: RequestMethod,
+    /// A unique identifier for the account, most commonly the
+    /// account's address.
     account: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
+    /// If included, filter results to include only this type
+    /// of ledger object. The valid types are: check, deposit_preauth,
+    /// escrow, offer, payment_channel, signer_list, ticket,
+    /// and state (trust line).
     r#type: Option<AccountObjectType>,
+    /// If true, the response only includes objects that would block
+    /// this account from being deleted. The default is false.
     #[serde(default = "default_false")]
     deletion_blockers_only: Option<bool>,
+    /// The maximum number of objects to include in the results.
+    /// Must be within the inclusive range 10 to 400 on non-admin
+    /// connections. The default is 200.
     limit: Option<u16>,
+    /// Value from a previous paginated response. Resume retrieving
+    /// data where that response left off.
     marker: Option<&'a str>,
 }
 
@@ -181,16 +286,31 @@ impl Model for AccountObjects<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AccountOffers<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::account_offers")]
     method: RequestMethod,
+    /// A unique identifier for the account, most commonly the
+    /// account's Address.
     account: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string identifying the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or "current",
+    /// "closed", or "validated" to select a ledger dynamically.
     ledger_index: Option<&'a str>,
+    /// Limit the number of transactions to retrieve. The server is
+    /// not required to honor this value. Must be within the inclusive
+    /// range 10 to 400.
     limit: Option<u16>,
+    /// If true, then the account field only accepts a public key or
+    /// XRP Ledger address. Otherwise, account can be a secret or
+    /// passphrase (not recommended). The default is false.
     #[serde(default = "default_false")]
     strict: Option<bool>,
+    /// Value from a previous paginated response. Resume retrieving
+    /// data where that response left off.
     marker: Option<&'a str>,
 }
 
@@ -208,20 +328,45 @@ impl Model for AccountOffers<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AccountTx<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::account_tx")]
     method: RequestMethod,
+    /// A unique identifier for the account, most commonly the
+    /// account's address.
     account: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// Use to look for transactions from a single ledger only.
     ledger_hash: Option<&'a str>,
+    /// Use to look for transactions from a single ledger only.
     ledger_index: Option<&'a str>,
+    /// Defaults to false. If set to true, returns transactions
+    /// as hex strings instead of JSON.
     #[serde(default = "default_false")]
     binary: Option<bool>,
+    /// Defaults to false. If set to true, returns values indexed
+    /// with the oldest ledger first. Otherwise, the results are
+    /// indexed with the newest ledger first.
+    /// (Each page of results may not be internally ordered, but
+    /// the pages are overall ordered.)
     #[serde(default = "default_false")]
     forward: Option<bool>,
+    /// Use to specify the earliest ledger to include transactions
+    /// from. A value of -1 instructs the server to use the earliest
+    /// validated ledger version available.
     ledger_index_min: Option<u32>,
+    /// Use to specify the most recent ledger to include transactions
+    /// from. A value of -1 instructs the server to use the most
+    /// recent validated ledger version available.
     ledger_index_max: Option<u32>,
+    /// Default varies. Limit the number of transactions to retrieve.
+    /// The server is not required to honor this value.
     limit: Option<u16>,
+    /// Value from a previous paginated response. Resume retrieving
+    /// data where that response left off. This value is stable even
+    /// if there is a change in the server's range of available
+    /// ledgers.
     marker: Option<&'a str>,
 }
 
@@ -239,15 +384,36 @@ impl Model for AccountTx<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BookOffers<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::book_offers")]
     method: RequestMethod,
+    /// Specification of which currency the account taking
+    /// the offer would receive, as an object with currency
+    /// and issuer fields (omit issuer for XRP),
+    /// like currency amounts.
     taker_gets: Currency,
+    /// Specification of which currency the account taking
+    /// the offer would pay, as an object with currency and
+    /// issuer fields (omit issuer for XRP),
+    /// like currency amounts.
     taker_pays: Currency,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
+    /// If provided, the server does not provide more than
+    /// this many offers in the results. The total number of
+    /// results returned may be fewer than the limit,
+    /// because the server omits unfunded offers.
     limit: Option<u16>,
+    /// The Address of an account to use as a perspective.
+    /// Unfunded offers placed by this account are always
+    /// included in the response. (You can use this to look
+    /// up your own orders to cancel them.)
     taker: Option<&'a str>,
 }
 
@@ -277,16 +443,44 @@ impl Model for BookOffers<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChannelAuthorize<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::channel_authorize")]
     method: RequestMethod,
+    /// The unique ID of the payment channel to use.
     channel_id: &'a str,
+    /// Cumulative amount of XRP, in drops, to authorize.
+    /// If the destination has already received a lesser amount
+    /// of XRP from this channel, the signature created by this
+    /// method can be redeemed for the difference.
     amount: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// The secret key to use to sign the claim. This must be
+    /// the same key pair as the public key specified in the
+    /// channel. Cannot be used with seed, seed_hex, or passphrase.
     secret: Option<&'a str>,
+    /// The secret seed to use to sign the claim. This must be
+    /// the same key pair as the public key specified in the channel.
+    /// Must be in the XRP Ledger's base58 format. If provided,
+    /// you must also specify the key_type. Cannot be used with
+    /// secret, seed_hex, or passphrase.
     seed: Option<&'a str>,
+    /// The secret seed to use to sign the claim. This must be the
+    /// same key pair as the public key specified in the channel.
+    /// Must be in hexadecimal format. If provided, you must also
+    /// specify the key_type. Cannot be used with secret, seed,
+    /// or passphrase.
     seed_hex: Option<&'a str>,
+    /// A string passphrase to use to sign the claim. This must be
+    /// the same key pair as the public key specified in the channel.
+    /// The key derived from this passphrase must match the public
+    /// key specified in the channel. If provided, you must also
+    /// specify the key_type. Cannot be used with secret, seed,
+    /// or seed_hex.
     passphrase: Option<&'a str>,
+    /// The signing algorithm of the cryptographic key pair provided.
+    /// Valid types are secp256k1 or ed25519. The default is secp256k1.
     key_type: Option<CryptoAlgorithm>,
 }
 
@@ -328,13 +522,22 @@ impl ChannelAuthorizeError for ChannelAuthorize<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChannelVerify<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::channel_verify")]
     method: RequestMethod,
+    /// The Channel ID of the channel that provides the XRP.
+    /// This is a 64-character hexadecimal string.
     channel_id: &'a str,
+    /// The amount of XRP, in drops, the provided signature authorizes.
     amount: &'a str,
+    /// The public key of the channel and the key pair that was used to
+    /// create the signature, in hexadecimal or the XRP Ledger's
+    /// base58 format.
     public_key: &'a str,
+    /// The signature to verify, in hexadecimal.
     signature: &'a str,
+    /// The unique request id.
     id: Option<u32>,
 }
 
@@ -352,13 +555,20 @@ impl Model for ChannelVerify<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DepositAuthorized<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::deposit_authorization")]
     method: RequestMethod,
+    /// The sender of a possible payment.
     source_account: &'a str,
+    /// The recipient of a possible payment.
     destination_account: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
 }
 
@@ -378,9 +588,11 @@ impl Model for DepositAuthorized<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Fee {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::fee")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
 }
 
@@ -399,15 +611,25 @@ impl Model for Fee {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GatewayBalances<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::deposit_authorization")]
     method: RequestMethod,
+    /// The Address to check. This should be the issuing address.
     account: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// If true, only accept an address or public key for the
+    /// account parameter. Defaults to false.
     #[serde(default = "default_false")]
     strict: Option<bool>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger version to use, or a
+    /// shortcut string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
+    /// An operational address to exclude from the balances
+    /// issued, or an array of such addresses.
     hotwallet: Option<Vec<&'a str>>,
 }
 
@@ -425,16 +647,16 @@ impl Model for GatewayBalances<'static> {
 /// `<https://xrpl.org/ledger_closed.html#ledger_closed>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
-pub struct LedgerClosed<'a> {
+pub struct LedgerClosed {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::ledger_closed")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
-    ledger_hash: Option<&'a str>,
-    ledger_index: Option<&'a str>,
 }
 
-impl Model for LedgerClosed<'static> {
+impl Model for LedgerClosed {
     fn to_json_value(&self) -> Value {
         serde_json::to_value(self).expect("Unable to serialize `LedgerClosed` to json.")
     }
@@ -449,9 +671,11 @@ impl Model for LedgerClosed<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LedgerCurrent {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::ledger_current")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
 }
 
@@ -470,15 +694,26 @@ impl Model for LedgerCurrent {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LedgerData<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::ledger_data")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
+    /// If set to true, return ledger objects as hashed hex
+    /// strings instead of JSON.
     #[serde(default = "default_false")]
     binary: Option<bool>,
+    /// Limit the number of ledger objects to retrieve.
+    /// The server is not required to honor this value.
     limit: Option<u16>,
+    /// Value from a previous paginated response.
+    /// Resume retrieving data where that response left off.
     marker: Option<&'a str>,
 }
 
@@ -501,9 +736,11 @@ impl Model for LedgerData<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LedgerEntry<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::ledger_entry")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
     index: Option<&'a str>,
     account_root: Option<&'a str>,
@@ -515,9 +752,16 @@ pub struct LedgerEntry<'a> {
     offer: Option<OfferFields<'a>>,
     ripple_state: Option<RippleStateFields<'a>>,
     ticket: Option<TicketFields<'a>>,
+    /// If true, return the requested ledger object's contents as a
+    /// hex string in the XRP Ledger's binary format. Otherwise, return
+    /// data in JSON format. The default is false.
     #[serde(default = "default_false")]
     binary: Option<bool>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut string
+    /// (e.g. "validated" or "closed" or "current") to choose a ledger
+    /// automatically.
     ledger_index: Option<&'a str>,
 }
 
@@ -579,24 +823,55 @@ impl LedgerEntryError for LedgerEntry<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Ledger<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::ledger")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
+    /// Admin required. If true, return full information on
+    /// the entire ledger. Ignored if you did not specify a
+    /// ledger version. Defaults to false. (Equivalent to
+    /// enabling transactions, accounts, and expand.)
+    /// Caution: This is a very large amount of data -- on
+    /// the order of several hundred megabytes!
     #[serde(default = "default_false")]
     full: Option<bool>,
+    /// Admin required. If true, return information on accounts
+    /// in the ledger. Ignored if you did not specify a ledger
+    /// version. Defaults to false. Caution: This returns a very
+    /// large amount of data!
     #[serde(default = "default_false")]
     accounts: Option<bool>,
+    /// If true, return information on transactions in the
+    /// specified ledger version. Defaults to false. Ignored if
+    /// you did not specify a ledger version.
     #[serde(default = "default_false")]
     transactions: Option<bool>,
+    /// Provide full JSON-formatted information for
+    /// transaction/account information instead of only hashes.
+    /// Defaults to false. Ignored unless you request transactions,
+    /// accounts, or both.
     #[serde(default = "default_false")]
     expand: Option<bool>,
+    /// If true, include owner_funds field in the metadata of
+    /// OfferCreate transactions in the response. Defaults to
+    /// false. Ignored unless transactions are included and
+    /// expand is true.
     #[serde(default = "default_false")]
     owner_funds: Option<bool>,
+    /// If true, and transactions and expand are both also true,
+    /// return transaction information in binary format
+    /// (hexadecimal string) instead of JSON format.
     #[serde(default = "default_false")]
     binary: Option<bool>,
+    /// If true, and the command is requesting the current ledger,
+    /// includes an array of queued transactions in the results.
     #[serde(default = "default_false")]
     queue: Option<bool>,
 }
@@ -617,16 +892,69 @@ impl Model for Ledger<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Manifest<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::manifest")]
     method: RequestMethod,
+    /// The base58-encoded public key of the validator
+    /// to look up. This can be the master public key or
+    /// ephemeral public key.
     public_key: &'a str,
+    /// The unique request id.
     id: Option<u32>,
 }
 
 impl Model for Manifest<'static> {
     fn to_json_value(&self) -> Value {
         serde_json::to_value(self).expect("Unable to serialize `Manifest` to json.")
+    }
+}
+
+/// This method retrieves all of buy offers for the specified NFToken.
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NftBuyOffers<'a> {
+    /// The request method.
+    #[serde(skip_serializing)]
+    #[serde(default = "RequestMethod::nft_buy_offers")]
+    method: RequestMethod,
+    /// The unique identifier of a NFToken object.
+    nft_id: &'a str,
+    /// A 20-byte hex string for the ledger version to use.
+    ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
+    ledger_index: Option<&'a str>,
+    /// Limit the number of NFT buy offers to retrieve.
+    /// This value cannot be lower than 50 or more than 500.
+    /// The default is 250.
+    limit: Option<u16>,
+    /// Value from a previous paginated response.
+    /// Resume retrieving data where that response left off.
+    marker: Option<&'a str>,
+}
+
+impl Model for NftBuyOffers<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `NftBuyOffers` to json.")
+    }
+}
+
+/// This method retrieves all of sell offers for the specified NFToken.
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NftSellOffers<'a> {
+    /// The request method.
+    #[serde(skip_serializing)]
+    #[serde(default = "RequestMethod::nft_sell_offers")]
+    method: RequestMethod,
+    /// The unique identifier of a NFToken object.
+    nft_id: &'a str,
+}
+
+impl Model for NftSellOffers<'static> {
+    fn to_json_value(&self) -> Value {
+        serde_json::to_value(self).expect("Unable to serialize `NftSellOffers` to json.")
     }
 }
 
@@ -640,15 +968,32 @@ impl Model for Manifest<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NoRippleCheck<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::no_ripple_check")]
     method: RequestMethod,
+    /// A unique identifier for the account, most commonly the
+    /// account's address.
     account: &'a str,
+    /// Whether the address refers to a gateway or user.
+    /// Recommendations depend on the role of the account.
+    /// Issuers must have Default Ripple enabled and must disable
+    /// No Ripple on all trust lines. Users should have Default Ripple
+    /// disabled, and should enable No Ripple on all trust lines.
     role: NoRippleCheckRole,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut string
+    /// to choose a ledger automatically.
     ledger_index: Option<&'a str>,
+    /// If true, include an array of suggested transactions, as JSON
+    /// objects, that you can sign and submit to fix the problems.
+    /// Defaults to false.
     transactions: Option<bool>,
+    /// The maximum number of trust line problems to include in the
+    /// results. Defaults to 300.
     limit: Option<u16>,
 }
 
@@ -688,15 +1033,35 @@ impl Model for NoRippleCheck<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PathFind<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::path_find")]
     method: RequestMethod,
+    /// Use "create" to send the create sub-command.
     subcommand: PathFindSubcommand,
+    /// Unique address of the account to find a path
+    /// from. (In other words, the account that would
+    /// be sending a payment.)
     source_account: &'a str,
+    /// Unique address of the account to find a path to.
+    /// (In other words, the account that would receive a payment.)
     destination_account: &'a str,
+    /// Currency Amount that the destination account would
+    /// receive in a transaction. Special case: New in: rippled 0.30.0
+    /// You can specify "-1" (for XRP) or provide -1 as the contents of
+    /// the value field (for non-XRP currencies). This requests a path
+    /// to deliver as much as possible, while spending no more than
+    /// the amount specified in send_max (if provided).
     destination_amount: Currency,
+    /// The unique request id.
     id: Option<u32>,
+    /// Currency Amount that would be spent in the transaction.
+    /// Not compatible with source_currencies.
     send_max: Option<Currency>,
+    /// Array of arrays of objects, representing payment paths to check.
+    /// You can use this to keep updated on changes to particular paths
+    /// you already know about, or to check the overall cost to make a
+    /// payment along a certain path.
     paths: Option<Vec<Path<'a>>>,
 }
 
@@ -725,18 +1090,41 @@ impl Model for PathFind<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RipplePathFind<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::ripple_path_find")]
     method: RequestMethod,
+    /// Unique address of the account that would send funds
+    /// in a transaction.
     source_account: &'a str,
+    /// Unique address of the account that would receive funds
+    /// in a transaction.
     destination_account: &'a str,
+    /// Currency Amount that the destination account would
+    /// receive in a transaction. Special case: New in: rippled 0.30.0
+    /// You can specify "-1" (for XRP) or provide -1 as the contents
+    /// of the value field (for non-XRP currencies). This requests a
+    /// path to deliver as much as possible, while spending no more
+    /// than the amount specified in send_max (if provided).
     destination_amount: Currency,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
+    /// Currency Amount that would be spent in the transaction.
+    /// Cannot be used with source_currencies.
     send_max: Option<Currency>,
+    /// Array of currencies that the source account might want
+    /// to spend. Each entry in the array should be a JSON object
+    /// with a mandatory currency field and optional issuer field,
+    /// like how currency amounts are specified. Cannot contain
+    /// more than 18 source currencies. By default, uses all source
+    /// currencies available up to a maximum of 88 different
+    /// currency/issuer pairs.
     source_currencies: Option<Vec<Currency>>,
-    paths: Option<Vec<Vec<PathStep<'a>>>>,
 }
 
 impl Model for RipplePathFind<'static> {
@@ -753,9 +1141,11 @@ impl Model for RipplePathFind<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Ping {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::ping")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
 }
 
@@ -774,9 +1164,11 @@ impl Model for Ping {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Random {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::random")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
 }
 
@@ -795,9 +1187,11 @@ impl Model for Random {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ServerInfo {
+    /// The request info.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::server_info")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
 }
 
@@ -821,9 +1215,11 @@ impl Model for ServerInfo {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ServerState {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::server_state")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
 }
 
@@ -862,23 +1258,62 @@ impl Model for ServerState {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SignAndSubmit<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::submit")]
     method: RequestMethod,
     // TODO
     // #[serde(rename(serialize = "tx_json", deserialize = "transaction"))]
     // transaction,
+    /// The unique request id.
     id: Option<u32>,
+    /// Secret key of the account supplying the transaction, used to sign it.
+    /// Do not send your secret to untrusted servers or through unsecured
+    /// network connections. Cannot be used with key_type, seed, seed_hex,
+    /// or passphrase.
     secret: Option<&'a str>,
+    /// Secret key of the account supplying the transaction, used to sign it.
+    /// Must be in the XRP Ledger's base58 format. If provided, you must also
+    /// specify the key_type. Cannot be used with secret, seed_hex, or passphrase.
     seed: Option<&'a str>,
+    /// Secret key of the account supplying the transaction, used to sign it.
+    /// Must be in hexadecimal format. If provided, you must also specify the
+    /// key_type. Cannot be used with secret, seed, or passphrase.
     seed_hex: Option<&'a str>,
+    /// Secret key of the account supplying the transaction, used to sign it,
+    /// as a string passphrase. If provided, you must also specify the key_type.
+    /// Cannot be used with secret, seed, or seed_hex.
     passphrase: Option<&'a str>,
+    /// Type of cryptographic key provided in this request. Valid types are
+    /// secp256k1 or ed25519. Defaults to secp256k1. Cannot be used with secret.
+    /// Caution: Ed25519 support is experimental.
     key_type: Option<CryptoAlgorithm>,
+    /// If true, when constructing the transaction, do not try to automatically
+    /// fill in or validate values.
     #[serde(default = "default_false")]
     offline: Option<bool>,
+    /// If this field is provided, the server auto-fills the Paths field of a
+    /// Payment transaction before signing. You must omit this field if the
+    /// transaction is a direct XRP payment or if it is not a Payment-type
+    /// transaction. Caution: The server looks for the presence or absence of
+    /// this field, not its value. This behavior may change.
     build_path: Option<bool>,
+    /// Sign-and-submit fails with the error rpcHIGH_FEE if the auto-filled
+    /// Fee value would be greater than the reference
+    /// transaction cost × fee_mult_max ÷ fee_div_max.
+    /// This field has no effect if you explicitly specify the Fee field of
+    /// the transaction. The default is 10.
     fee_mult_max: Option<u32>,
+    /// Sign-and-submit fails with the error rpcHIGH_FEE if the auto-filled
+    /// Fee value would be greater than the reference
+    /// transaction cost × fee_mult_max ÷ fee_div_max.
+    /// This field has no effect if you explicitly specify the Fee field of
+    /// the transaction. The default is 1.
     fee_div_max: Option<u32>,
+    /// If true, and the transaction fails locally, do not retry
+    /// or relay the transaction to other servers
+    #[serde(default = "default_false")]
+    fail_hard: Option<bool>,
 }
 
 impl Model for SignAndSubmit<'static> {
@@ -955,11 +1390,17 @@ impl SignAndSubmitError for SignAndSubmit<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SubmitOnly<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::submit")]
     method: RequestMethod,
+    /// Hex representation of the signed transaction to submit.
+    /// This can also be a multi-signed transaction.
     tx_blob: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// If true, and the transaction fails locally, do not retry
+    /// or relay the transaction to other servers
     #[serde(default = "default_false")]
     fail_hard: Option<bool>,
 }
@@ -981,18 +1422,41 @@ impl Model for SubmitOnly<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SignFor<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::sign_for")]
     method: RequestMethod,
     // TODO
     // #[serde(rename(serialize = "tx_json", deserialize = "transaction"))]
     // transaction,
+    /// The address which is providing the signature.
     account: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// Secret key of the account supplying the transaction, used
+    /// to sign it. Do not send your secret to untrusted servers
+    /// or through unsecured network connections. Cannot be used
+    /// with key_type, seed, seed_hex, or passphrase.
     secret: Option<&'a str>,
+    /// Secret key of the account supplying the transaction, used
+    /// to sign it. Must be in the XRP Ledger's base58 format. If
+    /// provided, you must also specify the key_type. Cannot be
+    /// used with secret, seed_hex, or passphrase.
     seed: Option<&'a str>,
+    /// Secret key of the account supplying the transaction, used
+    /// to sign it. Must be in hexadecimal format. If provided,
+    /// you must also specify the key_type. Cannot be used with
+    /// secret, seed, or passphrase.
     seed_hex: Option<&'a str>,
+    /// Secret key of the account supplying the transaction, used
+    /// to sign it, as a string passphrase. If provided, you must
+    /// also specify the key_type. Cannot be used with secret,
+    /// seed, or seed_hex.
     passphrase: Option<&'a str>,
+    /// Type of cryptographic key provided in this request. Valid
+    /// types are secp256k1 or ed25519. Defaults to secp256k1.
+    /// Cannot be used with secret. Caution: Ed25519 support is
+    /// experimental.
     key_type: Option<CryptoAlgorithm>,
 }
 
@@ -1059,23 +1523,62 @@ impl SignForError for SignFor<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Sign<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::sign")]
     method: RequestMethod,
     // TODO
     // #[serde(rename(serialize = "tx_json", deserialize = "transaction"))]
     // transaction,
+    /// The unique request id.
     id: Option<u32>,
+    /// The secret seed of the account supplying the transaction,
+    /// used to sign it. Do not send your secret to untrusted
+    /// servers or through unsecured network connections. Cannot
+    /// be used with key_type, seed, seed_hex, or passphrase.
     secret: Option<&'a str>,
+    /// The secret seed of the account supplying the transaction,
+    /// used to sign it. Must be in the XRP Ledger's base58
+    /// format. If provided, you must also specify the key_type.
+    /// Cannot be used with secret, seed_hex, or passphrase.
     seed: Option<&'a str>,
+    /// The secret seed of the account supplying the transaction,
+    /// used to sign it. Must be in hexadecimal format. If
+    /// provided, you must also specify the key_type. Cannot be
+    /// used with secret, seed, or passphrase.
     seed_hex: Option<&'a str>,
+    /// The secret seed of the account supplying the transaction,
+    /// used to sign it, as a string passphrase. If provided,
+    /// you must also specify the key_type. Cannot be used with
+    /// secret, seed, or seed_hex.
     passphrase: Option<&'a str>,
+    /// The signing algorithm of the cryptographic key pair provided.
+    /// Valid types are secp256k1 or ed25519. Defaults to secp256k1.
+    /// Cannot be used with secret.
     key_type: Option<CryptoAlgorithm>,
+    /// If true, when constructing the transaction, do not try to
+    /// automatically fill any transaction details. The default
+    /// is false.
     #[serde(default = "default_false")]
     offline: Option<bool>,
-    /// None does have meaning here
+    /// If this field is provided, the server auto-fills the Paths
+    /// field of a Payment transaction before signing. You must omit
+    /// this field if the transaction is a direct XRP payment or if
+    /// it is not a Payment-type transaction. Caution: The server
+    /// looks for the presence or absence of this field, not its value.
+    /// This behavior may change.
     build_path: Option<bool>,
+    /// Signing fails with the error rpcHIGH_FEE if the auto-filled
+    /// Fee value would be greater than the reference
+    /// transaction cost × fee_mult_max ÷ fee_div_max. This field has
+    /// no effect if you explicitly specify the Fee field of the
+    /// transaction. The default is 10.
     fee_mult_max: Option<u32>,
+    /// Signing fails with the error rpcHIGH_FEE if the auto-filled
+    /// Fee value would be greater than the reference
+    /// transaction cost × fee_mult_max ÷ fee_div_max. This field has
+    /// no effect if you explicitly specify the Fee field of the
+    /// transaction. The default is 1.
     fee_div_max: Option<u32>,
 }
 
@@ -1137,13 +1640,17 @@ impl SignError for Sign<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SubmitMultisigned {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::submit_multisigned")]
     method: RequestMethod,
     // TODO
     // #[serde(rename(serialize = "tx_json", deserialize = "transaction"))]
     // transaction,
+    /// The unique request id.
     id: Option<u32>,
+    /// If true, and the transaction fails locally, do not
+    /// retry or relay the transaction to other servers.
     #[serde(default = "default_false")]
     fail_hard: Option<bool>,
 }
@@ -1164,16 +1671,31 @@ impl Model for SubmitMultisigned {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Subscribe<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::subscribe")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
+    /// Array of objects defining order books  to monitor for
+    /// updates, as detailed below.
     books: Option<Vec<SubscribeBookFields<'a>>>,
+    /// Array of string names of generic streams to subscribe to.
     streams: Option<Vec<StreamParameter>>,
+    /// Array with the unique addresses of accounts to monitor
+    /// for validated transactions. The addresses must be in the
+    /// XRP Ledger's base58 format. The server sends a notification
+    /// for any transaction that affects at least one of these accounts.
     accounts: Option<Vec<&'a str>>,
+    /// Like accounts, but include transactions that are not
+    /// yet finalized.
     accounts_proposed: Option<Vec<&'a str>>,
+    /// (Optional for Websocket; Required otherwise) URL where the server
+    /// sends a JSON-RPC callbacks for each event. Admin-only.
     url: Option<&'a str>,
+    /// Username to provide for basic authentication at the callback URL.
     url_username: Option<&'a str>,
+    /// Password to provide for basic authentication at the callback URL.
     url_password: Option<&'a str>,
 }
 
@@ -1194,13 +1716,27 @@ impl Model for Subscribe<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Unsubscribe<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::unsubscribe")]
     method: RequestMethod,
+    /// The unique request id.
     id: Option<u32>,
+    /// Array of objects defining order books to unsubscribe
+    /// from, as explained below.
     books: Option<Vec<UnsubscribeBookFields>>,
+    /// Array of string names of generic streams to unsubscribe
+    /// from, including ledger, server, transactions,
+    /// and transactions_proposed.
     streams: Option<Vec<StreamParameter>>,
+    /// Array of unique account addresses to stop receiving updates
+    /// for, in the XRP Ledger's base58 format. (This only stops
+    /// those messages if you previously subscribed to those accounts
+    /// specifically. You cannot use this to filter accounts out of
+    /// the general transactions stream.)
     accounts: Option<Vec<&'a str>>,
+    /// Like accounts, but for accounts_proposed subscriptions that
+    /// included not-yet-validated transactions.
     accounts_proposed: Option<Vec<&'a str>>,
     // TODO Lifetime issue
     #[serde(skip_serializing)]
@@ -1224,12 +1760,18 @@ impl Model for Unsubscribe<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TransactionEntry<'a> {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::transaction_entry")]
     method: RequestMethod,
+    /// Unique hash of the transaction you are looking up.
     tx_hash: &'a str,
+    /// The unique request id.
     id: Option<u32>,
+    /// A 20-byte hex string for the ledger version to use.
     ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut
+    /// string to choose a ledger automatically.
     ledger_index: Option<&'a str>,
 }
 
@@ -1246,16 +1788,29 @@ impl Model for TransactionEntry<'static> {
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Tx {
+    /// The request method.
     #[serde(skip_serializing)]
     #[serde(default = "RequestMethod::tx")]
     method: RequestMethod,
     // TODO
     // #[serde(rename(serialize = "tx_json", deserialize = "transaction"))]
     // transaction,
+    /// The unique request id.
     id: Option<u32>,
+    /// If true, return transaction data and metadata as binary
+    /// serialized to hexadecimal strings. If false, return
+    /// transaction data and metadata as JSON. The default is false.
     #[serde(default = "default_false")]
     binary: Option<bool>,
+    /// Use this with max_ledger to specify a range of up to 1000
+    /// ledger indexes, starting with this ledger (inclusive). If
+    /// the server cannot find the transaction, it confirms whether
+    /// it was able to search all the ledgers in this range.
     min_ledger: Option<u32>,
+    /// Use this with min_ledger to specify a range of up to 1000
+    /// ledger indexes, ending with this ledger (inclusive). If the
+    /// server cannot find the transaction, it confirms whether it
+    /// was able to search all the ledgers in the requested range.
     max_ledger: Option<u32>,
 }
 
@@ -1394,6 +1949,7 @@ mod test_sign_and_submit_errors {
             build_path: None,
             fee_mult_max: None,
             fee_div_max: None,
+            fail_hard: None,
         };
         let expected_error =
             XRPLModelException::XRPLRequestError(XRPLRequestException::SignAndSubmitError(
