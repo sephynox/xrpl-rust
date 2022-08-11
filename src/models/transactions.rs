@@ -106,8 +106,14 @@ impl Model for AccountDelete<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `AccountDelete` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
+    }
+}
+
+impl From<&AccountDelete<'static>> for u32 {
+    fn from(_: &AccountDelete<'static>) -> Self {
+        0
     }
 }
 
@@ -226,7 +232,7 @@ impl Model for AccountSet<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `AccountSet` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
     }
 
@@ -260,23 +266,10 @@ impl Model for AccountSet<'static> {
     }
 }
 
-impl Transaction for AccountSet<'static> {
-    fn iter_to_int(&self) -> u32 {
-        if self.set_flag.is_some() {
-            match self.set_flag.as_ref().unwrap() {
-                AccountSetFlag::AsfAccountTxnID => 0x00000005,
-                AccountSetFlag::AsfAuthorizedNFTokenMinter => 0x0000000A,
-                AccountSetFlag::AsfDefaultRipple => 0x00000008,
-                AccountSetFlag::AsfDepositAuth => 0x00000009,
-                AccountSetFlag::AsfDisableMaster => 0x00000004,
-                AccountSetFlag::AsfDisallowXRP => 0x00000003,
-                AccountSetFlag::AsfGlobalFreeze => 0x00000007,
-                AccountSetFlag::AsfNoFreeze => 0x00000006,
-                AccountSetFlag::AsfRequireAuth => 0x00000002,
-                AccountSetFlag::AsfRequireDest => 0x00000001,
-            }
-        } else if self.clear_flag.is_some() {
-            match self.clear_flag.as_ref().unwrap() {
+impl From<&AccountSet<'static>> for u32 {
+    fn from(val: &AccountSet<'static>) -> Self {
+        if let Some(flag) = val.set_flag.as_ref().or(val.clear_flag.as_ref()) {
+            match flag {
                 AccountSetFlag::AsfAccountTxnID => 0x00000005,
                 AccountSetFlag::AsfAuthorizedNFTokenMinter => 0x0000000A,
                 AccountSetFlag::AsfDefaultRipple => 0x00000008,
@@ -292,119 +285,37 @@ impl Transaction for AccountSet<'static> {
             0
         }
     }
+}
 
+impl Transaction for AccountSet<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
-        let mut has_flag = false;
-        if self.iter_to_int() > 0 {
-            match flag {
-                Flag::AccountSet(account_set_flag) => {
-                    match account_set_flag {
-                        AccountSetFlag::AsfAccountTxnID => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&AccountSetFlag::AsfAccountTxnID)
-                            {
-                                has_flag = true
-                            };
-                        }
-                        AccountSetFlag::AsfAuthorizedNFTokenMinter => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&AccountSetFlag::AsfAuthorizedNFTokenMinter)
-                            {
-                                has_flag = true
-                            };
-                        }
-                        AccountSetFlag::AsfDefaultRipple => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&AccountSetFlag::AsfDefaultRipple)
-                            {
-                                has_flag = true
-                            };
-                        }
-                        AccountSetFlag::AsfDepositAuth => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&AccountSetFlag::AsfDepositAuth)
-                            {
-                                has_flag = true
-                            };
-                        }
-                        AccountSetFlag::AsfDisableMaster => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&AccountSetFlag::AsfDisableMaster)
-                            {
-                                has_flag = true
-                            };
-                        }
-                        AccountSetFlag::AsfDisallowXRP => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&AccountSetFlag::AsfDisallowXRP)
-                            {
-                                has_flag = true
-                            };
-                        }
-                        AccountSetFlag::AsfGlobalFreeze => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&AccountSetFlag::AsfGlobalFreeze)
-                            {
-                                has_flag = true
-                            };
-                        }
-                        AccountSetFlag::AsfNoFreeze => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&AccountSetFlag::AsfNoFreeze)
-                            {
-                                has_flag = true
-                            };
-                        }
-                        AccountSetFlag::AsfRequireAuth => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&AccountSetFlag::AsfRequireAuth)
-                            {
-                                has_flag = true
-                            };
-                        }
-                        AccountSetFlag::AsfRequireDest => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&AccountSetFlag::AsfRequireDest)
-                            {
-                                has_flag = true
-                            };
-                        }
-                    };
-                }
-                _ => has_flag = false,
-            }
+        let mut flags = &Vec::new();
+
+        if let Some(flag_set) = self.flags.as_ref() {
+            flags = flag_set;
         }
-        has_flag
+
+        match flag {
+            Flag::AccountSet(account_set_flag) => match account_set_flag {
+                AccountSetFlag::AsfAccountTxnID => flags.contains(&AccountSetFlag::AsfAccountTxnID),
+                AccountSetFlag::AsfAuthorizedNFTokenMinter => {
+                    flags.contains(&AccountSetFlag::AsfAuthorizedNFTokenMinter)
+                }
+                AccountSetFlag::AsfDefaultRipple => {
+                    flags.contains(&AccountSetFlag::AsfDefaultRipple)
+                }
+                AccountSetFlag::AsfDepositAuth => flags.contains(&AccountSetFlag::AsfDepositAuth),
+                AccountSetFlag::AsfDisableMaster => {
+                    flags.contains(&AccountSetFlag::AsfDisableMaster)
+                }
+                AccountSetFlag::AsfDisallowXRP => flags.contains(&AccountSetFlag::AsfDisallowXRP),
+                AccountSetFlag::AsfGlobalFreeze => flags.contains(&AccountSetFlag::AsfGlobalFreeze),
+                AccountSetFlag::AsfNoFreeze => flags.contains(&AccountSetFlag::AsfNoFreeze),
+                AccountSetFlag::AsfRequireAuth => flags.contains(&AccountSetFlag::AsfRequireAuth),
+                AccountSetFlag::AsfRequireDest => flags.contains(&AccountSetFlag::AsfRequireDest),
+            },
+            _ => false,
+        }
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -578,8 +489,14 @@ impl Model for CheckCancel<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCancel` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
+    }
+}
+
+impl From<&CheckCancel<'static>> for u32 {
+    fn from(_: &CheckCancel<'static>) -> Self {
+        0
     }
 }
 
@@ -670,7 +587,7 @@ impl Model for CheckCash<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCash` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         if let Some(amount) = &self.amount {
             if amount.is_xrp() {
                 transaction_json["Amount"] =
@@ -693,6 +610,12 @@ impl Model for CheckCash<'static> {
                 XRPLTransactionException::CheckCashError(error),
             )),
         }
+    }
+}
+
+impl From<&CheckCash<'static>> for u32 {
+    fn from(_: &CheckCash<'static>) -> Self {
+        0
     }
 }
 
@@ -795,12 +718,18 @@ impl Model for CheckCreate<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `CheckCreate` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         if self.send_max.is_xrp() {
             transaction_json["SendMax"] =
                 Value::from(self.send_max.get_value_as_u32().to_string().as_str());
         }
         transaction_json
+    }
+}
+
+impl From<&CheckCreate<'static>> for u32 {
+    fn from(_: &CheckCreate<'static>) -> Self {
+        0
     }
 }
 
@@ -888,7 +817,7 @@ impl Model for DepositPreauth<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `DepositPreauth` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
     }
 
@@ -899,6 +828,12 @@ impl Model for DepositPreauth<'static> {
                 XRPLTransactionException::DepositPreauthError(error),
             )),
         }
+    }
+}
+
+impl From<&DepositPreauth<'static>> for u32 {
+    fn from(_: &DepositPreauth<'static>) -> Self {
+        0
     }
 }
 
@@ -997,8 +932,14 @@ impl Model for EscrowCancel<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EscrowCancel` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
+    }
+}
+
+impl From<&EscrowCancel<'static>> for u32 {
+    fn from(_: &EscrowCancel<'static>) -> Self {
+        0
     }
 }
 
@@ -1089,7 +1030,7 @@ impl Model for EscrowCreate<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EscrowCreate` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         if self.amount.is_xrp() {
             transaction_json["Amount"] =
                 Value::from(self.amount.get_value_as_u32().to_string().as_str());
@@ -1104,6 +1045,12 @@ impl Model for EscrowCreate<'static> {
                 XRPLTransactionException::EscrowCreateError(error),
             )),
         }
+    }
+}
+
+impl From<&EscrowCreate<'static>> for u32 {
+    fn from(_: &EscrowCreate<'static>) -> Self {
+        0
     }
 }
 
@@ -1209,7 +1156,7 @@ impl Model for EscrowFinish<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EscrowFinish` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
     }
 
@@ -1220,6 +1167,12 @@ impl Model for EscrowFinish<'static> {
                 XRPLTransactionException::EscrowFinishError(error),
             )),
         }
+    }
+}
+
+impl From<&EscrowFinish<'static>> for u32 {
+    fn from(_: &EscrowFinish<'static>) -> Self {
+        0
     }
 }
 
@@ -1318,7 +1271,7 @@ impl Model for NFTokenAcceptOffer<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenAcceptOffer` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         if let Some(nftoken_broker_fee) = &self.nftoken_broker_fee {
             if nftoken_broker_fee.is_xrp() {
                 transaction_json["NFTokenBrokerFee"] =
@@ -1340,6 +1293,12 @@ impl Model for NFTokenAcceptOffer<'static> {
                 Ok(_no_error) => Ok(()),
             },
         }
+    }
+}
+
+impl From<&NFTokenAcceptOffer<'static>> for u32 {
+    fn from(_: &NFTokenAcceptOffer<'static>) -> Self {
+        0
     }
 }
 
@@ -1448,8 +1407,14 @@ impl Model for NFTokenBurn<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenBurn` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
+    }
+}
+
+impl From<&NFTokenBurn<'static>> for u32 {
+    fn from(_: &NFTokenBurn<'static>) -> Self {
+        0
     }
 }
 
@@ -1537,7 +1502,7 @@ impl Model for NFTokenCancelOffer<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenCancelOffer` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
     }
 
@@ -1548,6 +1513,12 @@ impl Model for NFTokenCancelOffer<'static> {
             )),
             Ok(_no_error) => Ok(()),
         }
+    }
+}
+
+impl From<&NFTokenCancelOffer<'static>> for u32 {
+    fn from(_: &NFTokenCancelOffer<'static>) -> Self {
+        0
     }
 }
 
@@ -1648,7 +1619,7 @@ impl Model for NFTokenCreateOffer<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenCreateOffer` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         if self.amount.is_xrp() {
             transaction_json["Amount"] =
                 Value::from(self.amount.get_value_as_u32().to_string().as_str());
@@ -1676,41 +1647,36 @@ impl Model for NFTokenCreateOffer<'static> {
     }
 }
 
-impl Transaction for NFTokenCreateOffer<'static> {
-    fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                match flag {
-                    &NFTokenCreateOfferFlag::TfSellOffer => flags_int += 0x00000001,
-                }
-            }
-        }
-        flags_int
+impl From<&NFTokenCreateOffer<'static>> for u32 {
+    fn from(val: &NFTokenCreateOffer<'static>) -> Self {
+        val.flags
+            .as_ref()
+            .unwrap_or(&Vec::new())
+            .iter()
+            .fold(0, |collect, flag| match flag {
+                NFTokenCreateOfferFlag::TfSellOffer => collect + 0x00000001,
+            })
     }
+}
 
+impl Transaction for NFTokenCreateOffer<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
-        let mut has_flag = false;
-        if self.iter_to_int() > 0 {
-            match flag {
-                Flag::NFTokenCreateOffer(nftoken_create_offer_flag) => {
-                    match nftoken_create_offer_flag {
-                        NFTokenCreateOfferFlag::TfSellOffer => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&NFTokenCreateOfferFlag::TfSellOffer)
-                            {
-                                has_flag = true
-                            };
-                        }
+        let mut flags = &Vec::new();
+
+        if let Some(flag_set) = self.flags.as_ref() {
+            flags = flag_set;
+        }
+
+        match flag {
+            Flag::NFTokenCreateOffer(nftoken_create_offer_flag) => {
+                match nftoken_create_offer_flag {
+                    NFTokenCreateOfferFlag::TfSellOffer => {
+                        flags.contains(&NFTokenCreateOfferFlag::TfSellOffer)
                     }
                 }
-                _ => has_flag = false,
-            };
+            }
+            _ => false,
         }
-        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -1840,7 +1806,7 @@ impl Model for NFTokenMint<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `NFTokenMint` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
     }
 
@@ -1864,72 +1830,38 @@ impl Model for NFTokenMint<'static> {
     }
 }
 
-impl Transaction for NFTokenMint<'static> {
-    fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                match flag {
-                    NFTokenMintFlag::TfBurnable => flags_int += 0x00000001,
-                    NFTokenMintFlag::TfOnlyXRP => flags_int += 0x00000002,
-                    NFTokenMintFlag::TfTrustline => flags_int += 0x00000004,
-                    NFTokenMintFlag::TfTransferable => flags_int += 0x00000008,
-                }
-            }
-        }
-        flags_int
+impl From<&NFTokenMint<'static>> for u32 {
+    fn from(val: &NFTokenMint<'static>) -> Self {
+        val.flags
+            .as_ref()
+            .unwrap_or(&Vec::new())
+            .iter()
+            .fold(0, |collect, flag| match flag {
+                NFTokenMintFlag::TfBurnable => collect + 0x00000001,
+                NFTokenMintFlag::TfOnlyXRP => collect + 0x00000002,
+                NFTokenMintFlag::TfTrustline => collect + 0x00000004,
+                NFTokenMintFlag::TfTransferable => collect + 0x00000008,
+            })
     }
+}
 
+impl Transaction for NFTokenMint<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
-        let mut has_flag = false;
-        if self.iter_to_int() > 0 {
-            match flag {
-                Flag::NFTokenMint(nftoken_mint_flag) => match nftoken_mint_flag {
-                    NFTokenMintFlag::TfBurnable => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&NFTokenMintFlag::TfBurnable)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    NFTokenMintFlag::TfOnlyXRP => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&NFTokenMintFlag::TfOnlyXRP)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    NFTokenMintFlag::TfTransferable => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&NFTokenMintFlag::TfTransferable)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    NFTokenMintFlag::TfTrustline => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&NFTokenMintFlag::TfTrustline)
-                        {
-                            has_flag = true
-                        };
-                    }
-                },
-                _ => has_flag = false,
-            };
+        let mut flags = &Vec::new();
+
+        if let Some(flag_set) = self.flags.as_ref() {
+            flags = flag_set;
         }
-        has_flag
+
+        match flag {
+            Flag::NFTokenMint(nftoken_mint_flag) => match nftoken_mint_flag {
+                NFTokenMintFlag::TfBurnable => flags.contains(&NFTokenMintFlag::TfBurnable),
+                NFTokenMintFlag::TfOnlyXRP => flags.contains(&NFTokenMintFlag::TfOnlyXRP),
+                NFTokenMintFlag::TfTransferable => flags.contains(&NFTokenMintFlag::TfTransferable),
+                NFTokenMintFlag::TfTrustline => flags.contains(&NFTokenMintFlag::TfTrustline),
+            },
+            _ => false,
+        }
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -2051,8 +1983,14 @@ impl Model for OfferCancel<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `OfferCancel` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
+    }
+}
+
+impl From<&OfferCancel<'static>> for u32 {
+    fn from(_: &OfferCancel<'static>) -> Self {
+        0
     }
 }
 
@@ -2141,7 +2079,7 @@ impl Model for OfferCreate<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `OfferCreate` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         if self.taker_gets.is_xrp() {
             transaction_json["TakerGets"] =
                 Value::from(self.taker_gets.get_value_as_u32().to_string().as_str());
@@ -2154,72 +2092,40 @@ impl Model for OfferCreate<'static> {
     }
 }
 
-impl Transaction for OfferCreate<'static> {
-    fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                match flag {
-                    OfferCreateFlag::TfPassive => flags_int += 0x00010000,
-                    OfferCreateFlag::TfImmediateOrCancel => flags_int += 0x00020000,
-                    OfferCreateFlag::TfFillOrKill => flags_int += 0x00040000,
-                    OfferCreateFlag::TfSell => flags_int += 0x00080000,
-                }
-            }
-        }
-        flags_int
+impl From<&OfferCreate<'static>> for u32 {
+    fn from(val: &OfferCreate<'static>) -> Self {
+        val.flags
+            .as_ref()
+            .unwrap_or(&Vec::new())
+            .iter()
+            .fold(0, |collect, flag| match flag {
+                OfferCreateFlag::TfPassive => collect + 0x00010000,
+                OfferCreateFlag::TfImmediateOrCancel => collect + 0x00020000,
+                OfferCreateFlag::TfFillOrKill => collect + 0x00040000,
+                OfferCreateFlag::TfSell => collect + 0x00080000,
+            })
     }
+}
 
+impl Transaction for OfferCreate<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
-        let mut has_flag = false;
-        if self.iter_to_int() > 0 {
-            match flag {
-                Flag::OfferCreate(offer_create_flag) => match offer_create_flag {
-                    OfferCreateFlag::TfFillOrKill => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&OfferCreateFlag::TfFillOrKill)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    OfferCreateFlag::TfImmediateOrCancel => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&OfferCreateFlag::TfImmediateOrCancel)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    OfferCreateFlag::TfPassive => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&OfferCreateFlag::TfPassive)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    OfferCreateFlag::TfSell => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&OfferCreateFlag::TfSell)
-                        {
-                            has_flag = true
-                        };
-                    }
-                },
-                _ => has_flag = false,
-            };
+        let mut flags = &Vec::new();
+
+        if let Some(flag_set) = self.flags.as_ref() {
+            flags = flag_set;
         }
-        has_flag
+
+        match flag {
+            Flag::OfferCreate(offer_create_flag) => match offer_create_flag {
+                OfferCreateFlag::TfFillOrKill => flags.contains(&OfferCreateFlag::TfFillOrKill),
+                OfferCreateFlag::TfImmediateOrCancel => {
+                    flags.contains(&OfferCreateFlag::TfImmediateOrCancel)
+                }
+                OfferCreateFlag::TfPassive => flags.contains(&OfferCreateFlag::TfPassive),
+                OfferCreateFlag::TfSell => flags.contains(&OfferCreateFlag::TfSell),
+            },
+            _ => false,
+        }
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -2309,7 +2215,7 @@ impl Model for Payment<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `Payment` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         if self.amount.is_xrp() {
             transaction_json["Amount"] =
                 Value::from(self.amount.get_value_as_u32().to_string().as_str());
@@ -2349,61 +2255,36 @@ impl Model for Payment<'static> {
     }
 }
 
-impl Transaction for Payment<'static> {
-    fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                match flag {
-                    PaymentFlag::TfNoDirectRipple => flags_int += 0x00010000,
-                    PaymentFlag::TfPartialPayment => flags_int += 0x00020000,
-                    PaymentFlag::TfLimitQuality => flags_int += 0x00040000,
-                }
-            }
-        }
-        flags_int
+impl From<&Payment<'static>> for u32 {
+    fn from(val: &Payment<'static>) -> Self {
+        val.flags
+            .as_ref()
+            .unwrap_or(&Vec::new())
+            .iter()
+            .fold(0, |collect, flag| match flag {
+                PaymentFlag::TfNoDirectRipple => collect + 0x00010000,
+                PaymentFlag::TfPartialPayment => collect + 0x00020000,
+                PaymentFlag::TfLimitQuality => collect + 0x00040000,
+            })
     }
+}
 
+impl Transaction for Payment<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
-        let mut has_flag = false;
-        if self.iter_to_int() > 0 {
-            match flag {
-                Flag::Payment(payment_flag) => match payment_flag {
-                    PaymentFlag::TfLimitQuality => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&PaymentFlag::TfLimitQuality)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    PaymentFlag::TfNoDirectRipple => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&PaymentFlag::TfNoDirectRipple)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    PaymentFlag::TfPartialPayment => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&PaymentFlag::TfPartialPayment)
-                        {
-                            has_flag = true
-                        };
-                    }
-                },
-                _ => has_flag = false,
-            };
+        let mut flags = &Vec::new();
+
+        if let Some(flag_set) = self.flags.as_ref() {
+            flags = flag_set;
         }
-        has_flag
+
+        match flag {
+            Flag::Payment(payment_flag) => match payment_flag {
+                PaymentFlag::TfLimitQuality => flags.contains(&PaymentFlag::TfLimitQuality),
+                PaymentFlag::TfNoDirectRipple => flags.contains(&PaymentFlag::TfNoDirectRipple),
+                PaymentFlag::TfPartialPayment => flags.contains(&PaymentFlag::TfPartialPayment),
+            },
+            _ => false,
+        }
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -2542,57 +2423,45 @@ impl Model for PaymentChannelClaim<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json = serde_json::to_value(&self)
             .expect("Unable to serialize `PaymentChannelClaim` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
     }
 }
 
-impl Transaction for PaymentChannelClaim<'static> {
-    fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                match flag {
-                    PaymentChannelClaimFlag::TfRenew => flags_int += 0x00010000,
-                    PaymentChannelClaimFlag::TfClose => flags_int += 0x00020000,
-                }
-            }
-        }
-        flags_int
+impl From<&PaymentChannelClaim<'static>> for u32 {
+    fn from(val: &PaymentChannelClaim<'static>) -> Self {
+        val.flags
+            .as_ref()
+            .unwrap_or(&Vec::new())
+            .iter()
+            .fold(0, |collect, flag| match flag {
+                PaymentChannelClaimFlag::TfRenew => collect + 0x00010000,
+                PaymentChannelClaimFlag::TfClose => collect + 0x00020000,
+            })
     }
+}
 
+impl Transaction for PaymentChannelClaim<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
-        let mut has_flag = false;
-        if self.iter_to_int() > 0 {
-            match flag {
-                Flag::PaymentChannelClaim(payment_channel_claim_flag) => {
-                    match payment_channel_claim_flag {
-                        PaymentChannelClaimFlag::TfClose => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&PaymentChannelClaimFlag::TfClose)
-                            {
-                                has_flag = true
-                            };
-                        }
-                        PaymentChannelClaimFlag::TfRenew => {
-                            if self
-                                .flags
-                                .as_ref()
-                                .unwrap()
-                                .contains(&PaymentChannelClaimFlag::TfRenew)
-                            {
-                                has_flag = true
-                            };
-                        }
+        let mut flags = &Vec::new();
+
+        if let Some(flag_set) = self.flags.as_ref() {
+            flags = flag_set;
+        }
+
+        match flag {
+            Flag::PaymentChannelClaim(payment_channel_claim_flag) => {
+                match payment_channel_claim_flag {
+                    PaymentChannelClaimFlag::TfClose => {
+                        flags.contains(&PaymentChannelClaimFlag::TfClose)
+                    }
+                    PaymentChannelClaimFlag::TfRenew => {
+                        flags.contains(&PaymentChannelClaimFlag::TfRenew)
                     }
                 }
-                _ => has_flag = false,
-            };
+            }
+            _ => false,
         }
-        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -2681,12 +2550,18 @@ impl Model for PaymentChannelCreate<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json = serde_json::to_value(&self)
             .expect("Unable to serialize `PaymentChannelCreate` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         if self.amount.is_xrp() {
             transaction_json["Amount"] =
                 Value::from(self.amount.get_value_as_u32().to_string().as_str());
         }
         transaction_json
+    }
+}
+
+impl From<&PaymentChannelCreate<'static>> for u32 {
+    fn from(_: &PaymentChannelCreate<'static>) -> Self {
+        0
     }
 }
 
@@ -2775,8 +2650,14 @@ impl Model for PaymentChannelFund<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `PaymentChannelFund` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
+    }
+}
+
+impl From<&PaymentChannelFund<'static>> for u32 {
+    fn from(_: &PaymentChannelFund<'static>) -> Self {
+        0
     }
 }
 
@@ -2866,8 +2747,14 @@ impl Model for SetRegularKey<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `SetRegularKey` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
+    }
+}
+
+impl From<&SetRegularKey<'static>> for u32 {
+    fn from(_: &SetRegularKey<'static>) -> Self {
+        0
     }
 }
 
@@ -2957,7 +2844,7 @@ impl Model for SignerListSet<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `SignerListSet` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
     }
 
@@ -2973,6 +2860,12 @@ impl Model for SignerListSet<'static> {
                 Ok(_no_error) => Ok(()),
             },
         }
+    }
+}
+
+impl From<&SignerListSet<'static>> for u32 {
+    fn from(_: &SignerListSet<'static>) -> Self {
+        0
     }
 }
 
@@ -3113,8 +3006,14 @@ impl Model for TicketCreate<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `TicketCreate` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
+    }
+}
+
+impl From<&TicketCreate<'static>> for u32 {
+    fn from(_: &TicketCreate<'static>) -> Self {
+        0
     }
 }
 
@@ -3202,7 +3101,7 @@ impl Model for TrustSet<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `TrustSet` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         if self.limit_amount.is_xrp() {
             transaction_json["LimitAmount"] =
                 Value::from(self.limit_amount.get_value_as_u32().to_string().as_str());
@@ -3211,83 +3110,40 @@ impl Model for TrustSet<'static> {
     }
 }
 
-impl Transaction for TrustSet<'static> {
-    fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                match flag {
-                    TrustSetFlag::TfSetAuth => flags_int += 0x00010000,
-                    TrustSetFlag::TfSetNoRipple => flags_int += 0x00020000,
-                    TrustSetFlag::TfClearNoRipple => flags_int += 0x00040000,
-                    TrustSetFlag::TfSetFreeze => flags_int += 0x00100000,
-                    TrustSetFlag::TfClearFreeze => flags_int += 0x00200000,
-                }
-            }
-        }
-        flags_int
+impl From<&TrustSet<'static>> for u32 {
+    fn from(val: &TrustSet<'static>) -> Self {
+        val.flags
+            .as_ref()
+            .unwrap_or(&Vec::new())
+            .iter()
+            .fold(0, |collect, flag| match flag {
+                TrustSetFlag::TfSetAuth => collect + 0x00010000,
+                TrustSetFlag::TfSetNoRipple => collect + 0x00020000,
+                TrustSetFlag::TfClearNoRipple => collect + 0x00040000,
+                TrustSetFlag::TfSetFreeze => collect + 0x00100000,
+                TrustSetFlag::TfClearFreeze => collect + 0x00200000,
+            })
     }
+}
 
+impl Transaction for TrustSet<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
-        let mut has_flag = false;
-        if self.iter_to_int() > 0 {
-            match flag {
-                Flag::TrustSet(trust_set_flag) => match trust_set_flag {
-                    TrustSetFlag::TfClearFreeze => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&TrustSetFlag::TfClearFreeze)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    TrustSetFlag::TfClearNoRipple => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&TrustSetFlag::TfClearNoRipple)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    TrustSetFlag::TfSetAuth => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&TrustSetFlag::TfSetAuth)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    TrustSetFlag::TfSetFreeze => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&TrustSetFlag::TfSetFreeze)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    TrustSetFlag::TfSetNoRipple => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&TrustSetFlag::TfSetNoRipple)
-                        {
-                            has_flag = true
-                        };
-                    }
-                },
-                _ => has_flag = false,
-            };
+        let mut flags = &Vec::new();
+
+        if let Some(flag_set) = self.flags.as_ref() {
+            flags = flag_set;
         }
-        has_flag
+
+        match flag {
+            Flag::TrustSet(trust_set_flag) => match trust_set_flag {
+                TrustSetFlag::TfClearFreeze => flags.contains(&TrustSetFlag::TfClearFreeze),
+                TrustSetFlag::TfClearNoRipple => flags.contains(&TrustSetFlag::TfClearNoRipple),
+                TrustSetFlag::TfSetAuth => flags.contains(&TrustSetFlag::TfSetAuth),
+                TrustSetFlag::TfSetFreeze => flags.contains(&TrustSetFlag::TfSetFreeze),
+                TrustSetFlag::TfSetNoRipple => flags.contains(&TrustSetFlag::TfSetNoRipple),
+            },
+            _ => false,
+        }
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -3352,55 +3208,41 @@ impl Model for EnableAmendment<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `EnableAmendment` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
     }
 }
 
-impl Transaction for EnableAmendment<'static> {
-    fn iter_to_int(&self) -> u32 {
-        let mut flags_int: u32 = 0;
-        if self.flags.is_some() {
-            for flag in self.flags.as_ref().unwrap() {
-                match flag {
-                    EnableAmendmentFlag::TfGotMajority => flags_int += 0x00010000,
-                    EnableAmendmentFlag::TfLostMajority => flags_int += 0x00020000,
-                }
-            }
-        }
-        flags_int
+impl From<&EnableAmendment<'static>> for u32 {
+    fn from(val: &EnableAmendment<'static>) -> Self {
+        val.flags
+            .as_ref()
+            .unwrap_or(&Vec::new())
+            .iter()
+            .fold(0, |collect, flag| match flag {
+                EnableAmendmentFlag::TfGotMajority => collect + 0x00010000,
+                EnableAmendmentFlag::TfLostMajority => collect + 0x00020000,
+            })
     }
+}
 
+impl Transaction for EnableAmendment<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
-        let mut has_flag = false;
-        if self.iter_to_int() > 0 {
-            match flag {
-                Flag::EnableAmendment(enable_amendment_flag) => match enable_amendment_flag {
-                    EnableAmendmentFlag::TfGotMajority => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&EnableAmendmentFlag::TfGotMajority)
-                        {
-                            has_flag = true
-                        };
-                    }
-                    EnableAmendmentFlag::TfLostMajority => {
-                        if self
-                            .flags
-                            .as_ref()
-                            .unwrap()
-                            .contains(&EnableAmendmentFlag::TfLostMajority)
-                        {
-                            has_flag = true
-                        };
-                    }
-                },
-                _ => has_flag = false,
-            };
+        match flag {
+            Flag::EnableAmendment(enable_amendment_flag) => match enable_amendment_flag {
+                EnableAmendmentFlag::TfGotMajority => self
+                    .flags
+                    .as_ref()
+                    .unwrap()
+                    .contains(&EnableAmendmentFlag::TfGotMajority),
+                EnableAmendmentFlag::TfLostMajority => self
+                    .flags
+                    .as_ref()
+                    .unwrap()
+                    .contains(&EnableAmendmentFlag::TfLostMajority),
+            },
+            _ => false,
         }
-        has_flag
     }
 
     fn get_transaction_type(&self) -> TransactionType {
@@ -3466,8 +3308,14 @@ impl Model for SetFee<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `SetFee` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
+    }
+}
+
+impl From<&SetFee<'static>> for u32 {
+    fn from(_: &SetFee<'static>) -> Self {
+        0
     }
 }
 
@@ -3534,7 +3382,7 @@ impl Model for UNLModify<'static> {
     fn to_json_value(&self) -> Value {
         let mut transaction_json =
             serde_json::to_value(&self).expect("Unable to serialize `UNLModify` to json.");
-        transaction_json["Flags"] = Value::from(self.iter_to_int());
+        transaction_json["Flags"] = Value::from(u32::from(self));
         transaction_json
     }
 
@@ -3545,6 +3393,12 @@ impl Model for UNLModify<'static> {
             )),
             Ok(_no_error) => Ok(()),
         }
+    }
+}
+
+impl From<&UNLModify<'static>> for u32 {
+    fn from(_: &UNLModify<'static>) -> Self {
+        0
     }
 }
 
