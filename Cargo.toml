@@ -51,6 +51,7 @@ serde_json = { version = "1.0.68", default-features = false, features = [
     "alloc",
 ] }
 serde_with = "1.11.0"
+zeroize = "1.5.7"
 
 [dev-dependencies]
 criterion = "0.3.5"

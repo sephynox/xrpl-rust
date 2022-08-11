@@ -639,13 +639,11 @@ impl RequestMethod {
 
 /// Standard functions for transactions.
 pub trait Transaction {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
     fn has_flag(&self, flag: &Flag) -> bool {
         let _txn_flag = flag;
         false
     }
+
     fn get_transaction_type(&self) -> TransactionType;
 }
 
