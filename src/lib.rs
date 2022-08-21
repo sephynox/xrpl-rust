@@ -25,12 +25,14 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std as alloc;
 
+pub mod clients;
 pub mod constants;
 #[cfg(feature = "core")]
 pub mod core;
 pub mod macros;
 #[cfg(feature = "models")]
 pub mod models;
+pub mod tokio;
 #[cfg(feature = "utils")]
 pub mod utils;
 pub mod wallet;

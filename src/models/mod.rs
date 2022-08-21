@@ -4,6 +4,7 @@ pub mod exceptions;
 pub mod model;
 pub mod request_fields;
 pub mod requests;
+pub mod response;
 pub mod transactions;
 pub mod utils;
 
@@ -362,8 +363,14 @@ pub enum TransactionType {
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "role")]
 pub enum NoRippleCheckRole {
-    Gateway,
     User,
+    Gateway,
+}
+
+impl Default for NoRippleCheckRole {
+    fn default() -> Self {
+        NoRippleCheckRole::User
+    }
 }
 
 /// There are three different modes, or sub-commands, of
@@ -385,12 +392,17 @@ pub enum PathFindSubcommand {
     Status,
 }
 
+impl Default for PathFindSubcommand {
+    fn default() -> Self {
+        PathFindSubcommand::Create
+    }
+}
+
 /// Represents possible values of the streams query param
 /// for subscribe.
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display)]
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
-#[serde(tag = "streams")]
 pub enum StreamParameter {
     Consensus,
     Ledger,
@@ -651,13 +663,11 @@ impl RequestMethod {
 
 /// Standard functions for transactions.
 pub trait Transaction {
-    fn iter_to_int(&self) -> u32 {
-        0
-    }
     fn has_flag(&self, flag: &Flag) -> bool {
         let _txn_flag = flag;
         false
     }
+
     fn get_transaction_type(&self) -> TransactionType;
 }
 

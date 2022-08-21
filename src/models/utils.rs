@@ -5,16 +5,16 @@ use serde::{Deserialize, Serialize};
 
 /// JSONRPC Request
 #[derive(Debug, Clone, Serialize)]
-pub struct Request<'a, T> {
-    pub method: &'a str,
+pub struct Request<T: Send + Sync> {
+    pub method: String,
     pub params: Option<T>,
     pub id: serde_json::Value,
-    pub jsonrpc: Option<&'a str>,
+    pub jsonrpc: Option<String>,
 }
 
 /// JSONRPC Response
 #[derive(Debug, Clone, Deserialize)]
-pub struct Response<T> {
+pub struct Response<T: Send + Sync> {
     pub id: serde_json::Value,
     pub result: Option<T>,
     pub error: Option<JSONRPCException>,

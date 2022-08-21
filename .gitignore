@@ -15,5 +15,7 @@ Cargo.lock
 # VSCode
 .vscode
 
+.idea
+
 # Additional
 src/main.rs
