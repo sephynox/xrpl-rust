@@ -19,6 +19,11 @@
 [license]: https://opensource.org/licenses/ISC
 [license_status]: https://img.shields.io/badge/License-ISC-blue.svg
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="/assets/xrpl-rust_white.png">
+  <img alt="" src="/assets/xrpl-rust_black.png">
+</picture>
+
 A Rust library to interact with the XRPL.
 Based off of the [xrpl-py](https://github.com/XRPLF/xrpl-py) library.
 
