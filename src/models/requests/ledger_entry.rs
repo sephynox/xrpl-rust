@@ -1,0 +1,155 @@
+use alloc::string::ToString;
+use serde::{Deserialize, Serialize};
+use serde_with::skip_serializing_none;
+
+use crate::models::exceptions::{LedgerEntryException, XRPLModelException, XRPLRequestException};
+use crate::models::request_fields::*;
+use crate::models::{LedgerEntryError, Model, RequestMethod};
+
+/// The ledger_entry method returns a single ledger object
+/// from the XRP Ledger in its raw format. See ledger formats
+/// for information on the different types of objects you can
+/// retrieve.
+///
+/// See Ledger Formats:
+/// `<https://xrpl.org/ledger-data-formats.html#ledger-data-formats>`
+///
+/// See Ledger Entry:
+/// `<https://xrpl.org/ledger_entry.html#ledger_entry>`
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct LedgerEntry<'a> {
+    /// The unique request id.
+    pub id: Option<&'a str>,
+    pub index: Option<&'a str>,
+    pub account_root: Option<&'a str>,
+    pub check: Option<&'a str>,
+    pub payment_channel: Option<&'a str>,
+    pub deposit_preauth: Option<DepositPreauthFields<'a>>,
+    pub directory: Option<DirectoryFields<'a>>,
+    pub escrow: Option<EscrowFields<'a>>,
+    pub offer: Option<OfferFields<'a>>,
+    pub ripple_state: Option<RippleStateFields<'a>>,
+    pub ticket: Option<TicketFields<'a>>,
+    /// If true, return the requested ledger object's contents as a
+    /// hex string in the XRP Ledger's binary format. Otherwise, return
+    /// data in JSON format. The default is false.
+    pub binary: Option<bool>,
+    /// A 20-byte hex string for the ledger version to use.
+    pub ledger_hash: Option<&'a str>,
+    /// The ledger index of the ledger to use, or a shortcut string
+    /// (e.g. "validated" or "closed" or "current") to choose a ledger
+    /// automatically.
+    pub ledger_index: Option<&'a str>,
+    /// The request method.
+    #[serde(default = "RequestMethod::ledger_entry")]
+    pub command: RequestMethod,
+}
+
+impl Default for LedgerEntry<'static> {
+    fn default() -> Self {
+        LedgerEntry {
+            id: None,
+            index: None,
+            account_root: None,
+            check: None,
+            payment_channel: None,
+            deposit_preauth: None,
+            directory: None,
+            escrow: None,
+            offer: None,
+            ripple_state: None,
+            ticket: None,
+            binary: None,
+            ledger_hash: None,
+            ledger_index: None,
+            command: RequestMethod::LedgerEntry,
+        }
+    }
+}
+
+impl Model for LedgerEntry<'static> {
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
+        match self._get_field_error() {
+            Err(error) => Err(XRPLModelException::XRPLRequestError(
+                XRPLRequestException::LedgerEntryError(error),
+            )),
+            Ok(_no_error) => Ok(()),
+        }
+    }
+}
+
+impl LedgerEntryError for LedgerEntry<'static> {
+    fn _get_field_error(&self) -> Result<(), LedgerEntryException> {
+        let mut signing_methods: u32 = 0;
+        for method in [self.index, self.account_root, self.check] {
+            if method.is_some() {
+                signing_methods += 1
+            }
+        }
+        if self.directory.is_some() {
+            signing_methods += 1
+        }
+        if self.offer.is_some() {
+            signing_methods += 1
+        }
+        if self.ripple_state.is_some() {
+            signing_methods += 1
+        }
+        if self.escrow.is_some() {
+            signing_methods += 1
+        }
+        if self.payment_channel.is_some() {
+            signing_methods += 1
+        }
+        if self.deposit_preauth.is_some() {
+            signing_methods += 1
+        }
+        if self.ticket.is_some() {
+            signing_methods += 1
+        }
+        match signing_methods != 1 {
+            true => Err(LedgerEntryException::InvalidMustSetExactlyOneOf { fields: "`index`, `account_root`, `check`, `directory`, `offer`, `ripple_state`, `escrow`, `payment_channel`, `deposit_preauth`, `ticket`".to_string() }),
+            false => Ok(()),
+        }
+    }
+}
+
+#[cfg(test)]
+mod test_ledger_entry_errors {
+    use alloc::string::ToString;
+
+    use crate::models::{
+        exceptions::{LedgerEntryException, XRPLModelException, XRPLRequestException},
+        request_fields::OfferFields,
+        Model, RequestMethod,
+    };
+
+    use super::LedgerEntry;
+
+    #[test]
+    fn test_fields_error() {
+        let ledger_entry = LedgerEntry {
+            command: RequestMethod::LedgerEntry,
+            id: None,
+            index: None,
+            account_root: Some("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
+            check: None,
+            payment_channel: None,
+            deposit_preauth: None,
+            directory: None,
+            escrow: None,
+            offer: Some(OfferFields {
+                account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+                seq: 359,
+            }),
+            ripple_state: None,
+            ticket: None,
+            binary: None,
+            ledger_hash: None,
+            ledger_index: None,
+        };
+        let expected_error = XRPLModelException::XRPLRequestError(XRPLRequestException::LedgerEntryError(LedgerEntryException::InvalidMustSetExactlyOneOf { fields: "`index`, `account_root`, `check`, `directory`, `offer`, `ripple_state`, `escrow`, `payment_channel`, `deposit_preauth`, `ticket`".to_string() }));
+        assert_eq!(ledger_entry.validate(), Err(expected_error))
+    }
+}

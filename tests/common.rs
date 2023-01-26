@@ -1,6 +1,9 @@
 use futures::StreamExt;
 use tokio_tungstenite::tungstenite::Message;
-use xrpl::models::{AccountInfo, Model, StreamParameter, Subscribe};
+use xrpl::models::{
+    requests::{AccountInfo, Subscribe},
+    StreamParameter,
+};
 use xrpl::tokio::AsyncWebsocketClient;
 
 /// Setup common testing prerequisites here such as connecting a client
@@ -26,7 +29,7 @@ async fn test_client_send() {
         streams: Some(vec![StreamParameter::Ledger]),
         ..Default::default()
     };
-    let message = Message::Text(request.to_json());
+    let message = Message::Text(serde_json::to_string(&request).unwrap());
 
     match client.send(&mut ws_stream, sender, message).await {
         Ok(_) => (),
@@ -44,7 +47,7 @@ async fn test_client_request() {
         account: "r3rhWeE31Jt5sWmi4QiGLMZnY3ENgqw96W",
         ..Default::default()
     };
-    let message = Message::Text(request.to_json());
+    let message = Message::Text(serde_json::to_string(&request).unwrap());
 
     assert!(client.request(message).await.is_ok());
 }

@@ -51,6 +51,7 @@ serde_json = { version = "1.0.68", default-features = false, features = [
     "alloc",
 ] }
 serde_with = "1.11.0"
+serde_repr = "0.1"
 zeroize = "1.5.7"
 tokio = { version = "1.20.1", features = ["full"] }
 tokio-tungstenite = { version = "0.17.2", features = ["native-tls"] }

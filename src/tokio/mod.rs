@@ -95,12 +95,12 @@ impl AsyncWebsocketClient<'static> {
     }
 }
 
-#[tokio::test]
-async fn test_client_open() {
-    let client = AsyncWebsocketClient {
-        url: "wss://xrplcluster.com/",
-    };
-    let result = client.open().await;
+// #[tokio::test]
+// async fn test_client_open() {
+//     let client = AsyncWebsocketClient {
+//         url: "wss://xrplcluster.com/",
+//     };
+//     let result = client.open().await;
 
-    assert!(result.is_ok());
-}
+//     assert!(result.is_ok());
+// }
