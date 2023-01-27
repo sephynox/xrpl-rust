@@ -46,14 +46,8 @@ pub struct BookOffers<'a> {
 impl Default for BookOffers<'static> {
     fn default() -> Self {
         BookOffers {
-            taker_gets: Currency::Xrp {
-                value: None,
-                currency: Default::default(),
-            },
-            taker_pays: Currency::Xrp {
-                value: None,
-                currency: Default::default(),
-            },
+            taker_gets: Currency::XRP,
+            taker_pays: Currency::XRP,
             id: None,
             ledger_hash: None,
             ledger_index: None,
@@ -65,3 +59,24 @@ impl Default for BookOffers<'static> {
 }
 
 impl Model for BookOffers<'static> {}
+
+#[cfg(test)]
+mod test {
+    use crate::models::Currency;
+    use alloc::borrow::Cow::Borrowed;
+
+    use super::BookOffers;
+
+    #[test]
+    fn test_serde() {
+        let txn = BookOffers {
+            taker_gets: Currency::IssuedCurrency {
+                currency: Borrowed("EUR"),
+                issuer: Borrowed("rTestIssuer"),
+            },
+            taker_pays: Currency::XRP,
+            ..Default::default()
+        };
+        let txn_json = serde_json::to_string(&txn).unwrap();
+    }
+}

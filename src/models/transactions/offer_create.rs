@@ -152,109 +152,94 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_json() {
-        let sequence: u32 = 1;
-        let last_ledger_sequence: u32 = 72779837;
-        let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
-        let xrp_amount = "1000000";
-        let usd_amount = "0.3";
-        let offer_create: OfferCreate = OfferCreate {
+    fn test_serde() {
+        let txn: OfferCreate = OfferCreate {
             transaction_type: TransactionType::OfferCreate,
             account: "rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe",
             fee: Some("10"),
-            sequence: Some(sequence),
-            last_ledger_sequence: Some(last_ledger_sequence),
+            sequence: Some(1),
+            last_ledger_sequence: Some(72779837),
             account_txn_id: None,
             signing_pub_key: None,
             source_tag: None,
             ticket_sequence: None,
             txn_signature: None,
-            flags: Some(flags),
+            flags: Some(vec![OfferCreateFlag::TfImmediateOrCancel]),
             memos: None,
             signers: None,
-            taker_gets: CurrencyAmount::Xrp(Borrowed(xrp_amount)),
+            taker_gets: CurrencyAmount::Xrp(Borrowed("1000000")),
             taker_pays: CurrencyAmount::IssuedCurrency {
-                value: Borrowed(usd_amount),
+                value: Borrowed("0.3"),
                 currency: Borrowed("USD"),
                 issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
             },
             expiration: None,
             offer_sequence: None,
         };
-        let txn_as_string = serde_json::to_string(&offer_create).unwrap();
-        let txn_as_json = txn_as_string.as_str();
+        let txn_as_string = serde_json::to_string(&txn).unwrap();
+        let txn_json = txn_as_string.as_str();
         let expected_json = r#"{"TransactionType":"OfferCreate","Account":"rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe","Fee":"10","Sequence":1,"LastLedgerSequence":72779837,"Flags":131072,"TakerGets":"1000000","TakerPays":{"value":"0.3","currency":"USD","issuer":"rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"}}"#;
         let deserialized_txn: OfferCreate = serde_json::from_str(expected_json).unwrap();
 
-        assert_eq!(txn_as_json, expected_json);
-        assert_eq!(offer_create, deserialized_txn);
+        assert_eq!(txn_json, expected_json);
+        assert_eq!(txn, deserialized_txn);
     }
 
     #[test]
     fn test_has_flag() {
-        let sequence: u32 = 1;
-        let last_ledger_sequence: u32 = 72779837;
-        let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
-        let xrp_amount = "1000000";
-        let usd_amount = "0.3";
-        let offer_create: OfferCreate = OfferCreate {
+        let txn: OfferCreate = OfferCreate {
             transaction_type: TransactionType::OfferCreate,
             account: "rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe",
             fee: Some("10"),
-            sequence: Some(sequence),
-            last_ledger_sequence: Some(last_ledger_sequence),
+            sequence: Some(1),
+            last_ledger_sequence: Some(72779837),
             account_txn_id: None,
             signing_pub_key: None,
             source_tag: None,
             ticket_sequence: None,
             txn_signature: None,
-            flags: Some(flags),
+            flags: Some(vec![OfferCreateFlag::TfImmediateOrCancel]),
             memos: None,
             signers: None,
-            taker_gets: CurrencyAmount::Xrp(Borrowed(xrp_amount)),
+            taker_gets: CurrencyAmount::Xrp(Borrowed("1000000")),
             taker_pays: CurrencyAmount::IssuedCurrency {
-                value: Borrowed(usd_amount),
+                value: Borrowed("0.3"),
                 currency: Borrowed("USD"),
                 issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
             },
             expiration: None,
             offer_sequence: None,
         };
-        assert!(offer_create.has_flag(&Flag::OfferCreate(OfferCreateFlag::TfImmediateOrCancel)));
-        assert!(!offer_create.has_flag(&Flag::OfferCreate(OfferCreateFlag::TfPassive)));
+        assert!(txn.has_flag(&Flag::OfferCreate(OfferCreateFlag::TfImmediateOrCancel)));
+        assert!(!txn.has_flag(&Flag::OfferCreate(OfferCreateFlag::TfPassive)));
     }
 
     #[test]
     fn test_get_transaction_type() {
-        let sequence: u32 = 1;
-        let last_ledger_sequence: u32 = 72779837;
-        let flags = vec![OfferCreateFlag::TfImmediateOrCancel];
-        let xrp_amount = "1000000";
-        let usd_amount = "0.3";
-        let offer_create: OfferCreate = OfferCreate {
+        let txn: OfferCreate = OfferCreate {
             transaction_type: TransactionType::OfferCreate,
             account: "rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe",
             fee: Some("10"),
-            sequence: Some(sequence),
-            last_ledger_sequence: Some(last_ledger_sequence),
+            sequence: Some(1),
+            last_ledger_sequence: Some(72779837),
             account_txn_id: None,
             signing_pub_key: None,
             source_tag: None,
             ticket_sequence: None,
             txn_signature: None,
-            flags: Some(flags),
+            flags: Some(vec![OfferCreateFlag::TfImmediateOrCancel]),
             memos: None,
             signers: None,
-            taker_gets: CurrencyAmount::Xrp(Borrowed(xrp_amount)),
+            taker_gets: CurrencyAmount::Xrp(Borrowed("1000000")),
             taker_pays: CurrencyAmount::IssuedCurrency {
-                value: Borrowed(usd_amount),
+                value: Borrowed("0.3"),
                 currency: Borrowed("USD"),
                 issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
             },
             expiration: None,
             offer_sequence: None,
         };
-        let actual = offer_create.get_transaction_type();
+        let actual = txn.get_transaction_type();
         let expect = TransactionType::OfferCreate;
         assert_eq!(actual, expect)
     }

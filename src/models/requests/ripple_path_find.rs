@@ -64,10 +64,7 @@ impl Default for RipplePathFind<'static> {
         RipplePathFind {
             source_account: "",
             destination_account: "",
-            destination_amount: Currency::Xrp {
-                value: None,
-                currency: Default::default(),
-            },
+            destination_amount: Currency::XRP,
             id: None,
             ledger_hash: None,
             ledger_index: None,

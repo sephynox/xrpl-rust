@@ -97,10 +97,7 @@ impl Default for PathFind<'static> {
             subcommand: Default::default(),
             source_account: "",
             destination_account: "",
-            destination_amount: Currency::Xrp {
-                value: None,
-                currency: Default::default(),
-            },
+            destination_amount: Currency::XRP,
             id: None,
             send_max: None,
             paths: None,
