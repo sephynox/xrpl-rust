@@ -134,20 +134,6 @@ impl Model for NFTokenMint<'static> {
     }
 }
 
-impl From<&NFTokenMint<'static>> for u32 {
-    fn from(val: &NFTokenMint<'static>) -> Self {
-        val.flags
-            .as_ref()
-            .unwrap_or(&Vec::new())
-            .iter()
-            .fold(0, |collect, flag| match flag {
-                NFTokenMintFlag::TfBurnable => collect + 0x00000001,
-                NFTokenMintFlag::TfOnlyXRP => collect + 0x00000002,
-                NFTokenMintFlag::TfTransferable => collect + 0x00000008,
-            })
-    }
-}
-
 impl Transaction for NFTokenMint<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();

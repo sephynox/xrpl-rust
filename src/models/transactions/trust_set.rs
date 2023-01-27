@@ -109,22 +109,6 @@ pub struct TrustSet<'a> {
 
 impl Model for TrustSet<'static> {}
 
-impl From<&TrustSet<'static>> for u32 {
-    fn from(val: &TrustSet<'static>) -> Self {
-        val.flags
-            .as_ref()
-            .unwrap_or(&Vec::new())
-            .iter()
-            .fold(0, |collect, flag| match flag {
-                TrustSetFlag::TfSetAuth => collect + 0x00010000,
-                TrustSetFlag::TfSetNoRipple => collect + 0x00020000,
-                TrustSetFlag::TfClearNoRipple => collect + 0x00040000,
-                TrustSetFlag::TfSetFreeze => collect + 0x00100000,
-                TrustSetFlag::TfClearFreeze => collect + 0x00200000,
-            })
-    }
-}
-
 impl Transaction for TrustSet<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();

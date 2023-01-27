@@ -80,12 +80,6 @@ pub struct NFTokenBurn<'a> {
 
 impl Model for NFTokenBurn<'static> {}
 
-impl From<&NFTokenBurn<'static>> for u32 {
-    fn from(_: &NFTokenBurn<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for NFTokenBurn<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

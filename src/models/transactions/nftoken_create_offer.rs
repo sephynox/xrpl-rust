@@ -126,18 +126,6 @@ impl Model for NFTokenCreateOffer<'static> {
     }
 }
 
-impl From<&NFTokenCreateOffer<'static>> for u32 {
-    fn from(val: &NFTokenCreateOffer<'static>) -> Self {
-        val.flags
-            .as_ref()
-            .unwrap_or(&Vec::new())
-            .iter()
-            .fold(0, |collect, flag| match flag {
-                NFTokenCreateOfferFlag::TfSellOffer => collect + 0x00000001,
-            })
-    }
-}
-
 impl Transaction for NFTokenCreateOffer<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();

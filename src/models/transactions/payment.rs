@@ -135,20 +135,6 @@ impl Model for Payment<'static> {
     }
 }
 
-impl From<&Payment<'static>> for u32 {
-    fn from(val: &Payment<'static>) -> Self {
-        val.flags
-            .as_ref()
-            .unwrap_or(&Vec::new())
-            .iter()
-            .fold(0, |collect, flag| match flag {
-                PaymentFlag::TfNoDirectRipple => collect + 0x00010000,
-                PaymentFlag::TfPartialPayment => collect + 0x00020000,
-                PaymentFlag::TfLimitQuality => collect + 0x00040000,
-            })
-    }
-}
-
 impl Transaction for Payment<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();

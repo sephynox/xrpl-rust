@@ -59,12 +59,6 @@ pub struct SetFee<'a> {
 
 impl Model for SetFee<'static> {}
 
-impl From<&SetFee<'static>> for u32 {
-    fn from(_: &SetFee<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for SetFee<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

@@ -72,19 +72,6 @@ pub struct EnableAmendment<'a> {
 
 impl Model for EnableAmendment<'static> {}
 
-impl From<&EnableAmendment<'static>> for u32 {
-    fn from(val: &EnableAmendment<'static>) -> Self {
-        val.flags
-            .as_ref()
-            .unwrap_or(&Vec::new())
-            .iter()
-            .fold(0, |collect, flag| match flag {
-                EnableAmendmentFlag::TfGotMajority => collect + 0x00010000,
-                EnableAmendmentFlag::TfLostMajority => collect + 0x00020000,
-            })
-    }
-}
-
 impl Transaction for EnableAmendment<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
         match flag {

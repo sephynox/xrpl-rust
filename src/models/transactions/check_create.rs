@@ -85,12 +85,6 @@ pub struct CheckCreate<'a> {
 
 impl Model for CheckCreate<'static> {}
 
-impl From<&CheckCreate<'static>> for u32 {
-    fn from(_: &CheckCreate<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for CheckCreate<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

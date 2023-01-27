@@ -101,12 +101,6 @@ impl Model for SignerListSet<'static> {
     }
 }
 
-impl From<&SignerListSet<'static>> for u32 {
-    fn from(_: &SignerListSet<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for SignerListSet<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

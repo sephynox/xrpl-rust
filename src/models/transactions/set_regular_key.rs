@@ -82,12 +82,6 @@ pub struct SetRegularKey<'a> {
 
 impl Model for SetRegularKey<'static> {}
 
-impl From<&SetRegularKey<'static>> for u32 {
-    fn from(_: &SetRegularKey<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for SetRegularKey<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

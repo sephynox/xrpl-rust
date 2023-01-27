@@ -191,27 +191,6 @@ impl Model for AccountSet<'static> {
     }
 }
 
-impl From<&AccountSet<'static>> for u32 {
-    fn from(val: &AccountSet<'static>) -> Self {
-        if let Some(flag) = val.set_flag.as_ref().or(val.clear_flag.as_ref()) {
-            match flag {
-                AccountSetFlag::AsfAccountTxnID => 0x00000005,
-                AccountSetFlag::AsfAuthorizedNFTokenMinter => 0x0000000A,
-                AccountSetFlag::AsfDefaultRipple => 0x00000008,
-                AccountSetFlag::AsfDepositAuth => 0x00000009,
-                AccountSetFlag::AsfDisableMaster => 0x00000004,
-                AccountSetFlag::AsfDisallowXRP => 0x00000003,
-                AccountSetFlag::AsfGlobalFreeze => 0x00000007,
-                AccountSetFlag::AsfNoFreeze => 0x00000006,
-                AccountSetFlag::AsfRequireAuth => 0x00000002,
-                AccountSetFlag::AsfRequireDest => 0x00000001,
-            }
-        } else {
-            0
-        }
-    }
-}
-
 impl Transaction for AccountSet<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();

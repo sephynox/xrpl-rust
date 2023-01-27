@@ -94,12 +94,6 @@ impl Model for NFTokenCancelOffer<'static> {
     }
 }
 
-impl From<&NFTokenCancelOffer<'static>> for u32 {
-    fn from(_: &NFTokenCancelOffer<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for NFTokenCancelOffer<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
