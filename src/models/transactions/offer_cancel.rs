@@ -78,12 +78,6 @@ pub struct OfferCancel<'a> {
 
 impl Model for OfferCancel<'static> {}
 
-impl From<&OfferCancel<'static>> for u32 {
-    fn from(_: &OfferCancel<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for OfferCancel<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

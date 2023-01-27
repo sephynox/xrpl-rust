@@ -85,12 +85,6 @@ pub struct PaymentChannelCreate<'a> {
 
 impl Model for PaymentChannelCreate<'static> {}
 
-impl From<&PaymentChannelCreate<'static>> for u32 {
-    fn from(_: &PaymentChannelCreate<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for PaymentChannelCreate<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

@@ -94,12 +94,6 @@ impl Model for DepositPreauth<'static> {
     }
 }
 
-impl From<&DepositPreauth<'static>> for u32 {
-    fn from(_: &DepositPreauth<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for DepositPreauth<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

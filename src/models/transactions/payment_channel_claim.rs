@@ -114,19 +114,6 @@ pub struct PaymentChannelClaim<'a> {
 
 impl Model for PaymentChannelClaim<'static> {}
 
-impl From<&PaymentChannelClaim<'static>> for u32 {
-    fn from(val: &PaymentChannelClaim<'static>) -> Self {
-        val.flags
-            .as_ref()
-            .unwrap_or(&Vec::new())
-            .iter()
-            .fold(0, |collect, flag| match flag {
-                PaymentChannelClaimFlag::TfRenew => collect + 0x00010000,
-                PaymentChannelClaimFlag::TfClose => collect + 0x00020000,
-            })
-    }
-}
-
 impl Transaction for PaymentChannelClaim<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();

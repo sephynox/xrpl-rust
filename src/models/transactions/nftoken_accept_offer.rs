@@ -97,12 +97,6 @@ impl Model for NFTokenAcceptOffer<'static> {
     }
 }
 
-impl From<&NFTokenAcceptOffer<'static>> for u32 {
-    fn from(_: &NFTokenAcceptOffer<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for NFTokenAcceptOffer<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

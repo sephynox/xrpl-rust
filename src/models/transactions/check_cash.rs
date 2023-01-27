@@ -97,12 +97,6 @@ impl Model for CheckCash<'static> {
     }
 }
 
-impl From<&CheckCash<'static>> for u32 {
-    fn from(_: &CheckCash<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for CheckCash<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

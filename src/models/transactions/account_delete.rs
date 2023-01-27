@@ -88,12 +88,6 @@ pub struct AccountDelete<'a> {
 
 impl Model for AccountDelete<'static> {}
 
-impl From<&AccountDelete<'static>> for u32 {
-    fn from(_: &AccountDelete<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for AccountDelete<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

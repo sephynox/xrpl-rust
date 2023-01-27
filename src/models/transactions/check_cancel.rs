@@ -80,12 +80,6 @@ pub struct CheckCancel<'a> {
 
 impl Model for CheckCancel<'static> {}
 
-impl From<&CheckCancel<'static>> for u32 {
-    fn from(_: &CheckCancel<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for CheckCancel<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

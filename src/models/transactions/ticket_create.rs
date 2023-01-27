@@ -78,12 +78,6 @@ pub struct TicketCreate<'a> {
 
 impl Model for TicketCreate<'static> {}
 
-impl From<&TicketCreate<'static>> for u32 {
-    fn from(_: &TicketCreate<'static>) -> Self {
-        0
-    }
-}
-
 impl Transaction for TicketCreate<'static> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()

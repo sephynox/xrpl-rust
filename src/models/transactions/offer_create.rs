@@ -118,21 +118,6 @@ pub struct OfferCreate<'a> {
 
 impl Model for OfferCreate<'static> {}
 
-impl From<&OfferCreate<'static>> for u32 {
-    fn from(val: &OfferCreate<'static>) -> Self {
-        val.flags
-            .as_ref()
-            .unwrap_or(&Vec::new())
-            .iter()
-            .fold(0, |collect, flag| match flag {
-                OfferCreateFlag::TfPassive => collect + 0x00010000,
-                OfferCreateFlag::TfImmediateOrCancel => collect + 0x00020000,
-                OfferCreateFlag::TfFillOrKill => collect + 0x00040000,
-                OfferCreateFlag::TfSell => collect + 0x00080000,
-            })
-    }
-}
-
 impl Transaction for OfferCreate<'static> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();
