@@ -193,7 +193,7 @@ mod test {
         let serialize = serde_json::to_string(&currency).unwrap();
         let deserialize: Currency = serde_json::from_str(&serialize).unwrap();
 
-        assert_eq!(format!("\"{}\"", USD_ISO), serialize);
+        assert_eq!(format!("\"{USD_ISO}\""), serialize);
         assert_eq!(currency.to_string(), deserialize.to_string());
     }
 }

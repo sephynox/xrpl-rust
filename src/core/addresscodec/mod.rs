@@ -194,14 +194,14 @@ pub fn classic_address_to_xaddress(
     is_test_network: bool,
 ) -> Result<String, XRPLAddressCodecException> {
     let classic_address_bytes = decode_classic_address(classic_address)?;
-    let flag: bool = tag != None;
+    let flag: bool = tag.is_some();
     let tag_val: u64;
 
     if classic_address_bytes.len() != CLASSIC_ADDRESS_ID_LENGTH {
         Err(XRPLAddressCodecException::InvalidCAddressIdLength {
             length: CLASSIC_ADDRESS_ID_LENGTH,
         })
-    } else if tag != None && tag > Some(u32::max_value().into()) {
+    } else if tag.is_some() && tag > Some(u32::max_value().into()) {
         Err(XRPLAddressCodecException::InvalidCAddressTag)
     } else {
         if let Some(tval) = tag {

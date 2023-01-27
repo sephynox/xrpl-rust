@@ -90,7 +90,7 @@ pub fn get_account_id(public_key: &[u8]) -> [u8; ACCOUNT_ID_LENGTH] {
     let mut ripemd160 = Ripemd160::new();
 
     sha256.update(public_key);
-    ripemd160.update(&sha256.finalize());
+    ripemd160.update(sha256.finalize());
 
     ripemd160.finalize()[..ACCOUNT_ID_LENGTH]
         .try_into()

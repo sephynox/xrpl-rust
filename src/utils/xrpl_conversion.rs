@@ -35,15 +35,13 @@ fn _calculate_precision(value: &str) -> Result<usize, XRPRangeException> {
     if decimal.checked_rem(Decimal::ONE).is_some() {
         let stripped = regex
             .replace(&decimal.to_string(), "")
-            .replace('.', "")
-            .replace('0', "");
+            .replace(['.', '0'], "");
         Ok(stripped.len())
     } else {
         let quantized = decimal.round_dp_with_strategy(2, RoundingStrategy::MidpointAwayFromZero);
         let stripped = regex
             .replace(&quantized.to_string(), "")
-            .replace('.', "")
-            .replace('0', "");
+            .replace(['.', '0'], "");
         Ok(stripped.len())
     }
 }
@@ -219,16 +217,16 @@ pub fn verify_valid_ic_value(ic_value: &str) -> Result<(), XRPRangeException> {
 
     match decimal {
         ic if ic.is_zero() => Ok(()),
-        _ if prec > MAX_IOU_PRECISION as usize || scale > MAX_IOU_EXPONENT as i32 => {
+        _ if prec > MAX_IOU_PRECISION as usize || scale > MAX_IOU_EXPONENT => {
             Err(XRPRangeException::InvalidICPrecisionTooLarge {
-                max: MAX_IOU_EXPONENT as i32,
+                max: MAX_IOU_EXPONENT,
                 found: scale,
             })
         }
-        _ if prec > MAX_IOU_PRECISION as usize || scale < MIN_IOU_EXPONENT as i32 => {
+        _ if prec > MAX_IOU_PRECISION as usize || scale < MIN_IOU_EXPONENT => {
             Err(XRPRangeException::InvalidICPrecisionTooSmall {
-                min: MIN_IOU_EXPONENT as i32,
-                found: scale as i32,
+                min: MIN_IOU_EXPONENT,
+                found: scale,
             })
         }
         _ => _verify_no_decimal(decimal),
