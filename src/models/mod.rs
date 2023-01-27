@@ -13,10 +13,9 @@ pub use model::Model;
 pub use transactions::*;
 
 use alloc::borrow::Cow;
-use alloc::borrow::Cow::Borrowed;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
-use strum_macros::AsRefStr;
+use strum_macros::{AsRefStr, EnumString};
 use strum_macros::{Display, EnumIter};
 
 use self::account_set::AccountSetFlag;
@@ -125,23 +124,20 @@ pub enum AccountObjectType {
 }
 
 /// Specifies a currency.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, EnumString, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum Currency {
     /// Specifies an issued currency.
     IssuedCurrency {
-        value: Option<Cow<'static, str>>,
         currency: Cow<'static, str>,
         issuer: Cow<'static, str>,
     },
     /// Specifies XRP.
-    Xrp {
-        value: Option<Cow<'static, str>>,
-        currency: Cow<'static, str>,
-    },
+    #[serde(with = "crate::serde::strings::XRP")]
+    XRP,
 }
 
-/// Specifies an amount in an issued currency.
+/// Specifies a currency amount.
 ///
 /// See Specifying Currency Amounts:
 /// `<https://xrpl.org/currency-formats.html#specifying-currency-amounts>`
@@ -294,10 +290,7 @@ pub struct Signer<'a> {
 
 /// Returns a Currency as XRP for the currency, without a value.
 fn default_xrp_currency() -> Currency {
-    Currency::Xrp {
-        value: None,
-        currency: Borrowed("XRP"),
-    }
+    Currency::XRP
 }
 
 fn default_zero() -> Option<u32> {
@@ -384,43 +377,13 @@ impl CurrencyAmount {
 
 // TODO: DUPLICATE TO `CURRENCYAMOUNT`
 impl Currency {
-    fn get_value_as_u32(&self) -> u32 {
-        match self {
-            Currency::IssuedCurrency {
-                value,
-                currency: _,
-                issuer: _,
-            } => {
-                let value_as_u32: u32 = value
-                    .as_ref()
-                    .unwrap()
-                    .as_ref()
-                    .parse()
-                    .expect("Could not parse u32 from `value`");
-                value_as_u32
-            }
-            Currency::Xrp { value, currency: _ } => {
-                let value_as_u32: u32 = value
-                    .as_ref()
-                    .unwrap()
-                    .as_ref()
-                    .parse()
-                    .expect("Could not parse u32 from `value`");
-                value_as_u32
-            }
-        }
-    }
     fn is_xrp(&self) -> bool {
         match self {
             Currency::IssuedCurrency {
-                value: _,
                 currency: _,
                 issuer: _,
             } => false,
-            Currency::Xrp {
-                value: _,
-                currency: _,
-            } => true,
+            Currency::XRP => true,
         }
     }
 }
