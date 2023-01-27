@@ -149,7 +149,7 @@ mod test {
         let serialize = serde_json::to_string(&vector).unwrap();
         let deserialize: Vector256 = serde_json::from_str(&serialize).unwrap();
 
-        assert_eq!(format!("[\"{}\",\"{}\"]", HASH1, HASH2), serialize);
+        assert_eq!(format!("[\"{HASH1}\",\"{HASH2}\"]"), serialize);
         assert_eq!(SERIALIZED, deserialize.to_string());
     }
 }

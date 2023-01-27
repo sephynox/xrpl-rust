@@ -421,7 +421,7 @@ mod test {
             let amount: Amount = Amount::new(Some(&bytes)).unwrap();
             let serialize = serde_json::to_string(&amount).unwrap();
 
-            assert_eq!(serialize, format!("\"{}\"", xrp));
+            assert_eq!(serialize, format!("\"{xrp}\""));
         }
     }
 

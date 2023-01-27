@@ -32,9 +32,6 @@ pub enum NFTokenMintFlag {
     /// This can be desirable if the token has a transfer fee and the issuer
     /// does not want to receive fees in non-XRP currencies.
     TfOnlyXRP = 0x00000002,
-    /// Automatically create trust lines from the issuer to hold transfer
-    /// fees received from transferring the minted NFToken.
-    TfTrustline = 0x00000004,
     /// The minted NFToken can be transferred to others. If this flag is not
     /// enabled, the token can still be transferred from or to the issuer.
     TfTransferable = 0x00000008,
@@ -146,7 +143,6 @@ impl From<&NFTokenMint<'static>> for u32 {
             .fold(0, |collect, flag| match flag {
                 NFTokenMintFlag::TfBurnable => collect + 0x00000001,
                 NFTokenMintFlag::TfOnlyXRP => collect + 0x00000002,
-                NFTokenMintFlag::TfTrustline => collect + 0x00000004,
                 NFTokenMintFlag::TfTransferable => collect + 0x00000008,
             })
     }
@@ -165,7 +161,6 @@ impl Transaction for NFTokenMint<'static> {
                 NFTokenMintFlag::TfBurnable => flags.contains(&NFTokenMintFlag::TfBurnable),
                 NFTokenMintFlag::TfOnlyXRP => flags.contains(&NFTokenMintFlag::TfOnlyXRP),
                 NFTokenMintFlag::TfTransferable => flags.contains(&NFTokenMintFlag::TfTransferable),
-                NFTokenMintFlag::TfTrustline => flags.contains(&NFTokenMintFlag::TfTrustline),
             },
             _ => false,
         }

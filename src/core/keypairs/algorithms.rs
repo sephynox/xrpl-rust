@@ -42,7 +42,7 @@ impl Secp256k1 {
 
     /// Format a provided key.
     fn _format_key(keystr: &str) -> String {
-        format!("{:0>pad$}", keystr, pad = SECP256K1_KEY_LENGTH)
+        format!("{keystr:0>SECP256K1_KEY_LENGTH$}")
     }
 
     /// Format the public and private keys.
