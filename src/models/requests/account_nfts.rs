@@ -6,7 +6,7 @@ use crate::models::{Model, RequestMethod};
 /// This method retrieves all of the NFTs currently owned
 /// by the specified account.
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct AccountNfts<'a> {
     /// The unique identifier of an account, typically the
     /// account's Address. The request returns a list of

@@ -12,7 +12,7 @@ use crate::models::{Model, RequestMethod};
 /// See Transaction Entry:
 /// `<https://xrpl.org/transaction_entry.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct TransactionEntry<'a> {
     /// Unique hash of the transaction you are looking up.
     pub tx_hash: &'a str,

@@ -9,7 +9,7 @@ use crate::models::{Model, RequestMethod};
 /// See Ping:
 /// `<https://xrpl.org/ping.html#ping>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Ping<'a> {
     /// The unique request id.
     pub id: Option<&'a str>,

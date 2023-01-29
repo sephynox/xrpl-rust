@@ -9,7 +9,7 @@ use crate::models::{Model, RequestMethod};
 /// See Account Offers:
 /// `<https://xrpl.org/account_offers.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct AccountOffers<'a> {
     /// A unique identifier for the account, most commonly the
     /// account's Address.

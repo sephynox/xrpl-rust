@@ -31,7 +31,7 @@ use crate::models::{Model, RequestMethod};
 /// See Submit:
 /// `<https://xrpl.org/submit.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Submit<'a> {
     /// Hex representation of the signed transaction to submit.
     /// This can also be a multi-signed transaction.

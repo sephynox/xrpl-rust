@@ -11,7 +11,7 @@ use crate::models::{Model, RequestMethod};
 /// See Gateway Balances:
 /// `<https://xrpl.org/gateway_balances.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct GatewayBalances<'a> {
     /// The Address to check. This should be the issuing address.
     pub account: &'a str,

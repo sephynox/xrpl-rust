@@ -11,7 +11,7 @@ use crate::models::{Model, RequestMethod};
 /// See Account Lines:
 /// `<https://xrpl.org/account_lines.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct AccountLines<'a> {
     /// A unique identifier for the account, most commonly the
     /// account's Address.

@@ -6,7 +6,7 @@ use crate::models::{Model, RequestMethod};
 
 /// Enum representing the options for the address role in
 /// a NoRippleCheckRequest.
-#[derive(Debug, Clone, Serialize, Deserialize, Display)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Display)]
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "role")]
@@ -29,7 +29,7 @@ impl Default for NoRippleCheckRole {
 /// See No Ripple Check:
 /// `<https://xrpl.org/noripple_check.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct NoRippleCheck<'a> {
     /// A unique identifier for the account, most commonly the
     /// account's address.

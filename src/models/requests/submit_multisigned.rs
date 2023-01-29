@@ -15,7 +15,7 @@ use crate::models::{Model, RequestMethod};
 /// See Submit Multisigned:
 /// `<https://xrpl.org/submit_multisigned.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct SubmitMultisigned<'a> {
     // TODO
     // #[serde(rename(serialize = "tx_json", deserialize = "transaction"))]

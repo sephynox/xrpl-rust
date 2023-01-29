@@ -9,7 +9,7 @@ use crate::models::{Currency, Model, RequestMethod};
 /// See Book Offers:
 /// `<https://xrpl.org/book_offers.html#book_offers>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct BookOffers<'a> {
     /// Specification of which currency the account taking
     /// the offer would receive, as an object with currency

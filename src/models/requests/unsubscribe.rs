@@ -13,7 +13,7 @@ use crate::models::{request_fields::SubscribeBookFields, Model, RequestMethod, S
 /// See Unsubscribe:
 /// `<https://xrpl.org/unsubscribe.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Unsubscribe<'a> {
     /// The unique request id.
     pub id: Option<&'a str>,

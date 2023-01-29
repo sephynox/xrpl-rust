@@ -5,7 +5,7 @@ use crate::models::{Model, RequestMethod};
 
 /// This method retrieves all of sell offers for the specified NFToken.
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct NftSellOffers<'a> {
     /// The unique identifier of a NFToken object.
     pub nft_id: &'a str,
