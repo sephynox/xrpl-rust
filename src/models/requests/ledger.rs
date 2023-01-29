@@ -55,7 +55,7 @@ pub struct Ledger<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for Ledger<'static> {
+impl<'a> Default for Ledger<'a> {
     fn default() -> Self {
         Ledger {
             id: None,
@@ -73,4 +73,4 @@ impl Default for Ledger<'static> {
     }
 }
 
-impl Model for Ledger<'static> {}
+impl<'a> Model for Ledger<'a> {}

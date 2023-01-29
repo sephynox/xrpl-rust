@@ -20,7 +20,7 @@ pub struct Fee<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for Fee<'static> {
+impl<'a> Default for Fee<'a> {
     fn default() -> Self {
         Fee {
             id: None,
@@ -29,4 +29,4 @@ impl Default for Fee<'static> {
     }
 }
 
-impl Model for Fee<'static> {}
+impl<'a> Model for Fee<'a> {}

@@ -58,7 +58,7 @@ pub struct AccountChannels<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for AccountChannels<'static> {
+impl<'a> Default for AccountChannels<'a> {
     fn default() -> Self {
         AccountChannels {
             account: "",
@@ -73,4 +73,4 @@ impl Default for AccountChannels<'static> {
     }
 }
 
-impl Model for AccountChannels<'static> {}
+impl<'a> Model for AccountChannels<'a> {}

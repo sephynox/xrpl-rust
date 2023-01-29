@@ -7,7 +7,7 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 use crate::models::{
     exceptions::{NFTokenCreateOfferException, XRPLModelException, XRPLTransactionException},
     model::Model,
-    CurrencyAmount, Flag, Memo, NFTokenCreateOfferError, Signer, Transaction, TransactionType,
+    Amount, Flag, Memo, NFTokenCreateOfferError, Signer, Transaction, TransactionType,
 };
 
 use super::flags_serde;
@@ -34,7 +34,7 @@ pub enum NFTokenCreateOfferFlag {
 /// See NFTokenCreateOffer:
 /// `<https://xrpl.org/nftokencreateoffer.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NFTokenCreateOffer<'a> {
     // The base fields for all transaction models.
@@ -46,7 +46,7 @@ pub struct NFTokenCreateOffer<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::nftoken_create_offer")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
     pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
@@ -99,13 +99,13 @@ pub struct NFTokenCreateOffer<'a> {
     /// See NFTokenCreateOffer fields:
     /// `<https://xrpl.org/nftokencreateoffer.html#nftokencreateoffer-fields>`
     pub nftoken_id: &'a str,
-    pub amount: CurrencyAmount,
+    pub amount: Amount,
     pub owner: Option<&'a str>,
     pub expiration: Option<u32>,
     pub destination: Option<&'a str>,
 }
 
-impl Model for NFTokenCreateOffer<'static> {
+impl<'a> Model for NFTokenCreateOffer<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_amount_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
@@ -126,7 +126,7 @@ impl Model for NFTokenCreateOffer<'static> {
     }
 }
 
-impl Transaction for NFTokenCreateOffer<'static> {
+impl<'a> Transaction for NFTokenCreateOffer<'a> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();
 
@@ -151,7 +151,7 @@ impl Transaction for NFTokenCreateOffer<'static> {
     }
 }
 
-impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
+impl<'a> NFTokenCreateOfferError for NFTokenCreateOffer<'a> {
     fn _get_amount_error(&self) -> Result<(), NFTokenCreateOfferException> {
         match !self.has_flag(&Flag::NFTokenCreateOffer(
             NFTokenCreateOfferFlag::TfSellOffer,
@@ -193,13 +193,56 @@ impl NFTokenCreateOfferError for NFTokenCreateOffer<'static> {
     }
 }
 
+impl<'a> NFTokenCreateOffer<'a> {
+    fn new(
+        account: &'a str,
+        nftoken_id: &'a str,
+        amount: Amount,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        last_ledger_sequence: Option<u32>,
+        account_txn_id: Option<&'a str>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        ticket_sequence: Option<u32>,
+        txn_signature: Option<&'a str>,
+        flags: Option<Vec<NFTokenCreateOfferFlag>>,
+        memos: Option<Vec<Memo<'a>>>,
+        signers: Option<Vec<Signer<'a>>>,
+        owner: Option<&'a str>,
+        expiration: Option<u32>,
+        destination: Option<&'a str>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::NFTokenCreateOffer,
+            account,
+            fee,
+            sequence,
+            last_ledger_sequence,
+            account_txn_id,
+            signing_pub_key,
+            source_tag,
+            ticket_sequence,
+            txn_signature,
+            flags,
+            memos,
+            signers,
+            nftoken_id,
+            amount,
+            owner,
+            expiration,
+            destination,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test_nftoken_create_offer_error {
     use alloc::{borrow::Cow, vec};
 
     use crate::models::{
         exceptions::{NFTokenCreateOfferException, XRPLModelException, XRPLTransactionException},
-        CurrencyAmount, Model, NFTokenCreateOfferFlag, TransactionType,
+        Amount, Model, NFTokenCreateOfferFlag, TransactionType,
     };
 
     use super::NFTokenCreateOffer;
@@ -221,7 +264,7 @@ mod test_nftoken_create_offer_error {
             memos: None,
             signers: None,
             nftoken_id: "",
-            amount: CurrencyAmount::Xrp(Cow::Borrowed("0")),
+            amount: Amount::Xrp(Cow::Borrowed("0")),
             owner: None,
             expiration: None,
             destination: None,
@@ -251,7 +294,7 @@ mod test_nftoken_create_offer_error {
             memos: None,
             signers: None,
             nftoken_id: "",
-            amount: CurrencyAmount::Xrp(Cow::Borrowed("1")),
+            amount: Amount::Xrp(Cow::Borrowed("1")),
             owner: None,
             expiration: None,
             destination: Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb"),
@@ -281,7 +324,7 @@ mod test_nftoken_create_offer_error {
             memos: None,
             signers: None,
             nftoken_id: "",
-            amount: CurrencyAmount::Xrp(Cow::Borrowed("1")),
+            amount: Amount::Xrp(Cow::Borrowed("1")),
             owner: Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK"),
             expiration: None,
             destination: None,

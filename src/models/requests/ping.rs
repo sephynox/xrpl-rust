@@ -18,7 +18,7 @@ pub struct Ping<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for Ping<'static> {
+impl<'a> Default for Ping<'a> {
     fn default() -> Self {
         Ping {
             id: None,
@@ -27,4 +27,4 @@ impl Default for Ping<'static> {
     }
 }
 
-impl Model for Ping<'static> {}
+impl<'a> Model for Ping<'a> {}

@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::{
-    default_account_zero, default_zero,
     exceptions::{UNLModifyException, XRPLModelException, XRPLTransactionException},
     model::Model,
     Transaction, TransactionType, UNLModifyError,
@@ -11,7 +10,7 @@ use crate::models::{
 /// See UNLModify:
 /// `<https://xrpl.org/unlmodify.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct UNLModify<'a> {
     // The base fields for all transaction models.
@@ -23,9 +22,8 @@ pub struct UNLModify<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::unl_modify")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
-    #[serde(default = "default_account_zero")]
     pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
     /// for distributing this transaction to the network. Some
@@ -50,8 +48,7 @@ pub struct UNLModify<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
-    #[serde(default = "default_zero")]
-    flags: Option<u32>,
+    pub flags: Option<u32>,
     /// The custom fields for the UNLModify model.
     ///
     /// See UNLModify fields:
@@ -61,7 +58,7 @@ pub struct UNLModify<'a> {
     pub unlmodify_validator: &'a str,
 }
 
-impl Model for UNLModify<'static> {
+impl<'a> Model for UNLModify<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_unl_modify_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
@@ -72,18 +69,46 @@ impl Model for UNLModify<'static> {
     }
 }
 
-impl Transaction for UNLModify<'static> {
+impl<'a> Transaction for UNLModify<'a> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
 
-impl UNLModifyError for UNLModify<'static> {
+impl<'a> UNLModifyError for UNLModify<'a> {
     fn _get_unl_modify_error(&self) -> Result<(), UNLModifyException> {
         let possible_unlmodify_disabling: [u8; 2] = [0, 1];
         match !possible_unlmodify_disabling.contains(&self.unlmodify_disabling) {
             true => Err(UNLModifyException::InvalidUNLModifyDisablingMustBeOneOrTwo),
             false => Ok(()),
+        }
+    }
+}
+
+impl<'a> UNLModify<'a> {
+    fn new(
+        account: &'a str,
+        ledger_sequence: u32,
+        unlmodify_disabling: u8,
+        unlmodify_validator: &'a str,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        txn_signature: Option<&'a str>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::UNLModify,
+            account,
+            fee,
+            sequence,
+            signing_pub_key,
+            source_tag,
+            txn_signature,
+            flags: None,
+            ledger_sequence,
+            unlmodify_disabling,
+            unlmodify_validator,
         }
     }
 }

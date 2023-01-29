@@ -27,7 +27,7 @@ pub struct DepositAuthorized<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for DepositAuthorized<'static> {
+impl<'a> Default for DepositAuthorized<'a> {
     fn default() -> Self {
         DepositAuthorized {
             source_account: "",
@@ -40,4 +40,4 @@ impl Default for DepositAuthorized<'static> {
     }
 }
 
-impl Model for DepositAuthorized<'static> {}
+impl<'a> Model for DepositAuthorized<'a> {}

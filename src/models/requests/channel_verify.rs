@@ -27,7 +27,7 @@ pub struct ChannelVerify<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for ChannelVerify<'static> {
+impl<'a> Default for ChannelVerify<'a> {
     fn default() -> Self {
         ChannelVerify {
             channel_id: "",
@@ -40,4 +40,4 @@ impl Default for ChannelVerify<'static> {
     }
 }
 
-impl Model for ChannelVerify<'static> {}
+impl<'a> Model for ChannelVerify<'a> {}

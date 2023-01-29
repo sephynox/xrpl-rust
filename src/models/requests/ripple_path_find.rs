@@ -4,7 +4,7 @@ use serde_with::skip_serializing_none;
 
 use crate::models::{Currency, Model, RequestMethod};
 
-/// The ripple_path_find method is a simplified version of
+/// The ripple_path_find method is a simpl<'a>ified version of
 /// the path_find method that provides a single response with
 /// a payment path you can use right away. It is available in
 /// both the WebSocket and JSON-RPC APIs. However, the
@@ -59,12 +59,12 @@ pub struct RipplePathFind<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for RipplePathFind<'static> {
+impl<'a> Default for RipplePathFind<'a> {
     fn default() -> Self {
         RipplePathFind {
             source_account: "",
             destination_account: "",
-            destination_amount: Currency::XRP,
+            destination_amount: Currency::Xrp,
             id: None,
             ledger_hash: None,
             ledger_index: None,
@@ -75,4 +75,4 @@ impl Default for RipplePathFind<'static> {
     }
 }
 
-impl Model for RipplePathFind<'static> {}
+impl<'a> Model for RipplePathFind<'a> {}

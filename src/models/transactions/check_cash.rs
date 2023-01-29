@@ -3,10 +3,9 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::{
-    default_zero,
     exceptions::{CheckCashException, XRPLModelException, XRPLTransactionException},
     model::Model,
-    CheckCashError, CurrencyAmount, Memo, Signer, Transaction, TransactionType,
+    Amount, CheckCashError, Memo, Signer, Transaction, TransactionType,
 };
 
 /// Cancels an unredeemed Check, removing it from the ledger without
@@ -17,7 +16,7 @@ use crate::models::{
 /// See CheckCash:
 /// `<https://xrpl.org/checkcash.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct CheckCash<'a> {
     // The base fields for all transaction models.
@@ -29,7 +28,7 @@ pub struct CheckCash<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::check_cash")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
     pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
@@ -68,8 +67,7 @@ pub struct CheckCash<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
-    #[serde(default = "default_zero")]
-    flags: Option<u32>,
+    pub flags: Option<u32>,
     /// Additional arbitrary information used to identify this transaction.
     pub memos: Option<Vec<Memo<'a>>>,
     /// Arbitrary integer used to identify the reason for this
@@ -82,11 +80,11 @@ pub struct CheckCash<'a> {
     /// See CheckCash fields:
     /// `<https://xrpl.org/checkcash.html#checkcash-fields>`
     pub check_id: &'a str,
-    pub amount: Option<CurrencyAmount>,
-    pub deliver_min: Option<CurrencyAmount>,
+    pub amount: Option<Amount>,
+    pub deliver_min: Option<Amount>,
 }
 
-impl Model for CheckCash<'static> {
+impl<'a> Model for CheckCash<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_amount_and_deliver_min_error() {
             Ok(_no_error) => Ok(()),
@@ -97,13 +95,13 @@ impl Model for CheckCash<'static> {
     }
 }
 
-impl Transaction for CheckCash<'static> {
+impl<'a> Transaction for CheckCash<'a> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
 
-impl CheckCashError for CheckCash<'static> {
+impl<'a> CheckCashError for CheckCash<'a> {
     fn _get_amount_and_deliver_min_error(&self) -> Result<(), CheckCashException> {
         match self.amount.is_none() && self.deliver_min.is_none() {
             true => Err(CheckCashException::InvalidMustSetAmountOrDeliverMin),
@@ -115,11 +113,49 @@ impl CheckCashError for CheckCash<'static> {
     }
 }
 
+impl<'a> CheckCash<'a> {
+    fn new(
+        account: &'a str,
+        check_id: &'a str,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        last_ledger_sequence: Option<u32>,
+        account_txn_id: Option<&'a str>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        ticket_sequence: Option<u32>,
+        txn_signature: Option<&'a str>,
+        memos: Option<Vec<Memo<'a>>>,
+        signers: Option<Vec<Signer<'a>>>,
+        amount: Option<Amount>,
+        deliver_min: Option<Amount>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::CheckCash,
+            account,
+            fee,
+            sequence,
+            last_ledger_sequence,
+            account_txn_id,
+            signing_pub_key,
+            source_tag,
+            ticket_sequence,
+            txn_signature,
+            flags: None,
+            memos,
+            signers,
+            check_id,
+            amount,
+            deliver_min,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test_check_cash_error {
     use crate::models::{
         exceptions::{CheckCashException, XRPLModelException, XRPLTransactionException},
-        CurrencyAmount, Model, TransactionType,
+        Amount, Model, TransactionType,
     };
 
     use alloc::borrow::Cow;
@@ -152,8 +188,8 @@ mod test_check_cash_error {
             ));
         assert_eq!(check_cash.validate(), Err(expected_error));
 
-        check_cash.amount = Some(CurrencyAmount::Xrp(Cow::Borrowed("1000000")));
-        check_cash.deliver_min = Some(CurrencyAmount::Xrp(Cow::Borrowed("100000")));
+        check_cash.amount = Some(Amount::Xrp(Cow::Borrowed("1000000")));
+        check_cash.deliver_min = Some(Amount::Xrp(Cow::Borrowed("100000")));
         let expected_error =
             XRPLModelException::XRPLTransactionError(XRPLTransactionException::CheckCashError(
                 CheckCashException::InvalidMustNotSetAmountAndDeliverMin,

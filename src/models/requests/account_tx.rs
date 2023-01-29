@@ -50,7 +50,7 @@ pub struct AccountTx<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for AccountTx<'static> {
+impl<'a> Default for AccountTx<'a> {
     fn default() -> Self {
         AccountTx {
             account: "",
@@ -68,4 +68,4 @@ impl Default for AccountTx<'static> {
     }
 }
 
-impl Model for AccountTx<'static> {}
+impl<'a> Model for AccountTx<'a> {}

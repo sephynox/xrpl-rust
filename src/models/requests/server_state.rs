@@ -24,7 +24,7 @@ pub struct ServerState<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for ServerState<'static> {
+impl<'a> Default for ServerState<'a> {
     fn default() -> Self {
         ServerState {
             id: None,
@@ -33,4 +33,4 @@ impl Default for ServerState<'static> {
     }
 }
 
-impl Model for ServerState<'static> {}
+impl<'a> Model for ServerState<'a> {}

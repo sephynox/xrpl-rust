@@ -69,15 +69,4 @@ default = ["std", "core", "models", "utils"]
 models = ["core"]
 core = ["utils"]
 utils = []
-std = [
-    "rand/std",
-    "regex/std",
-    "chrono/std",
-    "rand/std_rng",
-    "hex/std",
-    "rust_decimal/std",
-    "bs58/std",
-    "serde/std",
-    "indexmap/std",
-    "secp256k1/std",
-]
+std = ["rand/std", "regex/std", "chrono/std", "rand/std_rng", "hex/std", "rust_decimal/std", "bs58/std", "serde/std", "indexmap/std", "secp256k1/std"]

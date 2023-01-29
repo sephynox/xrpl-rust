@@ -19,7 +19,7 @@ pub struct ServerInfo<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for ServerInfo<'static> {
+impl<'a> Default for ServerInfo<'a> {
     fn default() -> Self {
         ServerInfo {
             id: None,
@@ -28,4 +28,4 @@ impl Default for ServerInfo<'static> {
     }
 }
 
-impl Model for ServerInfo<'static> {}
+impl<'a> Model for ServerInfo<'a> {}

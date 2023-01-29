@@ -34,7 +34,7 @@ pub struct AccountCurrencies<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for AccountCurrencies<'static> {
+impl<'a> Default for AccountCurrencies<'a> {
     fn default() -> Self {
         AccountCurrencies {
             account: "",
@@ -47,4 +47,4 @@ impl Default for AccountCurrencies<'static> {
     }
 }
 
-impl Model for AccountCurrencies<'static> {}
+impl<'a> Model for AccountCurrencies<'a> {}

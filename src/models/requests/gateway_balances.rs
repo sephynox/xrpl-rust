@@ -33,7 +33,7 @@ pub struct GatewayBalances<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for GatewayBalances<'static> {
+impl<'a> Default for GatewayBalances<'a> {
     fn default() -> Self {
         GatewayBalances {
             account: "",
@@ -47,4 +47,4 @@ impl Default for GatewayBalances<'static> {
     }
 }
 
-impl Model for GatewayBalances<'static> {}
+impl<'a> Model for GatewayBalances<'a> {}

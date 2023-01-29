@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{default_zero, model::Model, Transaction, TransactionType};
+use crate::models::{model::Model, Transaction, TransactionType};
 
 /// See SetFee:
 /// `<https://xrpl.org/setfee.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct SetFee<'a> {
     // The base fields for all transaction models.
@@ -18,7 +18,7 @@ pub struct SetFee<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::set_fee")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
     pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
@@ -44,8 +44,7 @@ pub struct SetFee<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
-    #[serde(default = "default_zero")]
-    flags: Option<u32>,
+    pub flags: Option<u32>,
     /// The custom fields for the SetFee model.
     ///
     /// See SetFee fields:
@@ -57,10 +56,42 @@ pub struct SetFee<'a> {
     pub ledger_sequence: u32,
 }
 
-impl Model for SetFee<'static> {}
+impl<'a> Model for SetFee<'a> {}
 
-impl Transaction for SetFee<'static> {
+impl<'a> Transaction for SetFee<'a> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl<'a> SetFee<'a> {
+    fn new(
+        account: &'a str,
+        base_fee: u64,
+        reference_fee_units: u32,
+        reserve_base: u32,
+        reserve_increment: u32,
+        ledger_sequence: u32,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        txn_signature: Option<&'a str>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::SetFee,
+            account,
+            fee,
+            sequence,
+            signing_pub_key,
+            source_tag,
+            txn_signature,
+            flags: None,
+            base_fee,
+            reference_fee_units,
+            reserve_base,
+            reserve_increment,
+            ledger_sequence,
+        }
     }
 }

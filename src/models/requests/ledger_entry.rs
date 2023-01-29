@@ -46,7 +46,7 @@ pub struct LedgerEntry<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for LedgerEntry<'static> {
+impl<'a> Default for LedgerEntry<'a> {
     fn default() -> Self {
         LedgerEntry {
             id: None,
@@ -68,7 +68,7 @@ impl Default for LedgerEntry<'static> {
     }
 }
 
-impl Model for LedgerEntry<'static> {
+impl<'a> Model for LedgerEntry<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_field_error() {
             Err(error) => Err(XRPLModelException::XRPLRequestError(
@@ -79,7 +79,7 @@ impl Model for LedgerEntry<'static> {
     }
 }
 
-impl LedgerEntryError for LedgerEntry<'static> {
+impl<'a> LedgerEntryError for LedgerEntry<'a> {
     fn _get_field_error(&self) -> Result<(), LedgerEntryException> {
         let mut signing_methods: u32 = 0;
         for method in [self.index, self.account_root, self.check] {

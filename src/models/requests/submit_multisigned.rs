@@ -30,7 +30,7 @@ pub struct SubmitMultisigned<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for SubmitMultisigned<'static> {
+impl<'a> Default for SubmitMultisigned<'a> {
     fn default() -> Self {
         SubmitMultisigned {
             id: None,
@@ -40,4 +40,4 @@ impl Default for SubmitMultisigned<'static> {
     }
 }
 
-impl Model for SubmitMultisigned<'static> {}
+impl<'a> Model for SubmitMultisigned<'a> {}

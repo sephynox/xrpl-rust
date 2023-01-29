@@ -4,9 +4,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
-use crate::models::{
-    model::Model, CurrencyAmount, Flag, Memo, Signer, Transaction, TransactionType,
-};
+use crate::models::{model::Model, Amount, Flag, Memo, Signer, Transaction, TransactionType};
 
 use super::flags_serde;
 
@@ -38,8 +36,8 @@ pub enum TrustSetFlag {
 /// See TrustSet:
 /// `<https://xrpl.org/trustset.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct TrustSet<'a> {
     // The base fields for all transaction models.
     //
@@ -50,7 +48,7 @@ pub struct TrustSet<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::trust_set")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
     pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
@@ -102,14 +100,14 @@ pub struct TrustSet<'a> {
     ///
     /// See TrustSet fields:
     /// `<https://xrpl.org/trustset.html#trustset-fields>`
-    pub limit_amount: CurrencyAmount,
+    pub limit_amount: Amount,
     pub quality_in: Option<u32>,
     pub quality_out: Option<u32>,
 }
 
-impl Model for TrustSet<'static> {}
+impl<'a> Model for TrustSet<'a> {}
 
-impl Transaction for TrustSet<'static> {
+impl<'a> Transaction for TrustSet<'a> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();
 
@@ -131,5 +129,44 @@ impl Transaction for TrustSet<'static> {
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl<'a> TrustSet<'a> {
+    fn new(
+        account: &'a str,
+        limit_amount: Amount,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        last_ledger_sequence: Option<u32>,
+        account_txn_id: Option<&'a str>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        ticket_sequence: Option<u32>,
+        txn_signature: Option<&'a str>,
+        flags: Option<Vec<TrustSetFlag>>,
+        memos: Option<Vec<Memo<'a>>>,
+        signers: Option<Vec<Signer<'a>>>,
+        quality_in: Option<u32>,
+        quality_out: Option<u32>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::TrustSet,
+            account,
+            fee,
+            sequence,
+            last_ledger_sequence,
+            account_txn_id,
+            signing_pub_key,
+            source_tag,
+            ticket_sequence,
+            txn_signature,
+            flags,
+            memos,
+            signers,
+            limit_amount,
+            quality_in,
+            quality_out,
+        }
     }
 }

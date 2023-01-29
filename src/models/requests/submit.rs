@@ -46,7 +46,7 @@ pub struct Submit<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for Submit<'static> {
+impl<'a> Default for Submit<'a> {
     fn default() -> Self {
         Submit {
             tx_blob: "",
@@ -57,4 +57,4 @@ impl Default for Submit<'static> {
     }
 }
 
-impl Model for Submit<'static> {}
+impl<'a> Model for Submit<'a> {}

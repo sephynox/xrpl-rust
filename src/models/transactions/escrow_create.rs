@@ -3,10 +3,9 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::{
-    default_zero,
     exceptions::{EscrowCreateException, XRPLModelException, XRPLTransactionException},
     model::Model,
-    CurrencyAmount, EscrowCreateError, Memo, Signer, Transaction, TransactionType,
+    Amount, EscrowCreateError, Memo, Signer, Transaction, TransactionType,
 };
 
 /// Creates an Escrow, which sequests XRP until the escrow process either finishes or is canceled.
@@ -14,7 +13,7 @@ use crate::models::{
 /// See EscrowCreate:
 /// `<https://xrpl.org/escrowcreate.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct EscrowCreate<'a> {
     // The base fields for all transaction models.
@@ -26,7 +25,7 @@ pub struct EscrowCreate<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::escrow_create")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
     pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
@@ -65,8 +64,7 @@ pub struct EscrowCreate<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
-    #[serde(default = "default_zero")]
-    flags: Option<u32>,
+    pub flags: Option<u32>,
     /// Additional arbitrary information used to identify this transaction.
     pub memos: Option<Vec<Memo<'a>>>,
     /// Arbitrary integer used to identify the reason for this
@@ -78,7 +76,7 @@ pub struct EscrowCreate<'a> {
     ///
     /// See EscrowCreate fields:
     /// `<https://xrpl.org/escrowcreate.html#escrowcreate-flags>`
-    pub amount: CurrencyAmount,
+    pub amount: Amount,
     pub destination: &'a str,
     pub destination_tag: Option<&'a str>,
     pub cancel_after: Option<u32>,
@@ -86,7 +84,7 @@ pub struct EscrowCreate<'a> {
     pub condition: Option<&'a str>,
 }
 
-impl Model for EscrowCreate<'static> {
+impl<'a> Model for EscrowCreate<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_finish_after_error() {
             Ok(_no_error) => Ok(()),
@@ -97,13 +95,13 @@ impl Model for EscrowCreate<'static> {
     }
 }
 
-impl Transaction for EscrowCreate<'static> {
+impl<'a> Transaction for EscrowCreate<'a> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
 
-impl EscrowCreateError for EscrowCreate<'static> {
+impl<'a> EscrowCreateError for EscrowCreate<'a> {
     fn _get_finish_after_error(&self) -> Result<(), EscrowCreateException> {
         match self.finish_after {
             Some(finish_after) => match self.cancel_after {
@@ -120,11 +118,55 @@ impl EscrowCreateError for EscrowCreate<'static> {
     }
 }
 
+impl<'a> EscrowCreate<'a> {
+    fn new(
+        account: &'a str,
+        amount: Amount,
+        destination: &'a str,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        last_ledger_sequence: Option<u32>,
+        account_txn_id: Option<&'a str>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        ticket_sequence: Option<u32>,
+        txn_signature: Option<&'a str>,
+        memos: Option<Vec<Memo<'a>>>,
+        signers: Option<Vec<Signer<'a>>>,
+        destination_tag: Option<&'a str>,
+        cancel_after: Option<u32>,
+        finish_after: Option<u32>,
+        condition: Option<&'a str>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::EscrowCreate,
+            account,
+            fee,
+            sequence,
+            last_ledger_sequence,
+            account_txn_id,
+            signing_pub_key,
+            source_tag,
+            ticket_sequence,
+            txn_signature,
+            flags: None,
+            memos,
+            signers,
+            amount,
+            destination,
+            destination_tag,
+            cancel_after,
+            finish_after,
+            condition,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test_escrow_create_errors {
     use crate::models::{
         exceptions::{EscrowCreateException, XRPLModelException, XRPLTransactionException},
-        CurrencyAmount, Model, TransactionType,
+        Amount, Model, TransactionType,
     };
 
     use alloc::borrow::Cow;
@@ -147,7 +189,7 @@ mod test_escrow_create_errors {
             flags: None,
             memos: None,
             signers: None,
-            amount: CurrencyAmount::Xrp(Cow::Borrowed("100000000")),
+            amount: Amount::Xrp(Cow::Borrowed("100000000")),
             destination: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             destination_tag: None,
             cancel_after: Some(13298498),

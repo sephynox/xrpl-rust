@@ -4,9 +4,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
-use crate::models::{
-    model::Model, CurrencyAmount, Flag, Memo, Signer, Transaction, TransactionType,
-};
+use crate::models::{model::Model, Amount, Flag, Memo, Signer, Transaction, TransactionType};
 
 use super::flags_serde;
 
@@ -46,7 +44,7 @@ pub enum OfferCreateFlag {
 /// See OfferCreate:
 /// `<https://xrpl.org/offercreate.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct OfferCreate<'a> {
     // The base fields for all transaction models.
@@ -58,7 +56,7 @@ pub struct OfferCreate<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::offer_create")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
     pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
@@ -110,15 +108,15 @@ pub struct OfferCreate<'a> {
     ///
     /// See OfferCreate fields:
     /// `<https://xrpl.org/offercreate.html#offercreate-fields>`
-    pub taker_gets: CurrencyAmount,
-    pub taker_pays: CurrencyAmount,
+    pub taker_gets: Amount,
+    pub taker_pays: Amount,
     pub expiration: Option<u32>,
     pub offer_sequence: Option<u32>,
 }
 
-impl Model for OfferCreate<'static> {}
+impl<'a> Model for OfferCreate<'a> {}
 
-impl Transaction for OfferCreate<'static> {
+impl<'a> Transaction for OfferCreate<'a> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();
 
@@ -141,6 +139,47 @@ impl Transaction for OfferCreate<'static> {
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl<'a> OfferCreate<'a> {
+    fn new(
+        account: &'a str,
+        taker_gets: Amount,
+        taker_pays: Amount,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        last_ledger_sequence: Option<u32>,
+        account_txn_id: Option<&'a str>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        ticket_sequence: Option<u32>,
+        txn_signature: Option<&'a str>,
+        flags: Option<Vec<OfferCreateFlag>>,
+        memos: Option<Vec<Memo<'a>>>,
+        signers: Option<Vec<Signer<'a>>>,
+        expiration: Option<u32>,
+        offer_sequence: Option<u32>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::OfferCreate,
+            account,
+            fee,
+            sequence,
+            last_ledger_sequence,
+            account_txn_id,
+            signing_pub_key,
+            source_tag,
+            ticket_sequence,
+            txn_signature,
+            flags,
+            memos,
+            signers,
+            taker_gets,
+            taker_pays,
+            expiration,
+            offer_sequence,
+        }
     }
 }
 
@@ -167,8 +206,8 @@ mod test {
             flags: Some(vec![OfferCreateFlag::TfImmediateOrCancel]),
             memos: None,
             signers: None,
-            taker_gets: CurrencyAmount::Xrp(Borrowed("1000000")),
-            taker_pays: CurrencyAmount::IssuedCurrency {
+            taker_gets: Amount::Xrp(Borrowed("1000000")),
+            taker_pays: Amount::IssuedCurrency {
                 value: Borrowed("0.3"),
                 currency: Borrowed("USD"),
                 issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
@@ -201,8 +240,8 @@ mod test {
             flags: Some(vec![OfferCreateFlag::TfImmediateOrCancel]),
             memos: None,
             signers: None,
-            taker_gets: CurrencyAmount::Xrp(Borrowed("1000000")),
-            taker_pays: CurrencyAmount::IssuedCurrency {
+            taker_gets: Amount::Xrp(Borrowed("1000000")),
+            taker_pays: Amount::IssuedCurrency {
                 value: Borrowed("0.3"),
                 currency: Borrowed("USD"),
                 issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
@@ -230,8 +269,8 @@ mod test {
             flags: Some(vec![OfferCreateFlag::TfImmediateOrCancel]),
             memos: None,
             signers: None,
-            taker_gets: CurrencyAmount::Xrp(Borrowed("1000000")),
-            taker_pays: CurrencyAmount::IssuedCurrency {
+            taker_gets: Amount::Xrp(Borrowed("1000000")),
+            taker_pays: Amount::IssuedCurrency {
                 value: Borrowed("0.3"),
                 currency: Borrowed("USD"),
                 issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),

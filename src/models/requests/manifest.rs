@@ -24,7 +24,7 @@ pub struct Manifest<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for Manifest<'static> {
+impl<'a> Default for Manifest<'a> {
     fn default() -> Self {
         Manifest {
             public_key: "",
@@ -34,4 +34,4 @@ impl Default for Manifest<'static> {
     }
 }
 
-impl Model for Manifest<'static> {}
+impl<'a> Model for Manifest<'a> {}

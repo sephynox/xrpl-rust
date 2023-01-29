@@ -28,7 +28,7 @@ pub struct TransactionEntry<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for TransactionEntry<'static> {
+impl<'a> Default for TransactionEntry<'a> {
     fn default() -> Self {
         TransactionEntry {
             tx_hash: "",
@@ -40,4 +40,4 @@ impl Default for TransactionEntry<'static> {
     }
 }
 
-impl Model for TransactionEntry<'static> {}
+impl<'a> Model for TransactionEntry<'a> {}
