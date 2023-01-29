@@ -80,6 +80,31 @@ pub struct CheckCreate<'a> {
     pub invoice_id: Option<&'a str>,
 }
 
+impl<'a> Default for CheckCreate<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::CheckCreate,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            destination: Default::default(),
+            send_max: Default::default(),
+            destination_tag: Default::default(),
+            expiration: Default::default(),
+            invoice_id: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for CheckCreate<'a> {}
 
 impl<'a> Transaction for CheckCreate<'a> {

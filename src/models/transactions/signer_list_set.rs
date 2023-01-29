@@ -83,6 +83,28 @@ pub struct SignerListSet<'a> {
     pub signer_entries: Option<Vec<SignerEntry<'a>>>,
 }
 
+impl<'a> Default for SignerListSet<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::SignerListSet,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            signer_quorum: Default::default(),
+            signer_entries: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for SignerListSet<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_signer_entries_error() {

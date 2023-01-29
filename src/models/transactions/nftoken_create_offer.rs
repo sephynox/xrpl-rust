@@ -105,6 +105,31 @@ pub struct NFTokenCreateOffer<'a> {
     pub destination: Option<&'a str>,
 }
 
+impl<'a> Default for NFTokenCreateOffer<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::NFTokenCreateOffer,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            nftoken_id: Default::default(),
+            amount: Default::default(),
+            owner: Default::default(),
+            expiration: Default::default(),
+            destination: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for NFTokenCreateOffer<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_amount_error() {

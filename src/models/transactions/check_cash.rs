@@ -84,6 +84,29 @@ pub struct CheckCash<'a> {
     pub deliver_min: Option<Amount>,
 }
 
+impl<'a> Default for CheckCash<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::CheckCash,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            check_id: Default::default(),
+            amount: Default::default(),
+            deliver_min: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for CheckCash<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_amount_and_deliver_min_error() {

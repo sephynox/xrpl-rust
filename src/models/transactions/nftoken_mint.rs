@@ -113,6 +113,30 @@ pub struct NFTokenMint<'a> {
     pub uri: Option<&'a str>,
 }
 
+impl<'a> Default for NFTokenMint<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::NFTokenMint,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            nftoken_taxon: Default::default(),
+            issuer: Default::default(),
+            transfer_fee: Default::default(),
+            uri: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for NFTokenMint<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_issuer_error() {

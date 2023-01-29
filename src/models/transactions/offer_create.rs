@@ -114,6 +114,30 @@ pub struct OfferCreate<'a> {
     pub offer_sequence: Option<u32>,
 }
 
+impl<'a> Default for OfferCreate<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::OfferCreate,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            taker_gets: Default::default(),
+            taker_pays: Default::default(),
+            expiration: Default::default(),
+            offer_sequence: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for OfferCreate<'a> {}
 
 impl<'a> Transaction for OfferCreate<'a> {

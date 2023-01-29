@@ -76,6 +76,28 @@ pub struct EscrowCancel<'a> {
     pub offer_sequence: u32,
 }
 
+impl<'a> Default for EscrowCancel<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::EscrowCancel,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            owner: Default::default(),
+            offer_sequence: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for EscrowCancel<'a> {}
 
 impl<'a> Transaction for EscrowCancel<'a> {

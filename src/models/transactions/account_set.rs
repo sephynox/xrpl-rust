@@ -160,6 +160,34 @@ pub struct AccountSet<'a> {
     pub tick_size: Option<u32>,
 }
 
+impl<'a> Default for AccountSet<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::AccountSet,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            clear_flag: Default::default(),
+            domain: Default::default(),
+            email_hash: Default::default(),
+            message_key: Default::default(),
+            nftoken_minter: Default::default(),
+            set_flag: Default::default(),
+            transfer_rate: Default::default(),
+            tick_size: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for AccountSet<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_tick_size_error() {
