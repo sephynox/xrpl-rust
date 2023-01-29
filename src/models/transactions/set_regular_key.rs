@@ -79,6 +79,27 @@ pub struct SetRegularKey<'a> {
     pub regular_key: Option<&'a str>,
 }
 
+impl<'a> Default for SetRegularKey<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::SetRegularKey,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            regular_key: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for SetRegularKey<'a> {}
 
 impl<'a> Transaction for SetRegularKey<'a> {

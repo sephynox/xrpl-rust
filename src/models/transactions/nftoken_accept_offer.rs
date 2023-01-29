@@ -81,6 +81,29 @@ pub struct NFTokenAcceptOffer<'a> {
     pub nftoken_broker_fee: Option<Amount>,
 }
 
+impl<'a> Default for NFTokenAcceptOffer<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::NFTokenAcceptOffer,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            nftoken_sell_offer: Default::default(),
+            nftoken_buy_offer: Default::default(),
+            nftoken_broker_fee: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for NFTokenAcceptOffer<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_brokered_mode_error() {

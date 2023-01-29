@@ -84,6 +84,32 @@ pub struct EscrowCreate<'a> {
     pub condition: Option<&'a str>,
 }
 
+impl<'a> Default for EscrowCreate<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::EscrowCreate,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            amount: Default::default(),
+            destination: Default::default(),
+            destination_tag: Default::default(),
+            cancel_after: Default::default(),
+            finish_after: Default::default(),
+            condition: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for EscrowCreate<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_finish_after_error() {

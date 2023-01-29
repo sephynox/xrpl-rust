@@ -114,6 +114,33 @@ pub struct Payment<'a> {
     pub deliver_min: Option<Amount>,
 }
 
+impl<'a> Default for Payment<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::Payment,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            amount: Default::default(),
+            destination: Default::default(),
+            destination_tag: Default::default(),
+            invoice_id: Default::default(),
+            paths: Default::default(),
+            send_max: Default::default(),
+            deliver_min: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for Payment<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_xrp_transaction_error() {

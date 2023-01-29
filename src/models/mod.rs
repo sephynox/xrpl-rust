@@ -155,6 +155,12 @@ pub enum Amount {
     Xrp(Cow<'static, str>),
 }
 
+impl Default for Amount {
+    fn default() -> Self {
+        Self::Xrp(Cow::Borrowed("0"))
+    }
+}
+
 /// Enum containing the different Transaction types.
 #[derive(Debug, Clone, Serialize, Deserialize, Display, PartialEq, Eq)]
 pub enum TransactionType {

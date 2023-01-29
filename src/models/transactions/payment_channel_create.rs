@@ -80,6 +80,32 @@ pub struct PaymentChannelCreate<'a> {
     pub destination_tag: Option<u32>,
 }
 
+impl<'a> Default for PaymentChannelCreate<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::PaymentChannelCreate,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            amount: Default::default(),
+            destination: Default::default(),
+            settle_delay: Default::default(),
+            public_key: Default::default(),
+            cancel_after: Default::default(),
+            destination_tag: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for PaymentChannelCreate<'a> {}
 
 impl<'a> Transaction for PaymentChannelCreate<'a> {

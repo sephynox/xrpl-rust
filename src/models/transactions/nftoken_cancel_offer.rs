@@ -81,6 +81,27 @@ pub struct NFTokenCancelOffer<'a> {
     pub nftoken_offers: Vec<&'a str>,
 }
 
+impl<'a> Default for NFTokenCancelOffer<'a> {
+    fn default() -> Self {
+        Self {
+            transaction_type: TransactionType::NFTokenCancelOffer,
+            account: Default::default(),
+            fee: Default::default(),
+            sequence: Default::default(),
+            last_ledger_sequence: Default::default(),
+            account_txn_id: Default::default(),
+            signing_pub_key: Default::default(),
+            source_tag: Default::default(),
+            ticket_sequence: Default::default(),
+            txn_signature: Default::default(),
+            flags: Default::default(),
+            memos: Default::default(),
+            signers: Default::default(),
+            nftoken_offers: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for NFTokenCancelOffer<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_nftoken_offers_error() {
