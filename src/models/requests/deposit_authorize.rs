@@ -9,7 +9,7 @@ use crate::models::{Model, RequestMethod};
 /// See Deposit Authorization:
 /// `<https://xrpl.org/depositauth.html#deposit-authorization>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct DepositAuthorized<'a> {
     /// The sender of a possible payment.
     pub source_account: &'a str,

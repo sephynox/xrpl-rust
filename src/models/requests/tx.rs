@@ -8,7 +8,7 @@ use crate::models::{Model, RequestMethod};
 /// See Tx:
 /// `<https://xrpl.org/tx.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Tx<'a> {
     // TODO
     // #[serde(rename(serialize = "tx_json", deserialize = "transaction"))]

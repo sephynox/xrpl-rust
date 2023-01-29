@@ -10,7 +10,7 @@ use crate::models::{Model, RequestMethod};
 /// See Ledger Closed:
 /// `<https://xrpl.org/ledger_closed.html#ledger_closed>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct LedgerClosed<'a> {
     /// The unique request id.
     pub id: Option<&'a str>,

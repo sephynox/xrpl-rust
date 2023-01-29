@@ -30,7 +30,7 @@ use crate::models::{Model, RequestMethod};
 /// assert_eq!(revert, Some(json));
 /// ```
 #[skip_serializing_none]
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct AccountChannels<'a> {
     /// The unique identifier of an account, typically the
     /// account's Address. The request returns channels where

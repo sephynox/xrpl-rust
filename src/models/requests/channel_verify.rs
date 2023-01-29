@@ -7,7 +7,7 @@ use crate::models::{Model, RequestMethod};
 /// that can be used to redeem a specific amount of XRP from a
 /// payment channel.
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct ChannelVerify<'a> {
     /// The Channel ID of the channel that provides the XRP.
     /// This is a 64-character hexadecimal string.

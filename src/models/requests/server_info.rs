@@ -10,7 +10,7 @@ use crate::models::{Model, RequestMethod};
 /// See Server Info:
 /// `<https://xrpl.org/server_info.html#server_info>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct ServerInfo<'a> {
     /// The unique request id.
     pub id: Option<&'a str>,

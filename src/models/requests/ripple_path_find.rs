@@ -21,7 +21,7 @@ use crate::models::{Currency, Model, RequestMethod};
 /// See Ripple Path Find:
 /// `<https://xrpl.org/ripple_path_find.html#ripple_path_find>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct RipplePathFind<'a> {
     /// Unique address of the account that would send funds
     /// in a transaction.

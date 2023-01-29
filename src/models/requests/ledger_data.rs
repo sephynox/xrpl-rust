@@ -10,7 +10,7 @@ use crate::models::{Model, RequestMethod};
 /// See Ledger Data:
 /// `<https://xrpl.org/ledger_data.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct LedgerData<'a> {
     /// The unique request id.
     pub id: Option<&'a str>,

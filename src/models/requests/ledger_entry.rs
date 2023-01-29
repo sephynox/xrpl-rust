@@ -17,7 +17,7 @@ use crate::models::{LedgerEntryError, Model, RequestMethod};
 /// See Ledger Entry:
 /// `<https://xrpl.org/ledger_entry.html#ledger_entry>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct LedgerEntry<'a> {
     /// The unique request id.
     pub id: Option<&'a str>,

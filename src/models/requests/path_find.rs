@@ -14,7 +14,7 @@ use crate::models::{request_fields::Path, Currency, Model, RequestMethod};
 ///
 /// See Path Find:
 /// `<https://xrpl.org/path_find.html>`
-#[derive(Debug, Clone, Serialize, Deserialize, Display)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Display)]
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "subcommand")]
@@ -58,7 +58,7 @@ impl Default for PathFindSubcommand {
 /// See Path Find:
 /// `<https://xrpl.org/path_find.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct PathFind<'a> {
     /// Use "create" to send the create sub-command.
     pub subcommand: PathFindSubcommand,

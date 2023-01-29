@@ -10,7 +10,7 @@ use crate::models::{Model, RequestMethod};
 /// See Random:
 /// `<https://xrpl.org/random.html#random>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Random<'a> {
     /// The unique request id.
     pub id: Option<&'a str>,

@@ -11,7 +11,7 @@ use crate::models::{default_false, Model, RequestMethod};
 /// See Account Currencies:
 /// `<https://xrpl.org/account_currencies.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct AccountCurrencies<'a> {
     /// A unique identifier for the account, most commonly
     /// the account's Address.

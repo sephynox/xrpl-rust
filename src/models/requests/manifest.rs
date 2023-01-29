@@ -11,7 +11,7 @@ use crate::models::{Model, RequestMethod};
 /// See Manifest:
 /// `<https://xrpl.org/manifest.html#manifest>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Manifest<'a> {
     /// The base58-encoded public key of the validator
     /// to look up. This can be the master public key or

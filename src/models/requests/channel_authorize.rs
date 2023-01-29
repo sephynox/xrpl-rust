@@ -28,7 +28,7 @@ use crate::{
 /// See Channel Authorize:
 /// `<https://xrpl.org/channel_authorize.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct ChannelAuthorize<'a> {
     /// The unique ID of the payment channel to use.
     pub channel_id: &'a str,

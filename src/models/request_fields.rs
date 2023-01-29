@@ -8,7 +8,7 @@ use super::{Currency, PathStep};
 
 /// Required fields for requesting a DepositPreauth if not
 /// querying by object ID.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct DepositPreauthFields<'a> {
     pub owner: &'a str,
     pub authorized: &'a str,
@@ -17,7 +17,7 @@ pub struct DepositPreauthFields<'a> {
 /// Required fields for requesting a DirectoryNode if not
 /// querying by object ID.
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct DirectoryFields<'a> {
     pub owner: &'a str,
     pub dir_root: &'a str,
@@ -26,7 +26,7 @@ pub struct DirectoryFields<'a> {
 
 /// Required fields for requesting a Escrow if not querying
 /// by object ID.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct EscrowFields<'a> {
     pub owner: &'a str,
     pub seq: u64,
@@ -37,14 +37,14 @@ pub type Path<'a> = Vec<PathStep<'a>>;
 
 /// Required fields for requesting a Escrow if not querying
 /// by object ID.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct OfferFields<'a> {
     pub account: &'a str,
     pub seq: u64,
 }
 
 /// Required fields for requesting a RippleState.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct RippleStateFields<'a> {
     pub account: &'a str,
     pub currency: &'a str,
@@ -52,7 +52,7 @@ pub struct RippleStateFields<'a> {
 
 /// Required fields for requesting a Ticket, if not
 /// querying by object ID.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct TicketFields<'a> {
     pub owner: &'a str,
     pub ticket_sequence: u64,
@@ -62,7 +62,7 @@ pub struct TicketFields<'a> {
 ///
 /// See Subscribe:
 /// `<https://xrpl.org/subscribe.html#subscribe>`
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct SubscribeBookFields<'a> {
     pub taker_gets: Currency,
@@ -78,7 +78,7 @@ pub struct SubscribeBookFields<'a> {
 ///
 /// See Unsubscribe:
 /// `<https://xrpl.org/unsubscribe.html>`
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct UnsubscribeBookFields {
     pub taker_gets: Currency,

@@ -11,7 +11,7 @@ use crate::models::{Model, RequestMethod};
 /// See Fee:
 /// `<https://xrpl.org/fee.html#fee>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Fee<'a> {
     /// The unique request id.
     pub id: Option<&'a str>,

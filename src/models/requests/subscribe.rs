@@ -12,7 +12,7 @@ use crate::models::{request_fields::SubscribeBookFields, Model, RequestMethod, S
 /// See Subscribe:
 /// `<https://xrpl.org/subscribe.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Subscribe<'a> {
     /// The unique request id.
     pub id: Option<&'a str>,
