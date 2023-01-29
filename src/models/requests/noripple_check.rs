@@ -59,7 +59,7 @@ pub struct NoRippleCheck<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for NoRippleCheck<'static> {
+impl<'a> Default for NoRippleCheck<'a> {
     fn default() -> Self {
         NoRippleCheck {
             account: "",
@@ -74,4 +74,4 @@ impl Default for NoRippleCheck<'static> {
     }
 }
 
-impl Model for NoRippleCheck<'static> {}
+impl<'a> Model for NoRippleCheck<'a> {}

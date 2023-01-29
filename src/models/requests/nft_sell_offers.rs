@@ -14,7 +14,7 @@ pub struct NftSellOffers<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for NftSellOffers<'static> {
+impl<'a> Default for NftSellOffers<'a> {
     fn default() -> Self {
         NftSellOffers {
             nft_id: "",
@@ -23,4 +23,4 @@ impl Default for NftSellOffers<'static> {
     }
 }
 
-impl Model for NftSellOffers<'static> {}
+impl<'a> Model for NftSellOffers<'a> {}

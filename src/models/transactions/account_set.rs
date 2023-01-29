@@ -62,8 +62,8 @@ pub enum AccountSetFlag {
 /// See AccountSet:
 /// `<https://xrpl.org/accountset.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct AccountSet<'a> {
     // The base fields for all transaction models.
     //
@@ -74,93 +74,93 @@ pub struct AccountSet<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::account_set")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
-    account: &'a str,
+    pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    fee: Option<&'a str>,
+    pub fee: Option<&'a str>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
     /// The special case 0 means the transaction is using a Ticket instead.
-    sequence: Option<u32>,
+    pub sequence: Option<u32>,
     /// Highest ledger index this transaction can appear in.
     /// Specifying this field places a strict upper limit on how long
     /// the transaction can wait to be validated or rejected.
     /// See Reliable Transaction Submission for more details.
-    last_ledger_sequence: Option<u32>,
+    pub last_ledger_sequence: Option<u32>,
     /// Hash value identifying another transaction. If provided, this
     /// transaction is only valid if the sending account's
     /// previously-sent transaction matches the provided hash.
-    account_txn_id: Option<&'a str>,
+    pub account_txn_id: Option<&'a str>,
     /// Hex representation of the public key that corresponds to the
     /// private key used to sign this transaction. If an empty string,
     /// indicates a multi-signature is present in the Signers field instead.
-    signing_pub_key: Option<&'a str>,
+    pub signing_pub_key: Option<&'a str>,
     /// Arbitrary integer used to identify the reason for this
     /// payment, or a sender on whose behalf this transaction
     /// is made. Conventionally, a refund should specify the initial
     /// payment's SourceTag as the refund payment's DestinationTag.
-    source_tag: Option<u32>,
+    pub source_tag: Option<u32>,
     /// The sequence number of the ticket to use in place
     /// of a Sequence number. If this is provided, Sequence must
     /// be 0. Cannot be used with AccountTxnID.
-    ticket_sequence: Option<u32>,
+    pub ticket_sequence: Option<u32>,
     /// The signature that verifies this transaction as originating
     /// from the account it says it is from.
-    txn_signature: Option<&'a str>,
+    pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
-    flags: Option<Vec<AccountSetFlag>>,
+    pub flags: Option<Vec<AccountSetFlag>>,
     /// Additional arbitrary information used to identify this transaction.
-    memos: Option<Vec<Memo<'a>>>,
+    pub memos: Option<Vec<Memo<'a>>>,
     /// Arbitrary integer used to identify the reason for this
     /// payment, or a sender on whose behalf this transaction is
     /// made. Conventionally, a refund should specify the initial
     /// payment's SourceTag as the refund payment's DestinationTag.
-    signers: Option<Vec<Signer<'a>>>,
+    pub signers: Option<Vec<Signer<'a>>>,
     // The custom fields for the AccountSet model.
     //
     // See AccountSet fields:
     // `<https://xrpl.org/accountset.html#accountset-fields>`
     /// Unique identifier of a flag to disable for this account.
-    clear_flag: Option<AccountSetFlag>,
+    pub clear_flag: Option<AccountSetFlag>,
     /// The domain that owns this account, as a string of hex
     /// representing the ASCII for the domain in lowercase.
     /// Cannot be more than 256 bytes in length.
-    domain: Option<&'a str>,
+    pub domain: Option<&'a str>,
     /// Hash of an email address to be used for generating an
     /// avatar image. Conventionally, clients use Gravatar
     /// to display this image.
-    email_hash: Option<&'a str>,
+    pub email_hash: Option<&'a str>,
     /// Public key for sending encrypted messages to this account.
     /// To set the key, it must be exactly 33 bytes, with the
     /// first byte indicating the key type: 0x02 or 0x03 for
     /// secp256k1 keys, 0xED for Ed25519 keys. To remove the
     /// key, use an empty value.
-    message_key: Option<&'a str>,
+    pub message_key: Option<&'a str>,
     /// Sets an alternate account that is allowed to mint NFTokens
     /// on this account's behalf using NFTokenMint's Issuer field.
     /// This field is part of the experimental XLS-20 standard
     /// for non-fungible tokens.
-    nftoken_minter: Option<&'a str>,
+    pub nftoken_minter: Option<&'a str>,
     /// Flag to enable for this account.
-    set_flag: Option<AccountSetFlag>,
+    pub set_flag: Option<AccountSetFlag>,
     /// The fee to charge when users transfer this account's tokens,
     /// represented as billionths of a unit. Cannot be more than
     /// 2000000000 or less than 1000000000, except for the special
     /// case 0 meaning no fee.
-    transfer_rate: Option<u32>,
+    pub transfer_rate: Option<u32>,
     /// Tick size to use for offers involving a currency issued by
     /// this address. The exchange rates of those offers is rounded
     /// to this many significant digits. Valid values are 3 to 15
     /// inclusive, or 0 to disable.
-    tick_size: Option<u32>,
+    pub tick_size: Option<u32>,
 }
 
-impl Model for AccountSet<'static> {
+impl<'a> Model for AccountSet<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_tick_size_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
@@ -191,7 +191,7 @@ impl Model for AccountSet<'static> {
     }
 }
 
-impl Transaction for AccountSet<'static> {
+impl<'a> Transaction for AccountSet<'a> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();
 
@@ -227,7 +227,7 @@ impl Transaction for AccountSet<'static> {
     }
 }
 
-impl AccountSetError for AccountSet<'static> {
+impl<'a> AccountSetError for AccountSet<'a> {
     fn _get_tick_size_error(&self) -> Result<(), AccountSetException> {
         match self.tick_size {
             Some(tick_size) => match tick_size > MAX_TICK_SIZE {
@@ -310,6 +310,55 @@ impl AccountSetError for AccountSet<'static> {
                 Some(_set_flag) => Err(AccountSetException::InvalidNftokenMinterMustBeSetIfAsfAuthorizedNftokenMinterIsSet),
                 None => Ok(()),
             }
+        }
+    }
+}
+
+impl<'a> AccountSet<'a> {
+    fn new(
+        account: &'a str,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        last_ledger_sequence: Option<u32>,
+        account_txn_id: Option<&'a str>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        ticket_sequence: Option<u32>,
+        txn_signature: Option<&'a str>,
+        flags: Option<Vec<AccountSetFlag>>,
+        memos: Option<Vec<Memo<'a>>>,
+        signers: Option<Vec<Signer<'a>>>,
+        clear_flag: Option<AccountSetFlag>,
+        domain: Option<&'a str>,
+        email_hash: Option<&'a str>,
+        message_key: Option<&'a str>,
+        set_flag: Option<AccountSetFlag>,
+        transfer_rate: Option<u32>,
+        tick_size: Option<u32>,
+        nftoken_minter: Option<&'a str>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::AccountSet,
+            account,
+            fee,
+            sequence,
+            last_ledger_sequence,
+            account_txn_id,
+            signing_pub_key,
+            source_tag,
+            ticket_sequence,
+            txn_signature,
+            flags,
+            memos,
+            signers,
+            clear_flag,
+            domain,
+            email_hash,
+            message_key,
+            nftoken_minter,
+            set_flag,
+            transfer_rate,
+            tick_size,
         }
     }
 }

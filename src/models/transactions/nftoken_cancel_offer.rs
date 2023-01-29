@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::{
-    default_zero,
     exceptions::{NFTokenCancelOfferException, XRPLModelException, XRPLTransactionException},
     model::Model,
     Memo, NFTokenCancelOfferError, Signer, Transaction, TransactionType,
@@ -14,7 +13,7 @@ use crate::models::{
 /// See NFTokenCancelOffer:
 /// `<https://xrpl.org/nftokencanceloffer.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NFTokenCancelOffer<'a> {
     // The base fields for all transaction models.
@@ -26,7 +25,7 @@ pub struct NFTokenCancelOffer<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::nftoken_cancel_offer")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
     pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
@@ -65,8 +64,7 @@ pub struct NFTokenCancelOffer<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
-    #[serde(default = "default_zero")]
-    flags: Option<u32>,
+    pub flags: Option<u32>,
     /// Additional arbitrary information used to identify this transaction.
     pub memos: Option<Vec<Memo<'a>>>,
     /// Arbitrary integer used to identify the reason for this
@@ -83,7 +81,7 @@ pub struct NFTokenCancelOffer<'a> {
     pub nftoken_offers: Vec<&'a str>,
 }
 
-impl Model for NFTokenCancelOffer<'static> {
+impl<'a> Model for NFTokenCancelOffer<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_nftoken_offers_error() {
             Err(error) => Err(XRPLModelException::XRPLTransactionError(
@@ -94,17 +92,51 @@ impl Model for NFTokenCancelOffer<'static> {
     }
 }
 
-impl Transaction for NFTokenCancelOffer<'static> {
+impl<'a> Transaction for NFTokenCancelOffer<'a> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
 
-impl NFTokenCancelOfferError for NFTokenCancelOffer<'static> {
+impl<'a> NFTokenCancelOfferError for NFTokenCancelOffer<'a> {
     fn _get_nftoken_offers_error(&self) -> Result<(), NFTokenCancelOfferException> {
         match self.nftoken_offers.is_empty() {
             true => Err(NFTokenCancelOfferException::InvalidMustIncludeOneNFTokenOffer),
             false => Ok(()),
+        }
+    }
+}
+
+impl<'a> NFTokenCancelOffer<'a> {
+    fn new(
+        account: &'a str,
+        nftoken_offers: Vec<&'a str>,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        last_ledger_sequence: Option<u32>,
+        account_txn_id: Option<&'a str>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        ticket_sequence: Option<u32>,
+        txn_signature: Option<&'a str>,
+        memos: Option<Vec<Memo<'a>>>,
+        signers: Option<Vec<Signer<'a>>>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::NFTokenCancelOffer,
+            account,
+            fee,
+            sequence,
+            last_ledger_sequence,
+            account_txn_id,
+            signing_pub_key,
+            source_tag,
+            ticket_sequence,
+            txn_signature,
+            flags: None,
+            memos,
+            signers,
+            nftoken_offers,
         }
     }
 }

@@ -70,7 +70,7 @@ pub struct ChannelAuthorize<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for ChannelAuthorize<'static> {
+impl<'a> Default for ChannelAuthorize<'a> {
     fn default() -> Self {
         ChannelAuthorize {
             channel_id: "",
@@ -86,7 +86,7 @@ impl Default for ChannelAuthorize<'static> {
     }
 }
 
-impl Model for ChannelAuthorize<'static> {
+impl<'a> Model for ChannelAuthorize<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_field_error() {
             Err(error) => Err(XRPLModelException::XRPLRequestError(
@@ -97,7 +97,7 @@ impl Model for ChannelAuthorize<'static> {
     }
 }
 
-impl ChannelAuthorizeError for ChannelAuthorize<'static> {
+impl<'a> ChannelAuthorizeError for ChannelAuthorize<'a> {
     fn _get_field_error(&self) -> Result<(), ChannelAuthorizeException> {
         let mut signing_methods = Vec::new();
         for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {

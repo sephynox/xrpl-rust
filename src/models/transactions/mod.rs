@@ -65,6 +65,7 @@ mod flags_serde {
         if let Some(f) = flags {
             let flags_as_value = serde_json::to_value(f).unwrap();
             let flag_num_vec: Vec<u32> = serde_json::from_value(flags_as_value).unwrap();
+
             s.serialize_u32(flag_num_vec.iter().sum())
         } else {
             s.serialize_u32(0)
@@ -89,6 +90,11 @@ mod flags_serde {
                 flags_vec.push(flag);
             }
         }
-        Ok(Some(flags_vec))
+
+        if flags_vec.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(flags_vec))
+        }
     }
 }

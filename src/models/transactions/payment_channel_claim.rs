@@ -41,7 +41,7 @@ pub enum PaymentChannelClaimFlag {
 /// See PaymentChannelClaim:
 /// `<https://xrpl.org/paymentchannelclaim.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct PaymentChannelClaim<'a> {
     // The base fields for all transaction models.
@@ -53,7 +53,7 @@ pub struct PaymentChannelClaim<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::payment_channel_claim")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
     pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
@@ -112,9 +112,9 @@ pub struct PaymentChannelClaim<'a> {
     pub public_key: Option<&'a str>,
 }
 
-impl Model for PaymentChannelClaim<'static> {}
+impl<'a> Model for PaymentChannelClaim<'a> {}
 
-impl Transaction for PaymentChannelClaim<'static> {
+impl<'a> Transaction for PaymentChannelClaim<'a> {
     fn has_flag(&self, flag: &Flag) -> bool {
         let mut flags = &Vec::new();
 
@@ -139,5 +139,48 @@ impl Transaction for PaymentChannelClaim<'static> {
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl<'a> PaymentChannelClaim<'a> {
+    fn new(
+        account: &'a str,
+        channel: &'a str,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        last_ledger_sequence: Option<u32>,
+        account_txn_id: Option<&'a str>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        ticket_sequence: Option<u32>,
+        txn_signature: Option<&'a str>,
+        flags: Option<Vec<PaymentChannelClaimFlag>>,
+        memos: Option<Vec<Memo<'a>>>,
+        signers: Option<Vec<Signer<'a>>>,
+        balance: Option<&'a str>,
+        amount: Option<&'a str>,
+        signature: Option<&'a str>,
+        public_key: Option<&'a str>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::PaymentChannelClaim,
+            account,
+            fee,
+            sequence,
+            last_ledger_sequence,
+            account_txn_id,
+            signing_pub_key,
+            source_tag,
+            ticket_sequence,
+            txn_signature,
+            flags,
+            memos,
+            signers,
+            channel,
+            balance,
+            amount,
+            signature,
+            public_key,
+        }
     }
 }

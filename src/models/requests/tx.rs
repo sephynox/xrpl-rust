@@ -34,7 +34,7 @@ pub struct Tx<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for Tx<'static> {
+impl<'a> Default for Tx<'a> {
     fn default() -> Self {
         Tx {
             id: None,
@@ -46,4 +46,4 @@ impl Default for Tx<'static> {
     }
 }
 
-impl Model for Tx<'static> {}
+impl<'a> Model for Tx<'a> {}

@@ -33,7 +33,7 @@ impl Default for PathFindSubcommand {
 /// WebSocket API only! The path_find method searches for
 /// a path along which a transaction can possibly be made,
 /// and periodically sends updates when the path changes
-/// over time. For a simpler version that is supported by
+/// over time. For a simpl<'a>er version that is supported by
 /// JSON-RPC, see the ripple_path_find method. For payments
 /// occurring strictly in XRP, it is not necessary to find
 /// a path, because XRP can be sent directly to any account.
@@ -91,13 +91,13 @@ pub struct PathFind<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for PathFind<'static> {
+impl<'a> Default for PathFind<'a> {
     fn default() -> Self {
         PathFind {
             subcommand: Default::default(),
             source_account: "",
             destination_account: "",
-            destination_amount: Currency::XRP,
+            destination_amount: Currency::Xrp,
             id: None,
             send_max: None,
             paths: None,
@@ -106,4 +106,4 @@ impl Default for PathFind<'static> {
     }
 }
 
-impl Model for PathFind<'static> {}
+impl<'a> Model for PathFind<'a> {}

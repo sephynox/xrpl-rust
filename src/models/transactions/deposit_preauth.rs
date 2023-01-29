@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::{
-    default_zero,
     exceptions::{DepositPreauthException, XRPLModelException, XRPLTransactionException},
     model::Model,
     DepositPreauthError, Memo, Signer, Transaction, TransactionType,
@@ -15,7 +14,7 @@ use crate::models::{
 /// See DepositPreauth:
 /// `<https://xrpl.org/depositpreauth.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct DepositPreauth<'a> {
     // The base fields for all transaction models.
@@ -27,7 +26,7 @@ pub struct DepositPreauth<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
     #[serde(default = "TransactionType::deposit_preauth")]
-    transaction_type: TransactionType,
+    pub transaction_type: TransactionType,
     /// The unique address of the account that initiated the transaction.
     pub account: &'a str,
     /// Integer amount of XRP, in drops, to be destroyed as a cost
@@ -66,8 +65,7 @@ pub struct DepositPreauth<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
-    #[serde(default = "default_zero")]
-    flags: Option<u32>,
+    pub flags: Option<u32>,
     /// Additional arbitrary information used to identify this transaction.
     pub memos: Option<Vec<Memo<'a>>>,
     /// Arbitrary integer used to identify the reason for this
@@ -83,7 +81,7 @@ pub struct DepositPreauth<'a> {
     pub unauthorize: Option<&'a str>,
 }
 
-impl Model for DepositPreauth<'static> {
+impl<'a> Model for DepositPreauth<'a> {
     fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_authorize_and_unauthorize_error() {
             Ok(_no_error) => Ok(()),
@@ -94,13 +92,13 @@ impl Model for DepositPreauth<'static> {
     }
 }
 
-impl Transaction for DepositPreauth<'static> {
+impl<'a> Transaction for DepositPreauth<'a> {
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
 
-impl DepositPreauthError for DepositPreauth<'static> {
+impl<'a> DepositPreauthError for DepositPreauth<'a> {
     fn _get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException> {
         match self.authorize.is_none() && self.unauthorize.is_none() {
             true => Err(DepositPreauthException::InvalidMustSetAuthorizeOrUnauthorize),
@@ -108,6 +106,42 @@ impl DepositPreauthError for DepositPreauth<'static> {
                 true => Err(DepositPreauthException::InvalidMustNotSetAuthorizeAndUnauthorize),
                 false => Ok(()),
             },
+        }
+    }
+}
+
+impl<'a> DepositPreauth<'a> {
+    fn new(
+        account: &'a str,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        last_ledger_sequence: Option<u32>,
+        account_txn_id: Option<&'a str>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        ticket_sequence: Option<u32>,
+        txn_signature: Option<&'a str>,
+        memos: Option<Vec<Memo<'a>>>,
+        signers: Option<Vec<Signer<'a>>>,
+        authorize: Option<&'a str>,
+        unauthorize: Option<&'a str>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::DepositPreauth,
+            account,
+            fee,
+            sequence,
+            last_ledger_sequence,
+            account_txn_id,
+            signing_pub_key,
+            source_tag,
+            ticket_sequence,
+            txn_signature,
+            flags: None,
+            memos,
+            signers,
+            authorize,
+            unauthorize,
         }
     }
 }

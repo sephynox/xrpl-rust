@@ -22,7 +22,7 @@ pub enum EnableAmendmentFlag {
 /// See EnableAmendment:
 /// `<https://xrpl.org/enableamendment.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct EnableAmendment<'a> {
     // The base fields for all transaction models.
@@ -70,9 +70,9 @@ pub struct EnableAmendment<'a> {
     pub ledger_sequence: u32,
 }
 
-impl Model for EnableAmendment<'static> {}
+impl<'a> Model for EnableAmendment<'a> {}
 
-impl Transaction for EnableAmendment<'static> {
+impl<'a> Transaction for EnableAmendment<'a> {
     fn has_flag(&self, flag: &Flag) -> bool {
         match flag {
             Flag::EnableAmendment(enable_amendment_flag) => match enable_amendment_flag {
@@ -93,5 +93,32 @@ impl Transaction for EnableAmendment<'static> {
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+}
+
+impl<'a> EnableAmendment<'a> {
+    fn new(
+        account: &'a str,
+        amendment: &'a str,
+        ledger_sequence: u32,
+        fee: Option<&'a str>,
+        sequence: Option<u32>,
+        signing_pub_key: Option<&'a str>,
+        source_tag: Option<u32>,
+        txn_signature: Option<&'a str>,
+        flags: Option<Vec<EnableAmendmentFlag>>,
+    ) -> Self {
+        Self {
+            transaction_type: TransactionType::EnableAmendment,
+            account,
+            fee,
+            sequence,
+            signing_pub_key,
+            source_tag,
+            txn_signature,
+            flags,
+            amendment,
+            ledger_sequence,
+        }
     }
 }

@@ -19,7 +19,7 @@ pub struct Random<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for Random<'static> {
+impl<'a> Default for Random<'a> {
     fn default() -> Self {
         Random {
             id: None,
@@ -28,4 +28,4 @@ impl Default for Random<'static> {
     }
 }
 
-impl Model for Random<'static> {}
+impl<'a> Model for Random<'a> {}

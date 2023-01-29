@@ -42,7 +42,7 @@ pub struct Unsubscribe<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for Unsubscribe<'static> {
+impl<'a> Default for Unsubscribe<'a> {
     fn default() -> Self {
         Unsubscribe {
             id: None,
@@ -56,4 +56,4 @@ impl Default for Unsubscribe<'static> {
     }
 }
 
-impl Model for Unsubscribe<'static> {}
+impl<'a> Model for Unsubscribe<'a> {}

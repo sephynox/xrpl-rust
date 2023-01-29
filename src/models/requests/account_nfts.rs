@@ -26,7 +26,7 @@ pub struct AccountNfts<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for AccountNfts<'static> {
+impl<'a> Default for AccountNfts<'a> {
     fn default() -> Self {
         AccountNfts {
             account: "",
@@ -38,4 +38,4 @@ impl Default for AccountNfts<'static> {
     }
 }
 
-impl Model for AccountNfts<'static> {}
+impl<'a> Model for AccountNfts<'a> {}

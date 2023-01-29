@@ -43,11 +43,11 @@ pub struct BookOffers<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for BookOffers<'static> {
+impl<'a> Default for BookOffers<'a> {
     fn default() -> Self {
         BookOffers {
-            taker_gets: Currency::XRP,
-            taker_pays: Currency::XRP,
+            taker_gets: Currency::Xrp,
+            taker_pays: Currency::Xrp,
             id: None,
             ledger_hash: None,
             ledger_index: None,
@@ -58,7 +58,7 @@ impl Default for BookOffers<'static> {
     }
 }
 
-impl Model for BookOffers<'static> {}
+impl<'a> Model for BookOffers<'a> {}
 
 #[cfg(test)]
 mod test {
@@ -74,9 +74,9 @@ mod test {
                 currency: Borrowed("EUR"),
                 issuer: Borrowed("rTestIssuer"),
             },
-            taker_pays: Currency::XRP,
+            taker_pays: Currency::Xrp,
             ..Default::default()
         };
-        let txn_json = serde_json::to_string(&txn).unwrap();
+        let _txn_json = serde_json::to_string(&txn).unwrap();
     }
 }

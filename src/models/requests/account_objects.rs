@@ -60,7 +60,7 @@ pub struct AccountObjects<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for AccountObjects<'static> {
+impl<'a> Default for AccountObjects<'a> {
     fn default() -> Self {
         AccountObjects {
             account: "",
@@ -76,4 +76,4 @@ impl Default for AccountObjects<'static> {
     }
 }
 
-impl Model for AccountObjects<'static> {}
+impl<'a> Model for AccountObjects<'a> {}

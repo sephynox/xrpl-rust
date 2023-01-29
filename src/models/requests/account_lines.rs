@@ -38,7 +38,7 @@ pub struct AccountLines<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for AccountLines<'static> {
+impl<'a> Default for AccountLines<'a> {
     fn default() -> Self {
         AccountLines {
             account: "",
@@ -53,4 +53,4 @@ impl Default for AccountLines<'static> {
     }
 }
 
-impl Model for AccountLines<'static> {}
+impl<'a> Model for AccountLines<'a> {}

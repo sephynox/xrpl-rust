@@ -19,7 +19,7 @@ pub struct LedgerCurrent<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for LedgerCurrent<'static> {
+impl<'a> Default for LedgerCurrent<'a> {
     fn default() -> Self {
         LedgerCurrent {
             id: None,
@@ -28,4 +28,4 @@ impl Default for LedgerCurrent<'static> {
     }
 }
 
-impl Model for LedgerCurrent<'static> {}
+impl<'a> Model for LedgerCurrent<'a> {}

@@ -42,7 +42,7 @@ pub struct Subscribe<'a> {
     pub command: RequestMethod,
 }
 
-impl Default for Subscribe<'static> {
+impl<'a> Default for Subscribe<'a> {
     fn default() -> Self {
         Subscribe {
             id: None,
@@ -58,4 +58,4 @@ impl Default for Subscribe<'static> {
     }
 }
 
-impl Model for Subscribe<'static> {}
+impl<'a> Model for Subscribe<'a> {}
