@@ -59,7 +59,7 @@ pub mod currency_xrp {
     where
         S: serde::Serializer,
     {
-        let xrp_currency = HashMap::from([("currency", "XRP")]);
+        let xrp_currency = [("currency", "XRP")];
         let mut map = serializer.serialize_map(Some(xrp_currency.len()))?;
         for (k, v) in xrp_currency {
             map.serialize_entry(k, v)?;
