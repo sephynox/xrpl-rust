@@ -6,7 +6,7 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 
 use crate::models::{model::Model, Flag, Memo, Signer, Transaction, TransactionType};
 
-use super::flags_serde;
+use crate::_serde::txn_flags;
 
 /// Transactions of the PaymentChannelClaim type support additional values
 /// in the Flags field. This enum represents those options.
@@ -92,7 +92,7 @@ pub struct PaymentChannelClaim<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
-    #[serde(with = "flags_serde")]
+    #[serde(with = "txn_flags")]
     pub flags: Option<Vec<PaymentChannelClaimFlag>>,
     /// Additional arbitrary information used to identify this transaction.
     pub memos: Option<Vec<Memo<'a>>>,

@@ -69,7 +69,7 @@ mod test {
 
     #[test]
     fn test_serde() {
-        let txn = BookOffers {
+        let req = BookOffers {
             taker_gets: Currency::IssuedCurrency {
                 currency: Borrowed("EUR"),
                 issuer: Borrowed("rTestIssuer"),
@@ -77,6 +77,13 @@ mod test {
             taker_pays: Currency::Xrp,
             ..Default::default()
         };
-        let _txn_json = serde_json::to_string(&txn).unwrap();
+        let req_as_string = serde_json::to_string(&req).unwrap();
+        let req_json = req_as_string.as_str();
+        let expected_json = r#"{"taker_gets":{"currency":"EUR","issuer":"rTestIssuer"},"taker_pays":{"currency":"XRP"},"command":"book_offers"}"#;
+        let deserialized_req: BookOffers = serde_json::from_str(req_json).unwrap();
+
+        assert_eq!(req_json, expected_json);
+        assert_eq!(req, deserialized_req);
+        assert_eq!(Currency::Xrp, deserialized_req.taker_pays);
     }
 }

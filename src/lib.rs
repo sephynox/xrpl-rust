@@ -40,4 +40,4 @@ pub mod wallet;
 pub extern crate indexmap;
 pub extern crate serde_json;
 
-mod serde;
+mod _serde;
