@@ -1,10 +1,11 @@
+use crate::_serde::txn_flags;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
-use crate::models::{model::Model, transactions::flags_serde, Flag, Transaction, TransactionType};
+use crate::models::{model::Model, Flag, Transaction, TransactionType};
 
 #[derive(
     Debug, Eq, PartialEq, Clone, Serialize_repr, Deserialize_repr, Display, AsRefStr, EnumIter,
@@ -60,7 +61,7 @@ pub struct EnableAmendment<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
-    #[serde(with = "flags_serde")]
+    #[serde(with = "txn_flags")]
     pub flags: Option<Vec<EnableAmendmentFlag>>,
     /// The custom fields for the EnableAmendment model.
     ///

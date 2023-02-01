@@ -13,10 +13,12 @@ pub mod utils;
 
 pub use model::Model;
 
+use crate::_serde::currency_xrp;
+
 use alloc::borrow::Cow;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
-use strum_macros::{AsRefStr, EnumString};
+use strum_macros::AsRefStr;
 use strum_macros::{Display, EnumIter};
 
 use self::exceptions::{
@@ -125,7 +127,7 @@ pub enum AccountObjectType {
 }
 
 /// Specifies a currency.
-#[derive(Debug, Clone, Serialize, Deserialize, EnumString, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum Currency {
     /// Specifies an issued currency.
@@ -134,7 +136,7 @@ pub enum Currency {
         issuer: Cow<'static, str>,
     },
     /// Specifies XRP.
-    #[serde(with = "crate::serde::strings::XRP")]
+    #[serde(with = "currency_xrp")]
     Xrp,
 }
 
@@ -157,7 +159,7 @@ pub enum Amount {
 
 impl Default for Amount {
     fn default() -> Self {
-        Self::Xrp(Cow::Borrowed("0"))
+        Self::Xrp(Cow::Borrowed("()"))
     }
 }
 
