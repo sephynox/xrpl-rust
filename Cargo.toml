@@ -58,6 +58,8 @@ tokio-tungstenite = { version = "0.17.2", features = ["native-tls"] }
 futures = "0.3.21"
 futures-channel = "0.3.21"
 futures-util = "0.3.21"
+hashbrown = { version = "0.13.2", default-features = false, features = ["serde"] }
+fnv = "1.0.7"
 
 [dev-dependencies]
 criterion = "0.3.5"

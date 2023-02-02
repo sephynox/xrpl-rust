@@ -51,9 +51,14 @@ pub mod txn_flags {
 
 /// Used for tagged variants in an `untagged` enum
 pub mod currency_xrp {
-    use alloc::collections::HashMap;
+    use core::hash::BuildHasherDefault;
+
+    use fnv::FnvHasher;
+    use hashbrown::HashMap;
     use serde::de::Error;
     use serde::{ser::SerializeMap, Deserialize};
+
+    type FnvHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FnvHasher>>;
 
     pub fn serialize<S>(serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -71,9 +76,9 @@ pub mod currency_xrp {
     where
         D: serde::Deserializer<'de>,
     {
-        let xrp_currency: HashMap<&str, &str> = HashMap::deserialize(deserializer)?;
+        let xrp_currency: FnvHashMap<&str, &str> = FnvHashMap::deserialize(deserializer)?;
 
-        if xrp_currency["currency"] == "XRP" {
+        if xrp_currency.get("currency").unwrap() == &"XRP" {
             return Ok(());
         }
 
