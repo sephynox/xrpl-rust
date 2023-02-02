@@ -53,6 +53,13 @@ serde_json = { version = "1.0.68", default-features = false, features = [
 serde_with = "1.11.0"
 serde_repr = "0.1"
 zeroize = "1.5.7"
+tokio = { version = "1.20.1", features = ["full"] }
+tokio-tungstenite = { version = "0.17.2", features = ["native-tls"] }
+futures = "0.3.21"
+futures-channel = "0.3.21"
+futures-util = "0.3.21"
+hashbrown = { version = "0.13.2", default-features = false, features = ["serde"] }
+fnv = "1.0.7"
 
 [dev-dependencies]
 criterion = "0.3.5"
