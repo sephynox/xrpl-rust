@@ -1,9 +1,11 @@
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
-use strum_macros::Display;
 
-use crate::models::{request_fields::Path, Currency, Model, RequestMethod};
+use crate::models::{Currency, Model, PathStep, RequestMethod};
+
+/// A path is an array. Each member of a path is an object that specifies a step on that path.
+pub type Path<'a> = Vec<PathStep<'a>>;
 
 /// There are three different modes, or sub-commands, of
 /// the path_find command. Specify which one you want with
@@ -14,8 +16,7 @@ use crate::models::{request_fields::Path, Currency, Model, RequestMethod};
 ///
 /// See Path Find:
 /// `<https://xrpl.org/path_find.html>`
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Display)]
-#[strum(serialize_all = "snake_case")]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "subcommand")]
 pub enum PathFindSubcommand {

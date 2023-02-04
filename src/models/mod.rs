@@ -2,7 +2,6 @@
 
 pub mod exceptions;
 pub mod model;
-pub mod request_fields;
 #[allow(clippy::too_many_arguments)]
 pub mod requests;
 #[allow(clippy::too_many_arguments)]

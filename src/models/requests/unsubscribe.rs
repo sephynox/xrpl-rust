@@ -2,7 +2,20 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{request_fields::SubscribeBookFields, Model, RequestMethod, StreamParameter};
+use crate::models::{default_false, Currency, Model, RequestMethod, StreamParameter};
+
+/// Format for elements in the `books` array for Unsubscribe only.
+///
+/// See Unsubscribe:
+/// `<https://xrpl.org/unsubscribe.html>`
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
+pub struct Book {
+    pub taker_gets: Currency,
+    pub taker_pays: Currency,
+    #[serde(default = "default_false")]
+    pub both: Option<bool>,
+}
 
 /// The unsubscribe command tells the server to stop
 /// sending messages for a particular subscription or set
@@ -20,7 +33,7 @@ pub struct Unsubscribe<'a> {
     /// Array of objects defining order books to unsubscribe
     /// from, as explained below.
     // TODO: USE `UnsubscribeBookFields` AS SOON AS LIFETIME ISSUES ARE FIXED
-    pub books: Option<Vec<SubscribeBookFields<'a>>>,
+    pub books: Option<Vec<Book>>,
     /// Array of string names of generic streams to unsubscribe
     /// from, including ledger, server, transactions,
     /// and transactions_proposed.

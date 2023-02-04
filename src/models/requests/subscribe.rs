@@ -2,7 +2,23 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{request_fields::SubscribeBookFields, Model, RequestMethod, StreamParameter};
+use crate::models::{default_false, Currency, Model, RequestMethod, StreamParameter};
+
+/// Format for elements in the `books` array for Subscribe only.
+///
+/// See Subscribe:
+/// `<https://xrpl.org/subscribe.html#subscribe>`
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
+pub struct Book<'a> {
+    pub taker_gets: Currency,
+    pub taker_pays: Currency,
+    pub taker: &'a str,
+    #[serde(default = "default_false")]
+    pub snapshot: Option<bool>,
+    #[serde(default = "default_false")]
+    pub both: Option<bool>,
+}
 
 /// The subscribe method requests periodic notifications
 /// from the server when certain events happen.
@@ -18,7 +34,7 @@ pub struct Subscribe<'a> {
     pub id: Option<&'a str>,
     /// Array of objects defining order books  to monitor for
     /// updates, as detailed below.
-    pub books: Option<Vec<SubscribeBookFields<'a>>>,
+    pub books: Option<Vec<Book<'a>>>,
     /// Array of string names of generic streams to subscribe to.
     pub streams: Option<Vec<StreamParameter>>,
     /// Array with the unique addresses of accounts to monitor
