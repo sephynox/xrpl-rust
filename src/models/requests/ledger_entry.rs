@@ -3,8 +3,56 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::exceptions::{LedgerEntryException, XRPLModelException, XRPLRequestException};
-use crate::models::request_fields::*;
 use crate::models::{LedgerEntryError, Model, RequestMethod};
+
+/// Required fields for requesting a DepositPreauth if not
+/// querying by object ID.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+pub struct DepositPreauth<'a> {
+    pub owner: &'a str,
+    pub authorized: &'a str,
+}
+
+/// Required fields for requesting a DirectoryNode if not
+/// querying by object ID.
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+pub struct Directory<'a> {
+    pub owner: &'a str,
+    pub dir_root: &'a str,
+    pub sub_index: Option<u8>,
+}
+
+/// Required fields for requesting a Escrow if not querying
+/// by object ID.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+pub struct Escrow<'a> {
+    pub owner: &'a str,
+    pub seq: u64,
+}
+
+/// Required fields for requesting a Escrow if not querying
+/// by object ID.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+pub struct Offer<'a> {
+    pub account: &'a str,
+    pub seq: u64,
+}
+
+/// Required fields for requesting a Ticket, if not
+/// querying by object ID.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+pub struct Ticket<'a> {
+    pub owner: &'a str,
+    pub ticket_sequence: u64,
+}
+
+/// Required fields for requesting a RippleState.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+pub struct RippleState<'a> {
+    pub account: &'a str,
+    pub currency: &'a str,
+}
 
 /// The ledger_entry method returns a single ledger object
 /// from the XRP Ledger in its raw format. See ledger formats
@@ -25,12 +73,12 @@ pub struct LedgerEntry<'a> {
     pub account_root: Option<&'a str>,
     pub check: Option<&'a str>,
     pub payment_channel: Option<&'a str>,
-    pub deposit_preauth: Option<DepositPreauthFields<'a>>,
-    pub directory: Option<DirectoryFields<'a>>,
-    pub escrow: Option<EscrowFields<'a>>,
-    pub offer: Option<OfferFields<'a>>,
-    pub ripple_state: Option<RippleStateFields<'a>>,
-    pub ticket: Option<TicketFields<'a>>,
+    pub deposit_preauth: Option<DepositPreauth<'a>>,
+    pub directory: Option<Directory<'a>>,
+    pub escrow: Option<Escrow<'a>>,
+    pub offer: Option<Offer<'a>>,
+    pub ripple_state: Option<RippleState<'a>>,
+    pub ticket: Option<Ticket<'a>>,
     /// If true, return the requested ledger object's contents as a
     /// hex string in the XRP Ledger's binary format. Otherwise, return
     /// data in JSON format. The default is false.
@@ -119,9 +167,9 @@ impl<'a> LedgerEntryError for LedgerEntry<'a> {
 mod test_ledger_entry_errors {
     use alloc::string::ToString;
 
+    use super::Offer;
     use crate::models::{
         exceptions::{LedgerEntryException, XRPLModelException, XRPLRequestException},
-        request_fields::OfferFields,
         Model, RequestMethod,
     };
 
@@ -139,7 +187,7 @@ mod test_ledger_entry_errors {
             deposit_preauth: None,
             directory: None,
             escrow: None,
-            offer: Some(OfferFields {
+            offer: Some(Offer {
                 account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
                 seq: 359,
             }),
