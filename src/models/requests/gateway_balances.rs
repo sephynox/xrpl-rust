@@ -48,3 +48,24 @@ impl<'a> Default for GatewayBalances<'a> {
 }
 
 impl<'a> Model for GatewayBalances<'a> {}
+
+impl<'a> GatewayBalances<'a> {
+    fn new(
+        account: &'a str,
+        id: Option<&'a str>,
+        strict: Option<bool>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        hotwallet: Option<Vec<&'a str>>,
+    ) -> Self {
+        Self {
+            account,
+            id,
+            strict,
+            ledger_hash,
+            ledger_index,
+            hotwallet,
+            command: RequestMethod::GatewayBalances,
+        }
+    }
+}

@@ -157,3 +157,65 @@ impl<'a> PaymentChannelCreate<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod test_serde {
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = PaymentChannelCreate::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            Amount::Xrp(alloc::borrow::Cow::Borrowed("10000")),
+            "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
+            86400,
+            "32D2471DB72B27E3310F355BB33E339BF26F8392D5A93D3BC0FC3B566612DA0F0A",
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(11747),
+            None,
+            None,
+            None,
+            None,
+            Some(533171558),
+            Some(23480),
+        );
+        let default_json = r#"{"TransactionType":"PaymentChannelCreate","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","SourceTag":11747,"Amount":"10000","Destination":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","SettleDelay":86400,"PublicKey":"32D2471DB72B27E3310F355BB33E339BF26F8392D5A93D3BC0FC3B566612DA0F0A","CancelAfter":533171558,"DestinationTag":23480}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = PaymentChannelCreate::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            Amount::Xrp(alloc::borrow::Cow::Borrowed("10000")),
+            "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
+            86400,
+            "32D2471DB72B27E3310F355BB33E339BF26F8392D5A93D3BC0FC3B566612DA0F0A",
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(11747),
+            None,
+            None,
+            None,
+            None,
+            Some(533171558),
+            Some(23480),
+        );
+        let default_json = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"PaymentChannelCreate","Amount":"10000","Destination":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","SettleDelay":86400,"PublicKey":"32D2471DB72B27E3310F355BB33E339BF26F8392D5A93D3BC0FC3B566612DA0F0A","CancelAfter":533171558,"DestinationTag":23480,"SourceTag":11747}"#;
+
+        let txn_as_obj: PaymentChannelCreate = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
+    }
+}

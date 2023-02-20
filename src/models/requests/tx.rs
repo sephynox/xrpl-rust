@@ -47,3 +47,20 @@ impl<'a> Default for Tx<'a> {
 }
 
 impl<'a> Model for Tx<'a> {}
+
+impl<'a> Tx<'a> {
+    fn new(
+        id: Option<&'a str>,
+        binary: Option<bool>,
+        min_ledger: Option<u32>,
+        max_ledger: Option<u32>,
+    ) -> Self {
+        Self {
+            id,
+            binary,
+            min_ledger,
+            max_ledger,
+            command: RequestMethod::Tx,
+        }
+    }
+}

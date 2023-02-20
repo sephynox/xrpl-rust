@@ -137,3 +137,55 @@ impl<'a> TicketCreate<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod test_serde {
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = TicketCreate::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            10,
+            Some("10"),
+            Some(381),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"TicketCreate","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"10","Sequence":381,"TicketCount":10}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = TicketCreate::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            10,
+            Some("10"),
+            Some(381),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"TicketCreate","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"10","Sequence":381,"TicketCount":10}"#;
+
+        let txn_as_obj: TicketCreate = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
+    }
+}

@@ -40,3 +40,22 @@ impl<'a> Default for NftBuyOffers<'a> {
 }
 
 impl<'a> Model for NftBuyOffers<'a> {}
+
+impl<'a> NftBuyOffers<'a> {
+    fn new(
+        nft_id: &'a str,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        limit: Option<u16>,
+        marker: Option<u32>,
+    ) -> Self {
+        Self {
+            nft_id,
+            ledger_hash,
+            ledger_index,
+            limit,
+            marker,
+            command: RequestMethod::NftBuyOffers,
+        }
+    }
+}

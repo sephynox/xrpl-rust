@@ -87,6 +87,7 @@ pub struct TrustSet<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
+    #[serde(default)]
     #[serde(with = "txn_flags")]
     pub flags: Option<Vec<TrustSetFlag>>,
     /// Additional arbitrary information used to identify this transaction.
@@ -191,5 +192,72 @@ impl<'a> TrustSet<'a> {
             quality_in,
             quality_out,
         }
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use super::*;
+    use alloc::{borrow::Cow::Borrowed, vec};
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = TrustSet::new(
+            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
+            Amount::IssuedCurrency {
+                currency: Borrowed("USD"),
+                issuer: Borrowed("rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc"),
+                value: Borrowed("100"),
+            },
+            Some("12"),
+            Some(12),
+            Some(8007750),
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(vec![TrustSetFlag::TfClearNoRipple]),
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"TrustSet","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","Sequence":12,"LastLedgerSequence":8007750,"Flags":262144,"LimitAmount":{"currency":"USD","issuer":"rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc","value":"100"}}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = TrustSet::new(
+            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
+            Amount::IssuedCurrency {
+                currency: Borrowed("USD"),
+                issuer: Borrowed("rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc"),
+                value: Borrowed("100"),
+            },
+            Some("12"),
+            Some(12),
+            Some(8007750),
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(vec![TrustSetFlag::TfClearNoRipple]),
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"TrustSet","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","Flags":262144,"LastLedgerSequence":8007750,"LimitAmount":{"currency":"USD","issuer":"rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc","value":"100"},"Sequence":12}"#;
+
+        let txn_as_obj: TrustSet = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

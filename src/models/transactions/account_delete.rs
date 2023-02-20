@@ -152,17 +152,16 @@ impl<'a> AccountDelete<'a> {
 }
 
 #[cfg(test)]
-mod test {
+mod test_serde {
     use super::*;
 
     #[test]
-    fn test_serde() {
-        let txn = AccountDelete::new(
-            "rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe",
-            "rTestDestination",
-            Some("10"),
-            Some(1),
-            Some(72779837),
+    fn test_serialize() {
+        let default_txn = AccountDelete::new(
+            "rWYkbWkCeg8dP6rXALnjgZSjjLyih5NXm",
+            "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
+            Some("2000000"),
+            Some(2470665),
             None,
             None,
             None,
@@ -171,13 +170,37 @@ mod test {
             None,
             None,
             None,
+            Some(13),
         );
-        let txn_as_string = serde_json::to_string(&txn).unwrap();
-        let txn_json = txn_as_string.as_str();
-        let expected_json = r#"{"TransactionType":"AccountDelete","Account":"rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe","Fee":"10","Sequence":1,"LastLedgerSequence":72779837,"Destination":"rTestDestination"}"#;
-        assert_eq!(txn_json, expected_json);
+        let default_json = r#"{"TransactionType":"AccountDelete","Account":"rWYkbWkCeg8dP6rXALnjgZSjjLyih5NXm","Fee":"2000000","Sequence":2470665,"Destination":"rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe","DestinationTag":13}"#;
 
-        let deserialized_txn: AccountDelete = serde_json::from_str(expected_json).unwrap();
-        assert_eq!(txn, deserialized_txn);
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = AccountDelete::new(
+            "rWYkbWkCeg8dP6rXALnjgZSjjLyih5NXm",
+            "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
+            Some("2000000"),
+            Some(2470665),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(13),
+        );
+        let default_json = r#"{"TransactionType":"AccountDelete","Account":"rWYkbWkCeg8dP6rXALnjgZSjjLyih5NXm","Destination":"rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe","DestinationTag":13,"Fee":"2000000","Sequence":2470665}"#;
+
+        let txn_as_obj: AccountDelete = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

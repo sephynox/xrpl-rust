@@ -150,3 +150,28 @@ mod test_channel_authorize_errors {
         assert_eq!(channel_authorize.validate(), Err(expected_error))
     }
 }
+
+impl<'a> ChannelAuthorize<'a> {
+    fn new(
+        channel_id: &'a str,
+        amount: &'a str,
+        id: Option<&'a str>,
+        secret: Option<&'a str>,
+        seed: Option<&'a str>,
+        seed_hex: Option<&'a str>,
+        passphrase: Option<&'a str>,
+        key_type: Option<CryptoAlgorithm>,
+    ) -> Self {
+        Self {
+            channel_id,
+            amount,
+            id,
+            secret,
+            seed,
+            seed_hex,
+            passphrase,
+            key_type,
+            command: RequestMethod::ChannelAuthorize,
+        }
+    }
+}

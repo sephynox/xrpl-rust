@@ -61,6 +61,7 @@ pub struct EnableAmendment<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
+    #[serde(default)]
     #[serde(with = "txn_flags")]
     pub flags: Option<Vec<EnableAmendmentFlag>>,
     /// The custom fields for the EnableAmendment model.

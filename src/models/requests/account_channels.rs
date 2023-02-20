@@ -74,3 +74,26 @@ impl<'a> Default for AccountChannels<'a> {
 }
 
 impl<'a> Model for AccountChannels<'a> {}
+
+impl<'a> AccountChannels<'a> {
+    fn new(
+        account: &'a str,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        limit: Option<u16>,
+        destination_account: Option<&'a str>,
+        marker: Option<u32>,
+    ) -> Self {
+        Self {
+            account,
+            id,
+            ledger_hash,
+            ledger_index,
+            limit,
+            destination_account,
+            marker,
+            command: RequestMethod::AccountChannels,
+        }
+    }
+}

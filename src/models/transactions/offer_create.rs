@@ -95,6 +95,7 @@ pub struct OfferCreate<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
+    #[serde(default)]
     #[serde(with = "txn_flags")]
     pub flags: Option<Vec<OfferCreateFlag>>,
     /// Additional arbitrary information used to identify this transaction.
@@ -215,40 +216,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_serde() {
-        let txn: OfferCreate = OfferCreate {
-            transaction_type: TransactionType::OfferCreate,
-            account: "rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe",
-            fee: Some("10"),
-            sequence: Some(1),
-            last_ledger_sequence: Some(72779837),
-            account_txn_id: None,
-            signing_pub_key: None,
-            source_tag: None,
-            ticket_sequence: None,
-            txn_signature: None,
-            flags: Some(vec![OfferCreateFlag::TfImmediateOrCancel]),
-            memos: None,
-            signers: None,
-            taker_gets: Amount::Xrp(Borrowed("1000000")),
-            taker_pays: Amount::IssuedCurrency {
-                value: Borrowed("0.3"),
-                currency: Borrowed("USD"),
-                issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
-            },
-            expiration: None,
-            offer_sequence: None,
-        };
-        let txn_as_string = serde_json::to_string(&txn).unwrap();
-        let txn_json = txn_as_string.as_str();
-        let expected_json = r#"{"TransactionType":"OfferCreate","Account":"rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe","Fee":"10","Sequence":1,"LastLedgerSequence":72779837,"Flags":131072,"TakerGets":"1000000","TakerPays":{"value":"0.3","currency":"USD","issuer":"rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"}}"#;
-        let deserialized_txn: OfferCreate = serde_json::from_str(expected_json).unwrap();
-
-        assert_eq!(txn_json, expected_json);
-        assert_eq!(txn, deserialized_txn);
-    }
-
-    #[test]
     fn test_has_flag() {
         let txn: OfferCreate = OfferCreate {
             transaction_type: TransactionType::OfferCreate,
@@ -305,5 +272,75 @@ mod test {
         let actual = txn.get_transaction_type();
         let expect = TransactionType::OfferCreate;
         assert_eq!(actual, expect)
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use alloc::borrow::Cow::Borrowed;
+
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = OfferCreate::new(
+            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
+            Amount::Xrp(Borrowed("6000000")),
+            Amount::IssuedCurrency {
+                value: Borrowed("2"),
+                currency: Borrowed("GKO"),
+                issuer: Borrowed("ruazs5h1qEsqpke88pcqnaseXdm6od2xc"),
+            },
+            Some("12"),
+            Some(8),
+            Some(7108682),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"OfferCreate","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","Sequence":8,"LastLedgerSequence":7108682,"TakerGets":"6000000","TakerPays":{"currency":"GKO","issuer":"ruazs5h1qEsqpke88pcqnaseXdm6od2xc","value":"2"}}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = OfferCreate::new(
+            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
+            Amount::Xrp(Borrowed("6000000")),
+            Amount::IssuedCurrency {
+                value: Borrowed("2"),
+                currency: Borrowed("GKO"),
+                issuer: Borrowed("ruazs5h1qEsqpke88pcqnaseXdm6od2xc"),
+            },
+            Some("12"),
+            Some(8),
+            Some(7108682),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"OfferCreate","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","Sequence":8,"LastLedgerSequence":7108682,"TakerGets":"6000000","TakerPays":{"value":"2","currency":"GKO","issuer":"ruazs5h1qEsqpke88pcqnaseXdm6od2xc"}}"#;
+
+        let txn_as_obj: OfferCreate = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

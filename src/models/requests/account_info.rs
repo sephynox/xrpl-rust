@@ -57,3 +57,26 @@ impl<'a> Default for AccountInfo<'a> {
 }
 
 impl<'a> Model for AccountInfo<'a> {}
+
+impl<'a> AccountInfo<'a> {
+    fn new(
+        account: &'a str,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        strict: Option<bool>,
+        queue: Option<bool>,
+        signer_lists: Option<bool>,
+    ) -> Self {
+        Self {
+            account,
+            id,
+            ledger_hash,
+            ledger_index,
+            strict,
+            queue,
+            signer_lists,
+            command: RequestMethod::AccountInfo,
+        }
+    }
+}

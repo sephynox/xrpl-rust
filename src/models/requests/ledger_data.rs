@@ -48,3 +48,24 @@ impl<'a> Default for LedgerData<'a> {
 }
 
 impl<'a> Model for LedgerData<'a> {}
+
+impl<'a> LedgerData<'a> {
+    fn new(
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        binary: Option<bool>,
+        limit: Option<u16>,
+        marker: Option<u32>,
+    ) -> Self {
+        Self {
+            id,
+            ledger_hash,
+            ledger_index,
+            binary,
+            limit,
+            marker,
+            command: RequestMethod::LedgerData,
+        }
+    }
+}

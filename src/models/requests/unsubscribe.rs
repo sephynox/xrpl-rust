@@ -70,3 +70,24 @@ impl<'a> Default for Unsubscribe<'a> {
 }
 
 impl<'a> Model for Unsubscribe<'a> {}
+
+impl<'a> Unsubscribe<'a> {
+    fn new(
+        id: Option<&'a str>,
+        books: Option<Vec<Book>>,
+        streams: Option<Vec<StreamParameter>>,
+        accounts: Option<Vec<&'a str>>,
+        accounts_proposed: Option<Vec<&'a str>>,
+        broken: Option<&'a str>,
+    ) -> Self {
+        Self {
+            id,
+            books,
+            streams,
+            accounts,
+            accounts_proposed,
+            broken,
+            command: RequestMethod::Unsubscribe,
+        }
+    }
+}

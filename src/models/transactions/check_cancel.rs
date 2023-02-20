@@ -75,6 +75,7 @@ pub struct CheckCancel<'a> {
     //
     // See CheckCancel fields:
     // `<https://xrpl.org/checkcancel.html#checkcancel-fields>`
+    #[serde(rename = "CheckID")]
     pub check_id: &'a str,
 }
 
@@ -138,5 +139,57 @@ impl<'a> CheckCancel<'a> {
             signers,
             check_id,
         }
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = CheckCancel::new(
+            "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
+            "49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0",
+            Some("12"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"CheckCancel","Account":"rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo","Fee":"12","CheckID":"49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0"}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = CheckCancel::new(
+            "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
+            "49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0",
+            Some("12"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"CheckCancel","Account":"rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo","CheckID":"49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0","Fee":"12"}"#;
+
+        let txn_as_obj: CheckCancel = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

@@ -29,3 +29,12 @@ impl<'a> Default for ServerInfo<'a> {
 }
 
 impl<'a> Model for ServerInfo<'a> {}
+
+impl<'a> ServerInfo<'a> {
+    fn new(id: Option<&'a str>) -> Self {
+        Self {
+            id,
+            command: RequestMethod::ServerInfo,
+        }
+    }
+}

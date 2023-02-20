@@ -10,9 +10,12 @@ pub mod transactions;
 pub mod response;
 pub mod utils;
 
+use derive_new::new;
 pub use model::Model;
+use serde::ser::SerializeMap;
 
 use crate::_serde::currency_xrp;
+use crate::serialize_with_tag;
 
 use alloc::borrow::Cow;
 use serde::{Deserialize, Serialize};
@@ -139,6 +142,19 @@ pub enum Currency {
     Xrp,
 }
 
+impl Currency {
+    /// Check wether the defined currency is XRP.
+    fn is_xrp(&self) -> bool {
+        match self {
+            Currency::IssuedCurrency {
+                currency: _,
+                issuer: _,
+            } => false,
+            Currency::Xrp => true,
+        }
+    }
+}
+
 /// Specifies a currency amount.
 ///
 /// See Specifying Currency Amounts:
@@ -148,9 +164,9 @@ pub enum Currency {
 pub enum Amount {
     /// Specifies an amount in an issued currency.
     IssuedCurrency {
-        value: Cow<'static, str>,
         currency: Cow<'static, str>,
         issuer: Cow<'static, str>,
+        value: Cow<'static, str>,
     },
     /// Specifies an amount in XRP.
     Xrp(Cow<'static, str>),
@@ -159,6 +175,44 @@ pub enum Amount {
 impl Default for Amount {
     fn default() -> Self {
         Self::Xrp(Cow::Borrowed("()"))
+    }
+}
+
+impl Amount {
+    /// Returns the specified currency value as `u32`.
+    fn get_value_as_u32(&self) -> u32 {
+        match self {
+            Amount::IssuedCurrency {
+                currency: _,
+                issuer: _,
+                value,
+            } => {
+                let value_as_u32: u32 = value
+                    .as_ref()
+                    .parse()
+                    .expect("Could not parse u32 from `value`");
+                value_as_u32
+            }
+            Amount::Xrp(value) => {
+                let value_as_u32: u32 = value
+                    .as_ref()
+                    .parse()
+                    .expect("Could not parse u32 from `value`");
+                value_as_u32
+            }
+        }
+    }
+
+    /// Check wether the defined currency amount is a XRP amount.
+    fn is_xrp(&self) -> bool {
+        match self {
+            Amount::IssuedCurrency {
+                currency: _,
+                issuer: _,
+                value: _,
+            } => false,
+            Amount::Xrp(_) => true,
+        }
     }
 }
 
@@ -196,35 +250,9 @@ pub enum TransactionType {
     UNLModify,
 }
 
-/// There are three different modes, or sub-commands, of
-/// the path_find command. Specify which one you want with
-/// the subcommand parameter:
-/// * create - Start sending pathfinding information
-/// * close - Stop sending pathfinding information
-/// * status - Info on the currently-open pathfinding request
-///
-/// See Path Find:
-/// `<https://xrpl.org/path_find.html>`
-#[derive(Debug, Clone, Serialize, Deserialize, Display)]
-#[strum(serialize_all = "snake_case")]
-#[serde(rename_all = "snake_case")]
-#[serde(tag = "subcommand")]
-pub enum PathFindSubcommand {
-    Create,
-    Close,
-    Status,
-}
-
-impl Default for PathFindSubcommand {
-    fn default() -> Self {
-        PathFindSubcommand::Create
-    }
-}
-
 /// Represents possible values of the streams query param
 /// for subscribe.
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display)]
-#[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum StreamParameter {
     Consensus,
@@ -237,6 +265,7 @@ pub enum StreamParameter {
     Validations,
 }
 
+serialize_with_tag! {
 /// An arbitrary piece of data attached to a transaction. A
 /// transaction can have multiple Memo objects as an array
 /// in the Memos field.
@@ -246,17 +275,41 @@ pub enum StreamParameter {
 ///
 /// See Memos Field:
 /// `<https://xrpl.org/transaction-common-fields.html#memos-field>`
+// `#[derive(Serialize)]` is defined in the macro
+#[derive(Debug, PartialEq, Eq, Default, Clone, new)]
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default, Clone)]
-#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct Memo<'a> {
     memo_data: Option<&'a str>,
     memo_format: Option<&'a str>,
     memo_type: Option<&'a str>,
 }
+}
+
+impl<'a, 'de: 'a> Deserialize<'de> for Memo<'a> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use crate::_serde::HashMap;
+
+        let memo_map: HashMap<&str, HashMap<&str, Option<&str>>> =
+            HashMap::deserialize(deserializer)?;
+        let memo = memo_map.get("Memo").unwrap();
+        let memo_data = memo.get("MemoData").unwrap();
+        let memo_format = memo.get("MemoFormat").unwrap();
+        let memo_type = memo.get("MemoType").unwrap();
+
+        Ok(Self {
+            memo_data: *memo_data,
+            memo_format: *memo_format,
+            memo_type: *memo_type,
+        })
+    }
+}
 
 /// A PathStep represents an individual step along a Path.
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default, Clone, new)]
+#[serde(rename_all = "PascalCase")]
 pub struct PathStep<'a> {
     account: Option<&'a str>,
     currency: Option<&'a str>,
@@ -271,8 +324,8 @@ pub struct PathStep<'a> {
 ///
 /// See Signers Field:
 /// `<https://xrpl.org/transaction-common-fields.html#signers-field>`
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default, Clone)]
-#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default, Clone, new)]
+#[serde(rename_all = "PascalCase")]
 pub struct Signer<'a> {
     account: &'a str,
     txn_signature: &'a str,
@@ -319,57 +372,6 @@ fn default_fee_div_max() -> Option<u32> {
 /// codec, or an actual JSON string representing the same data.
 pub trait FromXRPL<T> {
     fn from_xrpl(value: T) -> Self;
-}
-
-impl Currency {
-    /// Check wether the defined currency is XRP.
-    fn is_xrp(&self) -> bool {
-        match self {
-            Currency::IssuedCurrency {
-                currency: _,
-                issuer: _,
-            } => false,
-            Currency::Xrp => true,
-        }
-    }
-}
-
-impl Amount {
-    /// Returns the specified currency value as `u32`.
-    fn get_value_as_u32(&self) -> u32 {
-        match self {
-            Amount::IssuedCurrency {
-                value,
-                currency: _,
-                issuer: _,
-            } => {
-                let value_as_u32: u32 = value
-                    .as_ref()
-                    .parse()
-                    .expect("Could not parse u32 from `value`");
-                value_as_u32
-            }
-            Amount::Xrp(value) => {
-                let value_as_u32: u32 = value
-                    .as_ref()
-                    .parse()
-                    .expect("Could not parse u32 from `value`");
-                value_as_u32
-            }
-        }
-    }
-
-    /// Check wether the defined currency amount is a XRP amount.
-    fn is_xrp(&self) -> bool {
-        match self {
-            Amount::IssuedCurrency {
-                value: _,
-                currency: _,
-                issuer: _,
-            } => false,
-            Amount::Xrp(_) => true,
-        }
-    }
 }
 
 /// For use with serde defaults.
@@ -493,14 +495,6 @@ pub trait Transaction {
     }
 
     fn get_transaction_type(&self) -> TransactionType;
-}
-
-#[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
-pub struct SignerEntry<'a> {
-    account: &'a str,
-    signer_weight: u16,
 }
 
 pub trait AccountSetError {

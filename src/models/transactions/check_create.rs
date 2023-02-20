@@ -77,6 +77,7 @@ pub struct CheckCreate<'a> {
     pub send_max: Amount,
     pub destination_tag: Option<u32>,
     pub expiration: Option<u32>,
+    #[serde(rename = "InvoiceID")]
     pub invoice_id: Option<&'a str>,
 }
 
@@ -152,5 +153,67 @@ impl<'a> CheckCreate<'a> {
             expiration,
             invoice_id,
         }
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use alloc::borrow::Cow::Borrowed;
+
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = CheckCreate::new(
+            "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
+            "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
+            Amount::Xrp(Borrowed("100000000")),
+            Some("12"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(1),
+            Some(570113521),
+            Some("6F1DFD1D0FE8A32E40E1F2C05CF1C15545BAB56B617F9C6C2D63A6B704BEF59B"),
+        );
+        let default_json = r#"{"TransactionType":"CheckCreate","Account":"rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo","Fee":"12","Destination":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","SendMax":"100000000","DestinationTag":1,"Expiration":570113521,"InvoiceID":"6F1DFD1D0FE8A32E40E1F2C05CF1C15545BAB56B617F9C6C2D63A6B704BEF59B"}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = CheckCreate::new(
+            "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
+            "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
+            Amount::Xrp(Borrowed("100000000")),
+            Some("12"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(1),
+            Some(570113521),
+            Some("6F1DFD1D0FE8A32E40E1F2C05CF1C15545BAB56B617F9C6C2D63A6B704BEF59B"),
+        );
+        let default_json = r#"{"TransactionType":"CheckCreate","Account":"rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo","Destination":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","SendMax":"100000000","Expiration":570113521,"InvoiceID":"6F1DFD1D0FE8A32E40E1F2C05CF1C15545BAB56B617F9C6C2D63A6B704BEF59B","DestinationTag":1,"Fee":"12"}"#;
+
+        let txn_as_obj: CheckCreate = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

@@ -75,3 +75,28 @@ impl<'a> Default for Subscribe<'a> {
 }
 
 impl<'a> Model for Subscribe<'a> {}
+
+impl<'a> Subscribe<'a> {
+    fn new(
+        id: Option<&'a str>,
+        books: Option<Vec<Book<'a>>>,
+        streams: Option<Vec<StreamParameter>>,
+        accounts: Option<Vec<&'a str>>,
+        accounts_proposed: Option<Vec<&'a str>>,
+        url: Option<&'a str>,
+        url_username: Option<&'a str>,
+        url_password: Option<&'a str>,
+    ) -> Self {
+        Self {
+            id,
+            books,
+            streams,
+            accounts,
+            accounts_proposed,
+            url,
+            url_username,
+            url_password,
+            command: RequestMethod::Subscribe,
+        }
+    }
+}

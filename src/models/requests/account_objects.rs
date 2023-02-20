@@ -77,3 +77,28 @@ impl<'a> Default for AccountObjects<'a> {
 }
 
 impl<'a> Model for AccountObjects<'a> {}
+
+impl<'a> AccountObjects<'a> {
+    fn new(
+        account: &'a str,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        r#type: Option<AccountObjectType>,
+        deletion_blockers_only: Option<bool>,
+        limit: Option<u16>,
+        marker: Option<u32>,
+    ) -> Self {
+        Self {
+            account,
+            id,
+            ledger_hash,
+            ledger_index,
+            r#type,
+            deletion_blockers_only,
+            limit,
+            marker,
+            command: RequestMethod::AccountObjects,
+        }
+    }
+}

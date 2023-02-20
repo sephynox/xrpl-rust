@@ -28,3 +28,12 @@ impl<'a> Default for Ping<'a> {
 }
 
 impl<'a> Model for Ping<'a> {}
+
+impl<'a> Ping<'a> {
+    fn new(id: Option<&'a str>) -> Self {
+        Self {
+            id,
+            command: RequestMethod::Ping,
+        }
+    }
+}
