@@ -190,7 +190,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"EscrowCancel","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Owner":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","OfferSequence":7}"#;
 
-        let txn_as_obj: EscrowCancel = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: EscrowCancel = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

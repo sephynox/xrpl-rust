@@ -184,7 +184,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"OfferCancel","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","LastLedgerSequence":7108629,"OfferSequence":6,"Sequence":7}"#;
 
-        let txn_as_obj: OfferCancel = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: OfferCancel = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

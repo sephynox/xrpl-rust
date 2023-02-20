@@ -274,7 +274,7 @@ mod test_serde {
         );
         let default_json = r#"{"Account":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","TransactionType":"CheckCash","Amount":"100000000","CheckID":"838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334","Fee":"12"}"#;
 
-        let txn_as_obj: CheckCash = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: CheckCash = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

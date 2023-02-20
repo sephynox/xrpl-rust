@@ -262,7 +262,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"DepositPreauth","Account":"rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8","Authorize":"rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de","Fee":"10","Sequence":2}"#;
 
-        let txn_as_obj: DepositPreauth = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: DepositPreauth = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

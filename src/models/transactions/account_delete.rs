@@ -199,7 +199,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"AccountDelete","Account":"rWYkbWkCeg8dP6rXALnjgZSjjLyih5NXm","Destination":"rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe","DestinationTag":13,"Fee":"2000000","Sequence":2470665}"#;
 
-        let txn_as_obj: AccountDelete = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: AccountDelete = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

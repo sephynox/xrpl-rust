@@ -184,7 +184,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"TicketCreate","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"10","Sequence":381,"TicketCount":10}"#;
 
-        let txn_as_obj: TicketCreate = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: TicketCreate = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

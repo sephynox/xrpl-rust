@@ -188,7 +188,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"SetRegularKey","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"12","RegularKey":"rAR8rR8sUkBoCZFawhkWzY4Y5YoyuznwD"}"#;
 
-        let txn_as_obj: SetRegularKey = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: SetRegularKey = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

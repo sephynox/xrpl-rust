@@ -339,7 +339,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"OfferCreate","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","Sequence":8,"LastLedgerSequence":7108682,"TakerGets":"6000000","TakerPays":{"value":"2","currency":"GKO","issuer":"ruazs5h1qEsqpke88pcqnaseXdm6od2xc"}}"#;
 
-        let txn_as_obj: OfferCreate = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: OfferCreate = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

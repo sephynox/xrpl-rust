@@ -443,7 +443,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"NFTokenCreateOffer","Account":"rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX","NFTokenID":"000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007","Amount":"1000000","Flags":1}"#;
 
-        let txn_as_obj: NFTokenCreateOffer = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: NFTokenCreateOffer = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

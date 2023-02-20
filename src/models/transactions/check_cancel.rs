@@ -188,7 +188,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"CheckCancel","Account":"rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo","CheckID":"49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0","Fee":"12"}"#;
 
-        let txn_as_obj: CheckCancel = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: CheckCancel = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

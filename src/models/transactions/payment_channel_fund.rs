@@ -199,7 +199,7 @@ mod test_serde {
         );
         let default_json = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"PaymentChannelFund","Channel":"C1AE6DDDEEC05CF2978C0BAD6FE302948E9533691DC749DCDD3B9E5992CA6198","Amount":"200000","Expiration":543171558}"#;
 
-        let txn_as_obj: PaymentChannelFund = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: PaymentChannelFund = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }
