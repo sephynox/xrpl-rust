@@ -73,6 +73,7 @@ pub struct NFTokenBurn<'a> {
     ///
     /// See NFTokenBurn fields:
     /// `<https://xrpl.org/nftokenburn.html#nftokenburn-fields>`
+    #[serde(rename = "NFTokenID")]
     pub nftoken_id: &'a str,
     pub owner: Option<&'a str>,
 }
@@ -140,5 +141,59 @@ impl<'a> NFTokenBurn<'a> {
             nftoken_id,
             owner,
         }
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = NFTokenBurn::new(
+            "rNCFjv8Ek5oDrNiMJ3pw6eLLFtMjZLJnf2",
+            "000B013A95F14B0044F78A264E41713C64B5F89242540EE208C3098E00000D65",
+            Some("10"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"),
+        );
+        let default_json = r#"{"TransactionType":"NFTokenBurn","Account":"rNCFjv8Ek5oDrNiMJ3pw6eLLFtMjZLJnf2","Fee":"10","NFTokenID":"000B013A95F14B0044F78A264E41713C64B5F89242540EE208C3098E00000D65","Owner":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = NFTokenBurn::new(
+            "rNCFjv8Ek5oDrNiMJ3pw6eLLFtMjZLJnf2",
+            "000B013A95F14B0044F78A264E41713C64B5F89242540EE208C3098E00000D65",
+            Some("10"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"),
+        );
+        let default_json = r#"{"TransactionType":"NFTokenBurn","Account":"rNCFjv8Ek5oDrNiMJ3pw6eLLFtMjZLJnf2","Owner":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B","Fee":"10","NFTokenID":"000B013A95F14B0044F78A264E41713C64B5F89242540EE208C3098E00000D65"}"#;
+
+        let txn_as_obj: NFTokenBurn = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

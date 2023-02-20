@@ -85,6 +85,7 @@ pub struct NFTokenCreateOffer<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
+    #[serde(default)]
     #[serde(with = "txn_flags")]
     pub flags: Option<Vec<NFTokenCreateOfferFlag>>,
     /// Additional arbitrary information used to identify this transaction.
@@ -98,6 +99,7 @@ pub struct NFTokenCreateOffer<'a> {
     ///
     /// See NFTokenCreateOffer fields:
     /// `<https://xrpl.org/nftokencreateoffer.html#nftokencreateoffer-fields>`
+    #[serde(rename = "NFTokenID")]
     pub nftoken_id: &'a str,
     pub amount: Amount,
     pub owner: Option<&'a str>,
@@ -379,5 +381,70 @@ mod test_nftoken_create_offer_error {
             ),
         );
         assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use alloc::borrow::Cow::Borrowed;
+    use alloc::vec;
+
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = NFTokenCreateOffer::new(
+            "rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX",
+            "000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007",
+            Amount::Xrp(Borrowed("1000000")),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(vec![NFTokenCreateOfferFlag::TfSellOffer]),
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"NFTokenCreateOffer","Account":"rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX","Flags":1,"NFTokenID":"000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007","Amount":"1000000"}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = NFTokenCreateOffer::new(
+            "rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX",
+            "000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007",
+            Amount::Xrp(Borrowed("1000000")),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(vec![NFTokenCreateOfferFlag::TfSellOffer]),
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"NFTokenCreateOffer","Account":"rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX","NFTokenID":"000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007","Amount":"1000000","Flags":1}"#;
+
+        let txn_as_obj: NFTokenCreateOffer = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

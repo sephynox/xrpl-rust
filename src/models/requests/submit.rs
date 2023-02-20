@@ -58,3 +58,14 @@ impl<'a> Default for Submit<'a> {
 }
 
 impl<'a> Model for Submit<'a> {}
+
+impl<'a> Submit<'a> {
+    fn new(tx_blob: &'a str, id: Option<&'a str>, fail_hard: Option<bool>) -> Self {
+        Self {
+            tx_blob,
+            id,
+            fail_hard,
+            command: RequestMethod::Submit,
+        }
+    }
+}

@@ -78,7 +78,7 @@ pub struct EscrowCreate<'a> {
     /// `<https://xrpl.org/escrowcreate.html#escrowcreate-flags>`
     pub amount: Amount,
     pub destination: &'a str,
-    pub destination_tag: Option<&'a str>,
+    pub destination_tag: Option<u32>,
     pub cancel_after: Option<u32>,
     pub finish_after: Option<u32>,
     pub condition: Option<&'a str>,
@@ -159,7 +159,7 @@ impl<'a> EscrowCreate<'a> {
         txn_signature: Option<&'a str>,
         memos: Option<Vec<Memo<'a>>>,
         signers: Option<Vec<Signer<'a>>>,
-        destination_tag: Option<&'a str>,
+        destination_tag: Option<u32>,
         cancel_after: Option<u32>,
         finish_after: Option<u32>,
         condition: Option<&'a str>,
@@ -227,5 +227,68 @@ mod test_escrow_create_errors {
                 EscrowCreateException::InvalidCancelAfterMustNotBeBeforeFinishAfter,
             ));
         assert_eq!(escrow_create.validate(), Err(expected_error));
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use super::*;
+    use alloc::borrow::Cow::Borrowed;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = EscrowCreate::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            Amount::Xrp(Borrowed("10000")),
+            "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(11747),
+            None,
+            None,
+            None,
+            None,
+            Some(23480),
+            Some(533257958),
+            Some(533171558),
+            Some("A0258020E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855810100"),
+        );
+        let default_json = r#"{"TransactionType":"EscrowCreate","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","SourceTag":11747,"Amount":"10000","Destination":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","DestinationTag":23480,"CancelAfter":533257958,"FinishAfter":533171558,"Condition":"A0258020E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855810100"}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = EscrowCreate::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            Amount::Xrp(Borrowed("10000")),
+            "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(11747),
+            None,
+            None,
+            None,
+            None,
+            Some(23480),
+            Some(533257958),
+            Some(533171558),
+            Some("A0258020E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855810100"),
+        );
+        let default_json = r#"{"TransactionType":"EscrowCreate","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Amount":"10000","Destination":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","CancelAfter":533257958,"FinishAfter":533171558,"Condition":"A0258020E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855810100","DestinationTag":23480,"SourceTag":11747}"#;
+
+        let txn_as_obj: EscrowCreate = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

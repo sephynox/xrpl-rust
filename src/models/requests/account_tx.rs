@@ -69,3 +69,32 @@ impl<'a> Default for AccountTx<'a> {
 }
 
 impl<'a> Model for AccountTx<'a> {}
+
+impl<'a> AccountTx<'a> {
+    fn new(
+        account: &'a str,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        binary: Option<bool>,
+        forward: Option<bool>,
+        ledger_index_min: Option<u32>,
+        ledger_index_max: Option<u32>,
+        limit: Option<u16>,
+        marker: Option<u32>,
+    ) -> Self {
+        Self {
+            account,
+            id,
+            ledger_hash,
+            ledger_index,
+            binary,
+            forward,
+            ledger_index_min,
+            ledger_index_max,
+            limit,
+            marker,
+            command: RequestMethod::AccountTx,
+        }
+    }
+}

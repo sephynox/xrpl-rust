@@ -41,3 +41,22 @@ impl<'a> Default for DepositAuthorized<'a> {
 }
 
 impl<'a> Model for DepositAuthorized<'a> {}
+
+impl<'a> DepositAuthorized<'a> {
+    fn new(
+        source_account: &'a str,
+        destination_account: &'a str,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+    ) -> Self {
+        Self {
+            source_account,
+            destination_account,
+            id,
+            ledger_hash,
+            ledger_index,
+            command: RequestMethod::DepositAuthorized,
+        }
+    }
+}

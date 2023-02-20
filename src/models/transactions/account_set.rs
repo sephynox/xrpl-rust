@@ -1,9 +1,11 @@
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
-use strum_macros::{AsRefStr, Display};
+use strum_macros::{AsRefStr, Display, EnumIter};
 
 use crate::{
+    _serde::txn_flags,
     constants::{
         DISABLE_TICK_SIZE, MAX_DOMAIN_LENGTH, MAX_TICK_SIZE, MAX_TRANSFER_RATE, MIN_TICK_SIZE,
         MIN_TRANSFER_RATE, SPECIAL_CASE_TRANFER_RATE,
@@ -20,40 +22,43 @@ use crate::{
 ///
 /// See AccountSet flags:
 /// `<https://xrpl.org/accountset.html#accountset-flags>`
-#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
+#[derive(
+    Debug, Eq, PartialEq, Clone, Serialize_repr, Deserialize_repr, Display, AsRefStr, EnumIter,
+)]
+#[repr(u32)]
 pub enum AccountSetFlag {
     /// Track the ID of this account's most recent transaction
     /// Required for AccountTxnID
-    AsfAccountTxnID,
+    AsfAccountTxnID = 5,
     /// Enable to allow another account to mint non-fungible tokens (NFTokens)
     /// on this account's behalf. Specify the authorized account in the
     /// NFTokenMinter field of the AccountRoot object. This is an experimental
     /// field to enable behavior for NFToken support.
-    AsfAuthorizedNFTokenMinter,
+    AsfAuthorizedNFTokenMinter = 10,
     /// Enable rippling on this account's trust lines by default.
-    AsfDefaultRipple,
+    AsfDefaultRipple = 8,
     /// Enable Deposit Authorization on this account.
     /// (Added by the DepositAuth amendment.)
-    AsfDepositAuth,
+    AsfDepositAuth = 9,
     /// Disallow use of the master key pair. Can only be enabled if the
     /// account has configured another way to sign transactions, such as
     /// a Regular Key or a Signer List.
-    AsfDisableMaster,
+    AsfDisableMaster = 4,
     /// XRP should not be sent to this account.
     /// (Enforced by client applications, not by rippled)
-    AsfDisallowXRP,
+    AsfDisallowXRP = 3,
     /// Freeze all assets issued by this account.
-    AsfGlobalFreeze,
+    AsfGlobalFreeze = 7,
     /// Permanently give up the ability to freeze individual
     /// trust lines or disable Global Freeze. This flag can never
     /// be disabled after being enabled.
-    AsfNoFreeze,
+    AsfNoFreeze = 6,
     /// Require authorization for users to hold balances issued by
     /// this address. Can only be enabled if the address has no
     /// trust lines connected to it.
-    AsfRequireAuth,
+    AsfRequireAuth = 2,
     /// Require a destination tag to send transactions to this account.
-    AsfRequireDest,
+    AsfRequireDest = 1,
 }
 
 /// An AccountSet transaction modifies the properties of an
@@ -113,6 +118,8 @@ pub struct AccountSet<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
+    #[serde(default)]
+    #[serde(with = "txn_flags")]
     pub flags: Option<Vec<AccountSetFlag>>,
     /// Additional arbitrary information used to identify this transaction.
     pub memos: Option<Vec<Memo<'a>>>,
@@ -614,5 +621,73 @@ mod test_account_set_errors {
                 AccountSetException::InvalidNftokenMinterMustNotBeSetIfAsfAuthorizedNftokenMinterIsUnset,
             ));
         assert_eq!(account_set.validate(), Err(expected_error));
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = AccountSet::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            Some("12"),
+            Some(5),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("6578616D706C652E636F6D"),
+            None,
+            Some("03AB40A0490F9B7ED8DF29D246BF2D6269820A0EE7742ACDD457BEA7C7D0931EDB"),
+            Some(AccountSetFlag::AsfAccountTxnID),
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"AccountSet","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"12","Sequence":5,"Domain":"6578616D706C652E636F6D","MessageKey":"03AB40A0490F9B7ED8DF29D246BF2D6269820A0EE7742ACDD457BEA7C7D0931EDB","SetFlag":5}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = AccountSet::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            Some("12"),
+            Some(5),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("6578616D706C652E636F6D"),
+            None,
+            Some("03AB40A0490F9B7ED8DF29D246BF2D6269820A0EE7742ACDD457BEA7C7D0931EDB"),
+            Some(AccountSetFlag::AsfAccountTxnID),
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"AccountSet","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"12","Sequence":5,"Domain":"6578616D706C652E636F6D","MessageKey":"03AB40A0490F9B7ED8DF29D246BF2D6269820A0EE7742ACDD457BEA7C7D0931EDB","SetFlag":5}"#;
+
+        let txn_as_obj: AccountSet = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

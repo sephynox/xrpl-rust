@@ -75,3 +75,26 @@ impl<'a> Default for NoRippleCheck<'a> {
 }
 
 impl<'a> Model for NoRippleCheck<'a> {}
+
+impl<'a> NoRippleCheck<'a> {
+    fn new(
+        account: &'a str,
+        role: NoRippleCheckRole,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        transactions: Option<bool>,
+        limit: Option<u16>,
+    ) -> Self {
+        Self {
+            account,
+            role,
+            id,
+            ledger_hash,
+            ledger_index,
+            transactions,
+            limit,
+            command: RequestMethod::NoRippleCheck,
+        }
+    }
+}

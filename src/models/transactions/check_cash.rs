@@ -79,6 +79,7 @@ pub struct CheckCash<'a> {
     ///
     /// See CheckCash fields:
     /// `<https://xrpl.org/checkcash.html#checkcash-fields>`
+    #[serde(rename = "CheckID")]
     pub check_id: &'a str,
     pub amount: Option<Amount>,
     pub deliver_min: Option<Amount>,
@@ -218,5 +219,63 @@ mod test_check_cash_error {
                 CheckCashException::InvalidMustNotSetAmountAndDeliverMin,
             ));
         assert_eq!(check_cash.validate(), Err(expected_error));
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use alloc::borrow::Cow::Borrowed;
+
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = CheckCash::new(
+            "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
+            "838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334",
+            Some("12"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(Amount::Xrp(Borrowed("100000000"))),
+            None,
+        );
+        let default_json = r#"{"TransactionType":"CheckCash","Account":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","Fee":"12","CheckID":"838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334","Amount":"100000000"}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = CheckCash::new(
+            "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
+            "838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334",
+            Some("12"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(Amount::Xrp(Borrowed("100000000"))),
+            None,
+        );
+        let default_json = r#"{"Account":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","TransactionType":"CheckCash","Amount":"100000000","CheckID":"838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334","Fee":"12"}"#;
+
+        let txn_as_obj: CheckCash = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

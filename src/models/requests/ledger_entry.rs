@@ -163,6 +163,43 @@ impl<'a> LedgerEntryError for LedgerEntry<'a> {
     }
 }
 
+impl<'a> LedgerEntry<'a> {
+    fn new(
+        id: Option<&'a str>,
+        index: Option<&'a str>,
+        account_root: Option<&'a str>,
+        check: Option<&'a str>,
+        payment_channel: Option<&'a str>,
+        deposit_preauth: Option<DepositPreauth<'a>>,
+        directory: Option<Directory<'a>>,
+        escrow: Option<Escrow<'a>>,
+        offer: Option<Offer<'a>>,
+        ripple_state: Option<RippleState<'a>>,
+        ticket: Option<Ticket<'a>>,
+        binary: Option<bool>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+    ) -> Self {
+        Self {
+            id,
+            index,
+            account_root,
+            check,
+            payment_channel,
+            deposit_preauth,
+            directory,
+            escrow,
+            offer,
+            ripple_state,
+            ticket,
+            binary,
+            ledger_hash,
+            ledger_index,
+            command: RequestMethod::LedgerData,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test_ledger_entry_errors {
     use alloc::string::ToString;

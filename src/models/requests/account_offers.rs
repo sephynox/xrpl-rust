@@ -53,3 +53,26 @@ impl<'a> Default for AccountOffers<'a> {
 }
 
 impl<'a> Model for AccountOffers<'a> {}
+
+impl<'a> AccountOffers<'a> {
+    fn new(
+        account: &'a str,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        limit: Option<u16>,
+        strict: Option<bool>,
+        marker: Option<u32>,
+    ) -> Self {
+        Self {
+            account,
+            id,
+            ledger_hash,
+            ledger_index,
+            limit,
+            strict,
+            marker,
+            command: RequestMethod::AccountOffers,
+        }
+    }
+}

@@ -30,3 +30,12 @@ impl<'a> Default for Fee<'a> {
 }
 
 impl<'a> Model for Fee<'a> {}
+
+impl<'a> Fee<'a> {
+    fn new(id: Option<&'a str>) -> Self {
+        Self {
+            id,
+            command: RequestMethod::Fee,
+        }
+    }
+}

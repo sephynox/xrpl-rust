@@ -39,3 +39,15 @@ impl<'a> Default for AccountNfts<'a> {
 }
 
 impl<'a> Model for AccountNfts<'a> {}
+
+impl<'a> AccountNfts<'a> {
+    fn new(account: &'a str, id: Option<&'a str>, limit: Option<u32>, marker: Option<u32>) -> Self {
+        Self {
+            account,
+            id,
+            limit,
+            marker,
+            command: RequestMethod::AccountNfts,
+        }
+    }
+}

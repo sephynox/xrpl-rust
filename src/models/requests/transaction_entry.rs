@@ -41,3 +41,20 @@ impl<'a> Default for TransactionEntry<'a> {
 }
 
 impl<'a> Model for TransactionEntry<'a> {}
+
+impl<'a> TransactionEntry<'a> {
+    fn new(
+        tx_hash: &'a str,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+    ) -> Self {
+        Self {
+            tx_hash,
+            id,
+            ledger_hash,
+            ledger_index,
+            command: RequestMethod::TransactionEntry,
+        }
+    }
+}

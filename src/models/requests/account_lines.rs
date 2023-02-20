@@ -54,3 +54,26 @@ impl<'a> Default for AccountLines<'a> {
 }
 
 impl<'a> Model for AccountLines<'a> {}
+
+impl<'a> AccountLines<'a> {
+    fn new(
+        account: &'a str,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        limit: Option<u16>,
+        peer: Option<&'a str>,
+        marker: Option<u32>,
+    ) -> Self {
+        Self {
+            account,
+            id,
+            ledger_hash,
+            ledger_index,
+            limit,
+            peer,
+            marker,
+            command: RequestMethod::AccountLines,
+        }
+    }
+}

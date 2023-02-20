@@ -137,3 +137,55 @@ impl<'a> OfferCancel<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod test_serde {
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = OfferCancel::new(
+            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
+            6,
+            Some("12"),
+            Some(7),
+            Some(7108629),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"OfferCancel","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","Sequence":7,"LastLedgerSequence":7108629,"OfferSequence":6}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = OfferCancel::new(
+            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
+            6,
+            Some("12"),
+            Some(7),
+            Some(7108629),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"OfferCancel","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","LastLedgerSequence":7108629,"OfferSequence":6,"Sequence":7}"#;
+
+        let txn_as_obj: OfferCancel = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
+    }
+}

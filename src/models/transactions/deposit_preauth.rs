@@ -213,3 +213,57 @@ mod test_deposit_preauth_exception {
         assert_eq!(deposit_preauth.validate(), Err(expected_error));
     }
 }
+
+#[cfg(test)]
+mod test_serde {
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = DepositPreauth::new(
+            "rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8",
+            Some("10"),
+            Some(2),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de"),
+            None,
+        );
+        let default_json = r#"{"TransactionType":"DepositPreauth","Account":"rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8","Fee":"10","Sequence":2,"Authorize":"rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de"}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = DepositPreauth::new(
+            "rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8",
+            Some("10"),
+            Some(2),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de"),
+            None,
+        );
+        let default_json = r#"{"TransactionType":"DepositPreauth","Account":"rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8","Authorize":"rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de","Fee":"10","Sequence":2}"#;
+
+        let txn_as_obj: DepositPreauth = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
+    }
+}

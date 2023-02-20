@@ -92,6 +92,7 @@ pub struct Payment<'a> {
     /// from the account it says it is from.
     pub txn_signature: Option<&'a str>,
     /// Set of bit-flags for this transaction.
+    #[serde(default)]
     #[serde(with = "txn_flags")]
     pub flags: Option<Vec<PaymentFlag>>,
     /// Additional arbitrary information used to identify this transaction.
@@ -419,5 +420,83 @@ mod test_payment_error {
                 PaymentException::InvalidSendMaxMustBeSetForExchanges,
             ));
         assert_eq!(payment.validate(), Err(expected_error));
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use alloc::vec;
+
+    use crate::models::Amount;
+
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = Payment::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            Amount::IssuedCurrency {
+                currency: "USD".into(),
+                issuer: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
+                value: "1".into(),
+            },
+            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
+            Some("12"),
+            Some(2),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(vec![PaymentFlag::TfPartialPayment]),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"Payment","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"12","Sequence":2,"Flags":131072,"Amount":{"currency":"USD","issuer":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","value":"1"},"Destination":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX"}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = Payment::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            Amount::IssuedCurrency {
+                currency: "USD".into(),
+                issuer: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
+                value: "1".into(),
+            },
+            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
+            Some("12"),
+            Some(2),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(vec![PaymentFlag::TfPartialPayment]),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"Payment","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Destination":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Amount":{"currency":"USD","value":"1","issuer":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"},"Fee":"12","Flags":131072,"Sequence":2}"#;
+
+        let txn_as_obj: Payment = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

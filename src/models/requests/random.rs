@@ -29,3 +29,12 @@ impl<'a> Default for Random<'a> {
 }
 
 impl<'a> Model for Random<'a> {}
+
+impl<'a> Random<'a> {
+    fn new(id: Option<&'a str>) -> Self {
+        Self {
+            id,
+            command: RequestMethod::Random,
+        }
+    }
+}

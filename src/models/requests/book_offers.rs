@@ -60,6 +60,29 @@ impl<'a> Default for BookOffers<'a> {
 
 impl<'a> Model for BookOffers<'a> {}
 
+impl<'a> BookOffers<'a> {
+    fn new(
+        taker_gets: Currency,
+        taker_pays: Currency,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        limit: Option<u16>,
+        taker: Option<&'a str>,
+    ) -> Self {
+        Self {
+            taker_gets,
+            taker_pays,
+            id,
+            ledger_hash,
+            ledger_index,
+            limit,
+            taker,
+            command: RequestMethod::BookOffers,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::models::Currency;

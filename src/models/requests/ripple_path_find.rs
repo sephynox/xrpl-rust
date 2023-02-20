@@ -76,3 +76,28 @@ impl<'a> Default for RipplePathFind<'a> {
 }
 
 impl<'a> Model for RipplePathFind<'a> {}
+
+impl<'a> RipplePathFind<'a> {
+    fn new(
+        source_account: &'a str,
+        destination_account: &'a str,
+        destination_amount: Currency,
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        send_max: Option<Currency>,
+        source_currencies: Option<Vec<Currency>>,
+    ) -> Self {
+        Self {
+            source_account,
+            destination_account,
+            destination_amount,
+            id,
+            ledger_hash,
+            ledger_index,
+            send_max,
+            source_currencies,
+            command: RequestMethod::RipplePathFind,
+        }
+    }
+}

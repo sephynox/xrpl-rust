@@ -74,3 +74,32 @@ impl<'a> Default for Ledger<'a> {
 }
 
 impl<'a> Model for Ledger<'a> {}
+
+impl<'a> Ledger<'a> {
+    fn new(
+        id: Option<&'a str>,
+        ledger_hash: Option<&'a str>,
+        ledger_index: Option<&'a str>,
+        full: Option<bool>,
+        accounts: Option<bool>,
+        transactions: Option<bool>,
+        expand: Option<bool>,
+        owner_funds: Option<bool>,
+        binary: Option<bool>,
+        queue: Option<bool>,
+    ) -> Self {
+        Self {
+            id,
+            ledger_hash,
+            ledger_index,
+            full,
+            accounts,
+            transactions,
+            expand,
+            owner_funds,
+            binary,
+            queue,
+            command: RequestMethod::Ledger,
+        }
+    }
+}

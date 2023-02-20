@@ -1,5 +1,10 @@
 //! Serde functionalities
 
+use core::hash::BuildHasherDefault;
+use fnv::FnvHasher;
+
+pub type HashMap<K, V> = hashbrown::HashMap<K, V, BuildHasherDefault<FnvHasher>>;
+
 pub mod txn_flags {
     use core::fmt::Debug;
 
@@ -51,14 +56,9 @@ pub mod txn_flags {
 
 /// Used for tagged variants in an `untagged` enum
 pub mod currency_xrp {
-    use core::hash::BuildHasherDefault;
-
-    use fnv::FnvHasher;
-    use hashbrown::HashMap;
+    use super::HashMap;
     use serde::de::Error;
     use serde::{ser::SerializeMap, Deserialize};
-
-    type FnvHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FnvHasher>>;
 
     pub fn serialize<S>(serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -76,7 +76,7 @@ pub mod currency_xrp {
     where
         D: serde::Deserializer<'de>,
     {
-        let xrp_currency: FnvHashMap<&str, &str> = FnvHashMap::deserialize(deserializer)?;
+        let xrp_currency: HashMap<&str, &str> = HashMap::deserialize(deserializer)?;
 
         if xrp_currency.get("currency").unwrap() == &"XRP" {
             return Ok(());
@@ -85,4 +85,52 @@ pub mod currency_xrp {
         // TODO: utilize anyhow and thiserror
         Err("Could not deserialize XRP currency.").map_err(D::Error::custom)
     }
+}
+
+/// Source: https://github.com/serde-rs/serde/issues/554#issuecomment-249211775
+// TODO: Find a way to `#[skip_serializing_none]`
+#[macro_export]
+macro_rules! serialize_with_tag {
+    (
+        $(#[$attr:meta])*
+        pub struct $name:ident<$lt:lifetime> {
+            $(
+                $field:ident : $ty:ty,
+            )*
+        }
+    ) => {
+        $(#[$attr])*
+        pub struct $name<$lt> {
+            $(
+                $field: $ty,
+            )*
+        }
+
+        impl<$lt> ::serde::Serialize for $name<$lt> {
+            fn serialize<S>(&self, serializer: S) -> ::core::result::Result<S::Ok, S::Error>
+            where
+                S: ::serde::Serializer
+            {
+                #[derive(Serialize)]
+                #[serde(rename_all = "PascalCase")]
+                $(#[$attr])*
+                pub struct Helper<$lt> {
+                    $(
+                        $field: $ty,
+                    )*
+                }
+
+                let helper = Helper {
+                    $(
+                        $field: self.$field,
+                    )*
+                };
+
+                let mut state = serializer.serialize_map(Some(1))?;
+                state.serialize_key(stringify!($name))?;
+                state.serialize_value(&helper)?;
+                state.end()
+            }
+        }
+    };
 }

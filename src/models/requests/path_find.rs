@@ -108,3 +108,26 @@ impl<'a> Default for PathFind<'a> {
 }
 
 impl<'a> Model for PathFind<'a> {}
+
+impl<'a> PathFind<'a> {
+    fn new(
+        subcommand: PathFindSubcommand,
+        source_account: &'a str,
+        destination_account: &'a str,
+        destination_amount: Currency,
+        id: Option<&'a str>,
+        send_max: Option<Currency>,
+        paths: Option<Vec<Vec<PathStep<'a>>>>,
+    ) -> Self {
+        Self {
+            subcommand,
+            source_account,
+            destination_account,
+            destination_amount,
+            id,
+            send_max,
+            paths,
+            command: RequestMethod::PathFind,
+        }
+    }
+}

@@ -29,3 +29,12 @@ impl<'a> Default for LedgerCurrent<'a> {
 }
 
 impl<'a> Model for LedgerCurrent<'a> {}
+
+impl<'a> LedgerCurrent<'a> {
+    fn new(id: Option<&'a str>) -> Self {
+        Self {
+            id,
+            command: RequestMethod::LedgerCurrent,
+        }
+    }
+}

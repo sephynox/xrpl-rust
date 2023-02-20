@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
+use crate::models::{model::Model, Amount, Memo, Signer, Transaction, TransactionType};
 
 /// Add additional XRP to an open payment channel,
 /// and optionally update the expiration time of the channel.
@@ -73,8 +73,8 @@ pub struct PaymentChannelFund<'a> {
     ///
     /// See PaymentChannelFund fields:
     /// `<https://xrpl.org/paymentchannelfund.html#paymentchannelfund-fields>`
+    pub amount: Amount,
     pub channel: &'a str,
-    pub amount: &'a str,
     pub expiration: Option<u32>,
 }
 
@@ -94,8 +94,8 @@ impl<'a> Default for PaymentChannelFund<'a> {
             flags: Default::default(),
             memos: Default::default(),
             signers: Default::default(),
-            channel: Default::default(),
             amount: Default::default(),
+            channel: Default::default(),
             expiration: Default::default(),
         }
     }
@@ -113,7 +113,7 @@ impl<'a> PaymentChannelFund<'a> {
     fn new(
         account: &'a str,
         channel: &'a str,
-        amount: &'a str,
+        amount: Amount,
         fee: Option<&'a str>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
@@ -140,9 +140,67 @@ impl<'a> PaymentChannelFund<'a> {
             flags: None,
             memos,
             signers,
-            channel,
             amount,
+            channel,
             expiration,
         }
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use crate::models::Amount;
+
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = PaymentChannelFund::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            "C1AE6DDDEEC05CF2978C0BAD6FE302948E9533691DC749DCDD3B9E5992CA6198",
+            Amount::Xrp(alloc::borrow::Cow::Borrowed("200000")),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(543171558),
+        );
+        let default_json = r#"{"TransactionType":"PaymentChannelFund","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Amount":"200000","Channel":"C1AE6DDDEEC05CF2978C0BAD6FE302948E9533691DC749DCDD3B9E5992CA6198","Expiration":543171558}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = PaymentChannelFund::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            "C1AE6DDDEEC05CF2978C0BAD6FE302948E9533691DC749DCDD3B9E5992CA6198",
+            Amount::Xrp(alloc::borrow::Cow::Borrowed("200000")),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(543171558),
+        );
+        let default_json = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"PaymentChannelFund","Channel":"C1AE6DDDEEC05CF2978C0BAD6FE302948E9533691DC749DCDD3B9E5992CA6198","Amount":"200000","Expiration":543171558}"#;
+
+        let txn_as_obj: PaymentChannelFund = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

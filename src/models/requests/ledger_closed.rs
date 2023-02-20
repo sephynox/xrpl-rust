@@ -29,3 +29,12 @@ impl<'a> Default for LedgerClosed<'a> {
 }
 
 impl<'a> Model for LedgerClosed<'a> {}
+
+impl<'a> LedgerClosed<'a> {
+    fn new(id: Option<&'a str>) -> Self {
+        Self {
+            id,
+            command: RequestMethod::LedgerClosed,
+        }
+    }
+}

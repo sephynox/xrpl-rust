@@ -78,6 +78,7 @@ pub struct NFTokenCancelOffer<'a> {
     /// `<https://xrpl.org/nftokencanceloffer.html#nftokencanceloffer-fields>`
     /// Lifetime issue
     #[serde(borrow)]
+    #[serde(rename = "NFTokenOffers")]
     pub nftoken_offers: Vec<&'a str>,
 }
 
@@ -197,5 +198,59 @@ mod test_nftoken_cancel_offer_error {
             ),
         );
         assert_eq!(nftoken_cancel_offer.validate(), Err(expected_error));
+    }
+}
+
+#[cfg(test)]
+mod test_serde {
+    use alloc::vec;
+
+    use super::*;
+
+    #[test]
+    fn test_serialize() {
+        let default_txn = NFTokenCancelOffer::new(
+            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
+            vec!["9C92E061381C1EF37A8CDE0E8FC35188BFC30B1883825042A64309AC09F4C36D"],
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"NFTokenCancelOffer","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","NFTokenOffers":["9C92E061381C1EF37A8CDE0E8FC35188BFC30B1883825042A64309AC09F4C36D"]}"#;
+
+        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
+        let txn_json = txn_as_string.as_str();
+
+        assert_eq!(txn_json, default_json);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = NFTokenCancelOffer::new(
+            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
+            vec!["9C92E061381C1EF37A8CDE0E8FC35188BFC30B1883825042A64309AC09F4C36D"],
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"NFTokenCancelOffer","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","NFTokenOffers":["9C92E061381C1EF37A8CDE0E8FC35188BFC30B1883825042A64309AC09F4C36D"]}"#;
+
+        let txn_as_obj: NFTokenCancelOffer = serde_json::from_str(&default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
     }
 }

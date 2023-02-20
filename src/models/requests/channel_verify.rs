@@ -41,3 +41,22 @@ impl<'a> Default for ChannelVerify<'a> {
 }
 
 impl<'a> Model for ChannelVerify<'a> {}
+
+impl<'a> ChannelVerify<'a> {
+    fn new(
+        channel_id: &'a str,
+        amount: &'a str,
+        public_key: &'a str,
+        signature: &'a str,
+        id: Option<&'a str>,
+    ) -> Self {
+        Self {
+            channel_id,
+            amount,
+            public_key,
+            signature,
+            id,
+            command: RequestMethod::ChannelVerify,
+        }
+    }
+}
