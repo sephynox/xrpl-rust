@@ -249,7 +249,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"NFTokenCancelOffer","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","NFTokenOffers":["9C92E061381C1EF37A8CDE0E8FC35188BFC30B1883825042A64309AC09F4C36D"]}"#;
 
-        let txn_as_obj: NFTokenCancelOffer = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: NFTokenCancelOffer = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

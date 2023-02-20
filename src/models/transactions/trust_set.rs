@@ -256,7 +256,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"TrustSet","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","Flags":262144,"LastLedgerSequence":8007750,"LimitAmount":{"currency":"USD","issuer":"rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc","value":"100"},"Sequence":12}"#;
 
-        let txn_as_obj: TrustSet = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: TrustSet = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

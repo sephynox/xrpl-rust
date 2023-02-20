@@ -495,7 +495,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"Payment","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Destination":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Amount":{"currency":"USD","value":"1","issuer":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"},"Fee":"12","Flags":131072,"Sequence":2}"#;
 
-        let txn_as_obj: Payment = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: Payment = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }

@@ -192,7 +192,7 @@ mod test_serde {
         );
         let default_json = r#"{"TransactionType":"NFTokenBurn","Account":"rNCFjv8Ek5oDrNiMJ3pw6eLLFtMjZLJnf2","Owner":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B","Fee":"10","NFTokenID":"000B013A95F14B0044F78A264E41713C64B5F89242540EE208C3098E00000D65"}"#;
 
-        let txn_as_obj: NFTokenBurn = serde_json::from_str(&default_json).unwrap();
+        let txn_as_obj: NFTokenBurn = serde_json::from_str(default_json).unwrap();
 
         assert_eq!(txn_as_obj, default_txn);
     }
