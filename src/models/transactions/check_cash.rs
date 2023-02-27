@@ -49,6 +49,7 @@ pub struct CheckCash<'a> {
     /// Hash value identifying another transaction. If provided, this
     /// transaction is only valid if the sending account's
     /// previously-sent transaction matches the provided hash.
+    #[serde(rename = "AccountTxnID")]
     pub account_txn_id: Option<&'a str>,
     /// Hex representation of the public key that corresponds to the
     /// private key used to sign this transaction. If an empty string,

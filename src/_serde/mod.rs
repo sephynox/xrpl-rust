@@ -89,6 +89,7 @@ pub mod currency_xrp {
 
 /// Source: https://github.com/serde-rs/serde/issues/554#issuecomment-249211775
 // TODO: Find a way to `#[skip_serializing_none]`
+// TODO: Find a more generic way
 #[macro_export]
 macro_rules! serialize_with_tag {
     (
@@ -122,7 +123,49 @@ macro_rules! serialize_with_tag {
 
                 let helper = Helper {
                     $(
-                        $field: self.$field,
+                        $field: self.$field.clone(),
+                    )*
+                };
+
+                let mut state = serializer.serialize_map(Some(1))?;
+                state.serialize_key(stringify!($name))?;
+                state.serialize_value(&helper)?;
+                state.end()
+            }
+        }
+    };
+    (
+        $(#[$attr:meta])*
+        pub struct $name:ident {
+            $(
+                $field:ident : $ty:ty,
+            )*
+        }
+    ) => {
+        $(#[$attr])*
+        pub struct $name {
+            $(
+                $field: $ty,
+            )*
+        }
+
+        impl ::serde::Serialize for $name {
+            fn serialize<S>(&self, serializer: S) -> ::core::result::Result<S::Ok, S::Error>
+            where
+                S: ::serde::Serializer
+            {
+                #[derive(Serialize)]
+                #[serde(rename_all = "PascalCase")]
+                $(#[$attr])*
+                pub struct Helper {
+                    $(
+                        $field: $ty,
+                    )*
+                }
+
+                let helper = Helper {
+                    $(
+                        $field: self.$field.clone(),
                     )*
                 };
 
