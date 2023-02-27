@@ -18,6 +18,7 @@ tag-name = "{{version}}"
 [lib]
 name = "xrpl"
 crate-type = ["lib"]
+proc-macro = true
 
 [dependencies]
 lazy_static = "1.4.0"
