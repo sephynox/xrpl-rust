@@ -19,16 +19,12 @@ pub type Path<'a> = Vec<PathStep<'a>>;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "subcommand")]
+#[derive(Default)]
 pub enum PathFindSubcommand {
+    #[default]
     Create,
     Close,
     Status,
-}
-
-impl Default for PathFindSubcommand {
-    fn default() -> Self {
-        PathFindSubcommand::Create
-    }
 }
 
 /// WebSocket API only! The path_find method searches for
