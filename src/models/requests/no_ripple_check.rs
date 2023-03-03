@@ -10,15 +10,11 @@ use crate::models::{Model, RequestMethod};
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "role")]
+#[derive(Default)]
 pub enum NoRippleCheckRole {
+    #[default]
     User,
     Gateway,
-}
-
-impl Default for NoRippleCheckRole {
-    fn default() -> Self {
-        NoRippleCheckRole::User
-    }
 }
 
 /// This request provides a quick way to check the status of
