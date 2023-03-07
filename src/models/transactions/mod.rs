@@ -7,6 +7,7 @@ pub mod deposit_preauth;
 pub mod escrow_cancel;
 pub mod escrow_create;
 pub mod escrow_finish;
+pub mod exceptions;
 pub mod nftoken_accept_offer;
 pub mod nftoken_burn;
 pub mod nftoken_cancel_offer;
@@ -23,7 +24,6 @@ pub mod set_regular_key;
 pub mod signer_list_set;
 pub mod ticket_create;
 pub mod trust_set;
-pub mod exceptions;
 
 pub use account_delete::*;
 pub use account_set::*;

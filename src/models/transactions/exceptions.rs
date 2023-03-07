@@ -49,7 +49,7 @@ pub enum XrplDepositPreauthException<'a> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplEscrowCreateException<'a>{
+pub enum XrplEscrowCreateException<'a> {
     CancelAfterMustNotBeBeforeFinishAfter,
 }
 
