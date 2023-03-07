@@ -23,6 +23,7 @@ pub mod set_regular_key;
 pub mod signer_list_set;
 pub mod ticket_create;
 pub mod trust_set;
+pub mod exceptions;
 
 pub use account_delete::*;
 pub use account_set::*;
@@ -33,6 +34,7 @@ pub use deposit_preauth::*;
 pub use escrow_cancel::*;
 pub use escrow_create::*;
 pub use escrow_finish::*;
+pub use exceptions::*;
 pub use nftoken_accept_offer::*;
 pub use nftoken_burn::*;
 pub use nftoken_cancel_offer::*;
