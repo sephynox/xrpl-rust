@@ -152,7 +152,7 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
             if signer_entries.is_empty() {
                 return Err(XrplSignerListSetException::CollectionTooFewItems {
                     field: "signer_entries",
-                    min: 1 as usize,
+                    min: 1_usize,
                     found: signer_entries.len(),
                     resource: "",
                 });
@@ -160,7 +160,7 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
             if signer_entries.len() > 8 {
                 return Err(XrplSignerListSetException::CollectionTooManyItems {
                     field: "signer_entries",
-                    max: 8 as usize,
+                    max: 8_usize,
                     found: signer_entries.len(),
                     resource: "",
                 });
@@ -186,7 +186,7 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
             if check_account.contains(&account) {
                 return Err(XrplSignerListSetException::CollectionItemDuplicate {
                     field: "signer_entries",
-                    found: &*account,
+                    found: account,
                     resource: "",
                 });
             }
@@ -335,7 +335,7 @@ mod test_signer_list_set_error {
         };
         let _expected_error = XrplSignerListSetException::CollectionTooFewItems {
             field: "signer_entries",
-            min: 1 as usize,
+            min: 1_usize,
             found: signer_list_set.signer_entries.clone().unwrap().len(),
             resource: "",
         };
@@ -384,7 +384,7 @@ mod test_signer_list_set_error {
         ]);
         let _expected_error = XrplSignerListSetException::CollectionTooManyItems {
             field: "signer_entries",
-            max: 8 as usize,
+            max: 8_usize,
             found: signer_list_set.signer_entries.clone().unwrap().len(),
             resource: "",
         };
