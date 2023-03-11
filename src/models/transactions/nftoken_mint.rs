@@ -1,19 +1,20 @@
 use alloc::vec::Vec;
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
+use alloc::string::ToString;
+
 use crate::{
     constants::{MAX_TRANSFER_FEE, MAX_URI_LENGTH},
-    models::{
-        exceptions::{NFTokenMintException, XRPLModelException, XRPLTransactionException},
-        model::Model,
-        Flag, Memo, NFTokenMintError, Signer, Transaction, TransactionType,
-    },
+    models::{model::Model, Flag, Memo, NFTokenMintError, Signer, Transaction, TransactionType},
+    Err,
 };
 
 use crate::_serde::txn_flags;
+use crate::models::transactions::XrplNFTokenMintException;
 
 /// Transactions of the NFTokenMint type support additional values
 /// in the Flags field. This enum represents those options.
@@ -141,20 +142,14 @@ impl<'a> Default for NFTokenMint<'a> {
     }
 }
 
-impl<'a> Model for NFTokenMint<'a> {
-    fn get_errors(&self) -> Result<(), XRPLModelException> {
+impl<'a: 'static> Model for NFTokenMint<'a> {
+    fn get_errors(&self) -> Result<()> {
         match self._get_issuer_error() {
-            Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                XRPLTransactionException::NFTokenMintError(error),
-            )),
+            Err(error) => Err!(error),
             Ok(_no_error) => match self._get_transfer_fee_error() {
-                Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                    XRPLTransactionException::NFTokenMintError(error),
-                )),
+                Err(error) => Err!(error),
                 Ok(_no_error) => match self._get_uri_error() {
-                    Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                        XRPLTransactionException::NFTokenMintError(error),
-                    )),
+                    Err(error) => Err!(error),
                     Ok(_no_error) => Ok(()),
                 },
             },
@@ -186,40 +181,48 @@ impl<'a> Transaction for NFTokenMint<'a> {
 }
 
 impl<'a> NFTokenMintError for NFTokenMint<'a> {
-    fn _get_issuer_error(&self) -> Result<(), NFTokenMintException> {
-        match self.issuer {
-            Some(issuer) => match issuer == self.account {
-                true => Err(NFTokenMintException::InvalidIssuerMustNotEqualAccount),
-                false => Ok(()),
-            },
-            None => Ok(()),
+    fn _get_issuer_error(&self) -> Result<(), XrplNFTokenMintException> {
+        if let Some(issuer) = self.issuer {
+            if issuer == self.account {
+                return Err(XrplNFTokenMintException::ValueEqualsValue {
+                    field1: "issuer",
+                    field2: "account",
+                    resource: "",
+                });
+            }
         }
+
+        Ok(())
     }
 
-    fn _get_transfer_fee_error(&self) -> Result<(), NFTokenMintException> {
-        match self.transfer_fee {
-            Some(transfer_fee) => match transfer_fee > MAX_TRANSFER_FEE {
-                true => Err(NFTokenMintException::InvalidTransferFeeTooHigh {
+    fn _get_transfer_fee_error(&self) -> Result<(), XrplNFTokenMintException> {
+        if let Some(transfer_fee) = self.transfer_fee {
+            if transfer_fee > MAX_TRANSFER_FEE {
+                return Err(XrplNFTokenMintException::ValueTooHigh {
+                    field: "transfer_fee",
                     max: MAX_TRANSFER_FEE,
                     found: transfer_fee,
-                }),
-                false => Ok(()),
-            },
-            None => Ok(()),
+                    resource: "",
+                });
+            }
         }
+
+        Ok(())
     }
 
-    fn _get_uri_error(&self) -> Result<(), NFTokenMintException> {
-        match self.uri {
-            Some(uri) => match uri.len() > MAX_URI_LENGTH {
-                true => Err(NFTokenMintException::InvalidURITooLong {
+    fn _get_uri_error(&self) -> Result<(), XrplNFTokenMintException> {
+        if let Some(uri) = self.uri {
+            if uri.len() > MAX_URI_LENGTH {
+                return Err(XrplNFTokenMintException::ValueTooLong {
+                    field: "uri",
                     max: MAX_URI_LENGTH,
                     found: uri.len(),
-                }),
-                false => Ok(()),
-            },
-            None => Ok(()),
+                    resource: "",
+                });
+            }
         }
+
+        Ok(())
     }
 }
 
@@ -266,10 +269,10 @@ impl<'a> NFTokenMint<'a> {
 
 #[cfg(test)]
 mod test_nftoken_mint_error {
-    use crate::models::{
-        exceptions::{NFTokenMintException, XRPLModelException, XRPLTransactionException},
-        Model, TransactionType,
-    };
+    use crate::constants::{MAX_TRANSFER_FEE, MAX_URI_LENGTH};
+    use crate::models::transactions::XrplNFTokenMintException;
+    use crate::models::{Model, TransactionType};
+    use alloc::string::ToString;
 
     use super::NFTokenMint;
 
@@ -294,11 +297,15 @@ mod test_nftoken_mint_error {
             transfer_fee: None,
             uri: None,
         };
-        let expected_error =
-            XRPLModelException::XRPLTransactionError(XRPLTransactionException::NFTokenMintError(
-                NFTokenMintException::InvalidIssuerMustNotEqualAccount,
-            ));
-        assert_eq!(nftoken_mint.validate(), Err(expected_error));
+        let expected_error = XrplNFTokenMintException::ValueEqualsValue {
+            field1: "issuer",
+            field2: "account",
+            resource: "",
+        };
+        assert_eq!(
+            nftoken_mint.validate().unwrap_err().to_string().as_str(),
+            "The value of the field `issuer` is not allowed to be the same as the value of the field `account`. For more information see: "
+        );
     }
 
     #[test]
@@ -322,14 +329,16 @@ mod test_nftoken_mint_error {
             transfer_fee: Some(50001),
             uri: None,
         };
-        let expected_error =
-            XRPLModelException::XRPLTransactionError(XRPLTransactionException::NFTokenMintError(
-                NFTokenMintException::InvalidTransferFeeTooHigh {
-                    max: 50000,
-                    found: 50001,
-                },
-            ));
-        assert_eq!(nftoken_mint.validate(), Err(expected_error));
+        let expected_error = XrplNFTokenMintException::ValueTooHigh {
+            field: "transfer_fee",
+            max: MAX_TRANSFER_FEE,
+            found: nftoken_mint.transfer_fee.unwrap(),
+            resource: "",
+        };
+        assert_eq!(
+            nftoken_mint.validate().unwrap_err().to_string().as_str(),
+            "The field `transfer_fee` exceeds its maximum value (max 50000, found 50001). For more information see: "
+        );
     }
 
     #[test]
@@ -353,13 +362,16 @@ mod test_nftoken_mint_error {
             transfer_fee: None,
             uri: Some("wss://xrplcluster.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
         };
-        let expected_error = XRPLModelException::XRPLTransactionError(
-            XRPLTransactionException::NFTokenMintError(NFTokenMintException::InvalidURITooLong {
-                max: 512,
-                found: 513,
-            }),
+        let expected_error = XrplNFTokenMintException::ValueTooLong {
+            field: "uri",
+            max: MAX_URI_LENGTH,
+            found: nftoken_mint.uri.unwrap().len(),
+            resource: "",
+        };
+        assert_eq!(
+            nftoken_mint.validate().unwrap_err().to_string().as_str(),
+            "The value of the field `uri` exceeds its maximum length of characters (max 512, found 513). For more information see: "
         );
-        assert_eq!(nftoken_mint.validate(), Err(expected_error));
     }
 }
 
