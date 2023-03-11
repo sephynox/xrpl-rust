@@ -208,14 +208,15 @@ impl<'a> PaymentError for Payment<'a> {
 
     fn _get_partial_payment_error(&self) -> Result<(), XrplPaymentException> {
         if let Some(send_max) = &self.send_max {
-            if !self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment)) {
-                if send_max.is_xrp() && self.amount.is_xrp() {
-                    return Err(XrplPaymentException::IllegalOption {
-                        field: "send_max",
-                        context: "XRP to XRP non-partial payments",
-                        resource: "",
-                    });
-                }
+            if !self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment))
+                && send_max.is_xrp()
+                && self.amount.is_xrp()
+            {
+                return Err(XrplPaymentException::IllegalOption {
+                    field: "send_max",
+                    context: "XRP to XRP non-partial payments",
+                    resource: "",
+                });
             }
         } else if self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment)) {
             return Err(XrplPaymentException::FlagRequiresField {
