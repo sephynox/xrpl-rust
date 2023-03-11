@@ -1,6 +1,6 @@
 use crate::Err;
 use alloc::vec::Vec;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -198,7 +198,7 @@ mod test_nftoken_cancel_offer_error {
             signers: None,
             nftoken_offers: Vec::new(),
         };
-        let expected_error = XrplNFTokenCancelOfferException::CollectionEmpty {
+        let _expected_error = XrplNFTokenCancelOfferException::CollectionEmpty {
             field: "nftoken_offers",
             r#type: stringify!(Vec),
             resource: "",

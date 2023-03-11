@@ -1,6 +1,6 @@
 use crate::Err;
 use alloc::vec::Vec;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -225,7 +225,7 @@ mod test_nftoken_accept_offer_error {
             nftoken_buy_offer: None,
             nftoken_broker_fee: Some(Amount::Xrp(Cow::Borrowed("100"))),
         };
-        let expected_error = XrplNFTokenAcceptOfferException::DefineOneOf {
+        let _expected_error = XrplNFTokenAcceptOfferException::DefineOneOf {
             field1: "nftoken_sell_offer",
             field2: "nftoken_buy_offer",
             resource: "",
@@ -256,7 +256,7 @@ mod test_nftoken_accept_offer_error {
             nftoken_buy_offer: None,
             nftoken_broker_fee: Some(Amount::Xrp(Cow::Borrowed("0"))),
         };
-        let expected_error = XrplNFTokenAcceptOfferException::ValueZero {
+        let _expected_error = XrplNFTokenAcceptOfferException::ValueZero {
             field: "nftoken_broker_fee",
             resource: "",
         };

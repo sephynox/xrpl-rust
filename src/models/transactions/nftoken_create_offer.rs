@@ -1,5 +1,5 @@
 use alloc::vec::Vec;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
@@ -312,7 +312,7 @@ mod test_nftoken_create_offer_error {
             expiration: None,
             destination: None,
         };
-        let expected_error = XrplNFTokenCreateOfferException::ValueZero {
+        let _expected_error = XrplNFTokenCreateOfferException::ValueZero {
             field: "amount",
             resource: "",
         };
@@ -349,7 +349,7 @@ mod test_nftoken_create_offer_error {
             expiration: None,
             destination: Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb"),
         };
-        let expected_error = XrplNFTokenCreateOfferException::ValueEqualsValue {
+        let _expected_error = XrplNFTokenCreateOfferException::ValueEqualsValue {
             field1: "destination",
             field2: "account",
             resource: "",
@@ -385,7 +385,7 @@ mod test_nftoken_create_offer_error {
         };
         let sell_flag = vec![NFTokenCreateOfferFlag::TfSellOffer];
         nftoken_create_offer.flags = Some(sell_flag);
-        let expected_error = XrplNFTokenCreateOfferException::IllegalOption {
+        let _expected_error = XrplNFTokenCreateOfferException::IllegalOption {
             field: "owner",
             context: "NFToken sell offers",
             resource: "",
@@ -398,7 +398,7 @@ mod test_nftoken_create_offer_error {
 
         nftoken_create_offer.flags = None;
         nftoken_create_offer.owner = None;
-        let expected_error = XrplNFTokenCreateOfferException::OptionRequired {
+        let _expected_error = XrplNFTokenCreateOfferException::OptionRequired {
             field: "owner",
             context: "NFToken buy offers",
             resource: "",
@@ -410,7 +410,7 @@ mod test_nftoken_create_offer_error {
         );
 
         nftoken_create_offer.owner = Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb");
-        let expected_error = XrplNFTokenCreateOfferException::ValueEqualsValue {
+        let _expected_error = XrplNFTokenCreateOfferException::ValueEqualsValue {
             field1: "owner",
             field2: "account",
             resource: "",
