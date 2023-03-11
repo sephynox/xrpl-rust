@@ -1,5 +1,5 @@
 use alloc::vec::Vec;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
@@ -336,7 +336,7 @@ mod test_payment_error {
             send_max: None,
             deliver_min: None,
         };
-        let expected_error = XrplPaymentException::IllegalOption {
+        let _expected_error = XrplPaymentException::IllegalOption {
             field: "paths",
             context: "XRP to XRP payments",
             resource: "",
@@ -348,7 +348,7 @@ mod test_payment_error {
 
         payment.paths = None;
         payment.send_max = Some(Amount::Xrp(Cow::Borrowed("99999")));
-        let expected_error = XrplPaymentException::IllegalOption {
+        let _expected_error = XrplPaymentException::IllegalOption {
             field: "send_max",
             context: "XRP to XRP non-partial payments",
             resource: "",
@@ -360,7 +360,7 @@ mod test_payment_error {
 
         payment.send_max = None;
         payment.destination = "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb";
-        let expected_error = XrplPaymentException::ValueEqualsValueInContext {
+        let _expected_error = XrplPaymentException::ValueEqualsValueInContext {
             field1: "account",
             field2: "destination",
             context: "XRP to XRP Payments",
@@ -397,7 +397,7 @@ mod test_payment_error {
             deliver_min: None,
         };
         payment.flags = Some(vec![PaymentFlag::TfPartialPayment]);
-        let expected_error = XrplPaymentException::FlagRequiresField {
+        let _expected_error = XrplPaymentException::FlagRequiresField {
             flag: PaymentFlag::TfPartialPayment,
             field: "send_max",
             resource: "",
@@ -409,7 +409,7 @@ mod test_payment_error {
 
         payment.flags = None;
         payment.deliver_min = Some(Amount::Xrp(Cow::Borrowed("99999")));
-        let expected_error = XrplPaymentException::IllegalOption {
+        let _expected_error = XrplPaymentException::IllegalOption {
             field: "deliver_min",
             context: "XRP to XRP non-partial payments",
             resource: "",
@@ -448,7 +448,7 @@ mod test_payment_error {
             send_max: None,
             deliver_min: None,
         };
-        let expected_error = XrplPaymentException::OptionRequired {
+        let _expected_error = XrplPaymentException::OptionRequired {
             field: "send_max",
             context: "exchanges",
             resource: "",

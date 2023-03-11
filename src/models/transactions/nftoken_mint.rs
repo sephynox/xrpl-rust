@@ -1,5 +1,5 @@
 use alloc::vec::Vec;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
@@ -297,7 +297,7 @@ mod test_nftoken_mint_error {
             transfer_fee: None,
             uri: None,
         };
-        let expected_error = XrplNFTokenMintException::ValueEqualsValue {
+        let _expected_error = XrplNFTokenMintException::ValueEqualsValue {
             field1: "issuer",
             field2: "account",
             resource: "",
@@ -329,7 +329,7 @@ mod test_nftoken_mint_error {
             transfer_fee: Some(50001),
             uri: None,
         };
-        let expected_error = XrplNFTokenMintException::ValueTooHigh {
+        let _expected_error = XrplNFTokenMintException::ValueTooHigh {
             field: "transfer_fee",
             max: MAX_TRANSFER_FEE,
             found: nftoken_mint.transfer_fee.unwrap(),
@@ -362,7 +362,7 @@ mod test_nftoken_mint_error {
             transfer_fee: None,
             uri: Some("wss://xrplcluster.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
         };
-        let expected_error = XrplNFTokenMintException::ValueTooLong {
+        let _expected_error = XrplNFTokenMintException::ValueTooLong {
             field: "uri",
             max: MAX_URI_LENGTH,
             found: nftoken_mint.uri.unwrap().len(),

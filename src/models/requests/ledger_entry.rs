@@ -1,5 +1,5 @@
 use crate::Err;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -245,7 +245,7 @@ mod test_ledger_entry_errors {
             ledger_hash: None,
             ledger_index: None,
         };
-        let expected = XrplLedgerEntryException::DefineExactlyOneOf {
+        let _expected = XrplLedgerEntryException::DefineExactlyOneOf {
             field1: "index",
             field2: "account_root",
             field3: "check",

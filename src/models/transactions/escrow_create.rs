@@ -1,6 +1,6 @@
 use crate::Err;
 use alloc::vec::Vec;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -226,7 +226,7 @@ mod test_escrow_create_errors {
             finish_after: Some(14359039),
             condition: None,
         };
-        let expected_error = XrplEscrowCreateException::ValueBelowValue {
+        let _expected_error = XrplEscrowCreateException::ValueBelowValue {
             field1: "cancel_after",
             field2: "finish_after",
             field1_val: 13298498,

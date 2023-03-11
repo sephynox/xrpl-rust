@@ -1,6 +1,6 @@
 use crate::Err;
 use alloc::vec::Vec;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -210,7 +210,7 @@ mod test_escrow_finish_errors {
             ),
             fulfillment: None,
         };
-        let expected_error = XrplEscrowFinishException::FieldRequiresField {
+        let _expected_error = XrplEscrowFinishException::FieldRequiresField {
             field1: "condition",
             field2: "fulfillment",
             resource: "",

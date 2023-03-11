@@ -1,5 +1,5 @@
-use alloc::{format, vec::Vec};
-use anyhow::{anyhow, Result};
+use alloc::vec::Vec;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -168,7 +168,7 @@ mod test_channel_authorize_errors {
             passphrase: None,
             key_type: Some(CryptoAlgorithm::SECP256K1),
         };
-        let expected_error = XrplChannelAuthorizeException::DefineExactlyOneOf {
+        let _expected_error = XrplChannelAuthorizeException::DefineExactlyOneOf {
             field1: "secret",
             field2: "seed",
             field3: "seed_hex",

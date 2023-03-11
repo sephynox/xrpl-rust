@@ -1,6 +1,6 @@
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use derive_new::new;
 use serde::{ser::SerializeMap, Deserialize, Serialize};
 use serde_with::skip_serializing_none;
@@ -290,7 +290,7 @@ mod test_signer_list_set_error {
                 signer_weight: 2,
             }]),
         };
-        let expected_error = XrplSignerListSetException::ValueCausesValueDeletion {
+        let _expected_error = XrplSignerListSetException::ValueCausesValueDeletion {
             field1: "signer_entries",
             field2: "signer_quorum",
             resource: "",
@@ -302,7 +302,7 @@ mod test_signer_list_set_error {
 
         signer_list_set.signer_quorum = 3;
         signer_list_set.signer_entries = None;
-        let expected_error = XrplSignerListSetException::InvalidValueForValueDeletion {
+        let _expected_error = XrplSignerListSetException::InvalidValueForValueDeletion {
             field: "signer_quorum",
             expected: 0,
             found: signer_list_set.signer_quorum,
@@ -333,7 +333,7 @@ mod test_signer_list_set_error {
             signer_quorum: 3,
             signer_entries: Some(vec![]),
         };
-        let expected_error = XrplSignerListSetException::CollectionTooFewItems {
+        let _expected_error = XrplSignerListSetException::CollectionTooFewItems {
             field: "signer_entries",
             min: 1 as usize,
             found: signer_list_set.signer_entries.clone().unwrap().len(),
@@ -382,7 +382,7 @@ mod test_signer_list_set_error {
                 signer_weight: 2,
             },
         ]);
-        let expected_error = XrplSignerListSetException::CollectionTooManyItems {
+        let _expected_error = XrplSignerListSetException::CollectionTooManyItems {
             field: "signer_entries",
             max: 8 as usize,
             found: signer_list_set.signer_entries.clone().unwrap().len(),
@@ -407,7 +407,7 @@ mod test_signer_list_set_error {
                 signer_weight: 2,
             },
         ]);
-        let expected_error = XrplSignerListSetException::CollectionInvalidItem {
+        let _expected_error = XrplSignerListSetException::CollectionInvalidItem {
             field: "signer_entries",
             found: signer_list_set.account,
             resource: "",
@@ -422,7 +422,7 @@ mod test_signer_list_set_error {
             signer_weight: 3,
         }]);
         signer_list_set.signer_quorum = 10;
-        let expected_error = XrplSignerListSetException::SignerQuorumExceedsSignerWeight {
+        let _expected_error = XrplSignerListSetException::SignerQuorumExceedsSignerWeight {
             max: 3,
             found: signer_list_set.signer_quorum,
             resource: "",
@@ -443,7 +443,7 @@ mod test_signer_list_set_error {
             },
         ]);
         signer_list_set.signer_quorum = 2;
-        let expected_error = XrplSignerListSetException::CollectionItemDuplicate {
+        let _expected_error = XrplSignerListSetException::CollectionItemDuplicate {
             field: "signer_entries",
             found: "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
             resource: "",

@@ -1,5 +1,5 @@
 use crate::Err;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -143,7 +143,7 @@ mod test_unl_modify_error {
             unlmodify_validator:
                 "ED6629D456285AE3613B285F65BBFF168D695BA3921F309949AFCD2CA7AFEC16FE",
         };
-        let expected_error = XrplUNLModifyException::InvalidValue {
+        let _expected_error = XrplUNLModifyException::InvalidValue {
             field: "unlmodify_disabling",
             expected: "0 or 1",
             found: unl_modify.unlmodify_disabling as u32,

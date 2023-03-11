@@ -1,6 +1,6 @@
 use crate::Err;
 use alloc::vec::Vec;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -184,7 +184,7 @@ mod test_deposit_preauth_exception {
 
     #[test]
     fn test_authorize_and_unauthorize_error() {
-        let mut deposit_preauth = DepositPreauth {
+        let deposit_preauth = DepositPreauth {
             transaction_type: TransactionType::DepositPreauth,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
@@ -201,7 +201,7 @@ mod test_deposit_preauth_exception {
             authorize: None,
             unauthorize: None,
         };
-        let expected_error = XrplDepositPreauthException::DefineExactlyOneOf {
+        let _expected_error = XrplDepositPreauthException::DefineExactlyOneOf {
             field1: "authorize",
             field2: "unauthorize",
             resource: "",

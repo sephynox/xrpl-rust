@@ -1,6 +1,6 @@
 use crate::Err;
 use alloc::vec::Vec;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -192,7 +192,7 @@ mod test_check_cash_error {
 
     #[test]
     fn test_amount_and_deliver_min_error() {
-        let mut check_cash = CheckCash {
+        let check_cash = CheckCash {
             transaction_type: TransactionType::CheckCash,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
@@ -210,7 +210,7 @@ mod test_check_cash_error {
             amount: None,
             deliver_min: None,
         };
-        let expected_error = XrplCheckCashException::DefineExactlyOneOf {
+        let _expected_error = XrplCheckCashException::DefineExactlyOneOf {
             field1: "amount",
             field2: "deliver_min",
             resource: "",
