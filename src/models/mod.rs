@@ -17,19 +17,19 @@ use serde::ser::SerializeMap;
 use crate::_serde::currency_xrp;
 use crate::serialize_with_tag;
 
+use crate::models::requests::{XrplChannelAuthorizeException, XrplLedgerEntryException};
+use crate::models::transactions::{
+    XrplAccountSetException, XrplCheckCashException, XrplDepositPreauthException,
+    XrplEscrowCreateException, XrplEscrowFinishException, XrplNFTokenAcceptOfferException,
+    XrplNFTokenCancelOfferException, XrplNFTokenCreateOfferException, XrplNFTokenMintException,
+    XrplPaymentException, XrplSignerListSetException, XrplUNLModifyException,
+};
 use alloc::borrow::Cow;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use strum_macros::AsRefStr;
 use strum_macros::{Display, EnumIter};
 
-use self::exceptions::{
-    AccountSetException, ChannelAuthorizeException, CheckCashException, DepositPreauthException,
-    EscrowCreateException, EscrowFinishException, LedgerEntryException,
-    NFTokenAcceptOfferException, NFTokenCancelOfferException, NFTokenCreateOfferException,
-    NFTokenMintException, PaymentException, SignAndSubmitException, SignException,
-    SignForException, SignerListSetException, UNLModifyException,
-};
 use self::transactions::account_set::AccountSetFlag;
 use self::transactions::nftoken_create_offer::NFTokenCreateOfferFlag;
 use self::transactions::nftoken_mint::NFTokenMintFlag;
@@ -498,87 +498,87 @@ pub trait Transaction {
 }
 
 pub trait AccountSetError {
-    fn _get_tick_size_error(&self) -> Result<(), AccountSetException>;
-    fn _get_transfer_rate_error(&self) -> Result<(), AccountSetException>;
-    fn _get_domain_error(&self) -> Result<(), AccountSetException>;
-    fn _get_clear_flag_error(&self) -> Result<(), AccountSetException>;
-    fn _get_nftoken_minter_error(&self) -> Result<(), AccountSetException>;
+    fn _get_tick_size_error(&self) -> Result<(), XrplAccountSetException>;
+    fn _get_transfer_rate_error(&self) -> Result<(), XrplAccountSetException>;
+    fn _get_domain_error(&self) -> Result<(), XrplAccountSetException>;
+    fn _get_clear_flag_error(&self) -> Result<(), XrplAccountSetException>;
+    fn _get_nftoken_minter_error(&self) -> Result<(), XrplAccountSetException>;
 }
 
 pub trait CheckCashError {
-    fn _get_amount_and_deliver_min_error(&self) -> Result<(), CheckCashException>;
+    fn _get_amount_and_deliver_min_error(&self) -> Result<(), XrplCheckCashException>;
 }
 
 pub trait DepositPreauthError {
-    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException>;
+    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), XrplDepositPreauthException>;
 }
 
 pub trait EscrowCreateError {
-    fn _get_finish_after_error(&self) -> Result<(), EscrowCreateException>;
+    fn _get_finish_after_error(&self) -> Result<(), XrplEscrowCreateException>;
 }
 
 pub trait EscrowFinishError {
-    fn _get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishException>;
+    fn _get_condition_and_fulfillment_error(&self) -> Result<(), XrplEscrowFinishException>;
 }
 
 pub trait NFTokenAcceptOfferError {
-    fn _get_brokered_mode_error(&self) -> Result<(), NFTokenAcceptOfferException>;
-    fn _get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException>;
+    fn _get_brokered_mode_error(&self) -> Result<(), XrplNFTokenAcceptOfferException>;
+    fn _get_nftoken_broker_fee_error(&self) -> Result<(), XrplNFTokenAcceptOfferException>;
 }
 
 pub trait NFTokenCancelOfferError {
-    fn _get_nftoken_offers_error(&self) -> Result<(), NFTokenCancelOfferException>;
+    fn _get_nftoken_offers_error(&self) -> Result<(), XrplNFTokenCancelOfferException>;
 }
 
 pub trait NFTokenCreateOfferError {
-    fn _get_amount_error(&self) -> Result<(), NFTokenCreateOfferException>;
-    fn _get_destination_error(&self) -> Result<(), NFTokenCreateOfferException>;
-    fn _get_owner_error(&self) -> Result<(), NFTokenCreateOfferException>;
+    fn _get_amount_error(&self) -> Result<(), XrplNFTokenCreateOfferException>;
+    fn _get_destination_error(&self) -> Result<(), XrplNFTokenCreateOfferException>;
+    fn _get_owner_error(&self) -> Result<(), XrplNFTokenCreateOfferException>;
 }
 
 pub trait NFTokenMintError {
-    fn _get_issuer_error(&self) -> Result<(), NFTokenMintException>;
-    fn _get_transfer_fee_error(&self) -> Result<(), NFTokenMintException>;
-    fn _get_uri_error(&self) -> Result<(), NFTokenMintException>;
+    fn _get_issuer_error(&self) -> Result<(), XrplNFTokenMintException>;
+    fn _get_transfer_fee_error(&self) -> Result<(), XrplNFTokenMintException>;
+    fn _get_uri_error(&self) -> Result<(), XrplNFTokenMintException>;
 }
 
 pub trait PaymentError {
-    fn _get_xrp_transaction_error(&self) -> Result<(), PaymentException>;
-    fn _get_partial_payment_error(&self) -> Result<(), PaymentException>;
-    fn _get_exchange_error(&self) -> Result<(), PaymentException>;
+    fn _get_xrp_transaction_error(&self) -> Result<(), XrplPaymentException>;
+    fn _get_partial_payment_error(&self) -> Result<(), XrplPaymentException>;
+    fn _get_exchange_error(&self) -> Result<(), XrplPaymentException>;
 }
 
 pub trait SignerListSetError {
-    fn _get_signer_entries_error(&self) -> Result<(), SignerListSetException>;
-    fn _get_signer_quorum_error(&self) -> Result<(), SignerListSetException>;
+    fn _get_signer_entries_error(&self) -> Result<(), XrplSignerListSetException>;
+    fn _get_signer_quorum_error(&self) -> Result<(), XrplSignerListSetException>;
 }
 
 pub trait UNLModifyError {
-    fn _get_unl_modify_error(&self) -> Result<(), UNLModifyException>;
+    fn _get_unl_modify_error(&self) -> Result<(), XrplUNLModifyException>;
 }
 
 pub trait ChannelAuthorizeError {
-    fn _get_field_error(&self) -> Result<(), ChannelAuthorizeException>;
+    fn _get_field_error(&self) -> Result<(), XrplChannelAuthorizeException>;
 }
 
 pub trait LedgerEntryError {
-    fn _get_field_error(&self) -> Result<(), LedgerEntryException>;
+    fn _get_field_error(&self) -> Result<(), XrplLedgerEntryException>;
 }
 
-pub trait SignAndSubmitError {
-    fn _get_field_error(&self) -> Result<(), SignAndSubmitException>;
-    fn _get_key_type_error(&self) -> Result<(), SignAndSubmitException>;
+/*pub trait SignAndSubmitError {
+    fn _get_field_error(&self) -> Result<(), XrplSignAndSubmitException>;
+    fn _get_key_type_error(&self) -> Result<(), XrplSignAndSubmitException>;
 }
 
 pub trait SignForError {
-    fn _get_field_error(&self) -> Result<(), SignForException>;
-    fn _get_key_type_error(&self) -> Result<(), SignForException>;
+    fn _get_field_error(&self) -> Result<(), XrplSignForException>;
+    fn _get_key_type_error(&self) -> Result<(), XrplSignForException>;
 }
 
 pub trait SignError {
-    fn _get_field_error(&self) -> Result<(), SignException>;
-    fn _get_key_type_error(&self) -> Result<(), SignException>;
-}
+    fn _get_field_error(&self) -> Result<(), XrplSignException>;
+    fn _get_key_type_error(&self) -> Result<(), XrplSignException>;
+}*/
 
 /// For use with serde defaults.
 /// TODO Find a better way

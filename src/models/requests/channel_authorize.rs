@@ -1,13 +1,15 @@
-use alloc::{string::ToString, vec::Vec};
+use alloc::{format, vec::Vec};
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use alloc::string::ToString;
+
+use crate::models::requests::XrplChannelAuthorizeException;
 use crate::{
     constants::CryptoAlgorithm,
-    models::{
-        exceptions::{ChannelAuthorizeException, XRPLModelException, XRPLRequestException},
-        ChannelAuthorizeError, Model, RequestMethod,
-    },
+    models::{ChannelAuthorizeError, Model, RequestMethod},
+    Err,
 };
 
 /// The channel_authorize method creates a signature that can  be
@@ -87,67 +89,33 @@ impl<'a> Default for ChannelAuthorize<'a> {
 }
 
 impl<'a> Model for ChannelAuthorize<'a> {
-    fn get_errors(&self) -> Result<(), XRPLModelException> {
+    fn get_errors(&self) -> Result<()> {
         match self._get_field_error() {
-            Err(error) => Err(XRPLModelException::XRPLRequestError(
-                XRPLRequestException::ChannelAuthorizeError(error),
-            )),
+            Err(error) => Err!(error),
             Ok(_no_error) => Ok(()),
         }
     }
 }
 
 impl<'a> ChannelAuthorizeError for ChannelAuthorize<'a> {
-    fn _get_field_error(&self) -> Result<(), ChannelAuthorizeException> {
+    fn _get_field_error(&self) -> Result<(), XrplChannelAuthorizeException> {
         let mut signing_methods = Vec::new();
         for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {
             if method.is_some() {
                 signing_methods.push(method)
             }
         }
-        match signing_methods.len() != 1 {
-            true => Err(ChannelAuthorizeException::InvalidMustSetExactlyOneOf {
-                fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
-            }),
-            false => Ok(()),
+        if signing_methods.len() != 1 {
+            return Err(XrplChannelAuthorizeException::DefineExactlyOneOf {
+                field1: "secret",
+                field2: "seed",
+                field3: "seed_hex",
+                field4: "passphrase",
+                resource: "",
+            });
         }
-    }
-}
 
-#[cfg(test)]
-mod test_channel_authorize_errors {
-    use alloc::string::ToString;
-
-    use crate::{
-        constants::CryptoAlgorithm,
-        models::{
-            exceptions::{ChannelAuthorizeException, XRPLModelException, XRPLRequestException},
-            Model, RequestMethod,
-        },
-    };
-
-    use super::ChannelAuthorize;
-
-    #[test]
-    fn test_fields_error() {
-        let channel_authorize = ChannelAuthorize {
-            command: RequestMethod::ChannelAuthorize,
-            channel_id: "5DB01B7FFED6B67E6B0414DED11E051D2EE2B7619CE0EAA6286D67A3A4D5BDB3",
-            amount: "1000000",
-            id: None,
-            secret: None,
-            seed: Some(""),
-            seed_hex: Some(""),
-            passphrase: None,
-            key_type: Some(CryptoAlgorithm::SECP256K1),
-        };
-        let expected_error =
-            XRPLModelException::XRPLRequestError(XRPLRequestException::ChannelAuthorizeError(
-                ChannelAuthorizeException::InvalidMustSetExactlyOneOf {
-                    fields: "`secret`, `seed`, `seed_hex`, `passphrase`".to_string(),
-                },
-            ));
-        assert_eq!(channel_authorize.validate(), Err(expected_error))
+        Ok(())
     }
 }
 
@@ -173,5 +141,43 @@ impl<'a> ChannelAuthorize<'a> {
             key_type,
             command: RequestMethod::ChannelAuthorize,
         }
+    }
+}
+
+#[cfg(test)]
+mod test_channel_authorize_errors {
+    use crate::models::requests::XrplChannelAuthorizeException;
+    use crate::{
+        constants::CryptoAlgorithm,
+        models::{Model, RequestMethod},
+    };
+    use alloc::string::ToString;
+
+    use super::ChannelAuthorize;
+
+    #[test]
+    fn test_fields_error() {
+        let channel_authorize = ChannelAuthorize {
+            command: RequestMethod::ChannelAuthorize,
+            channel_id: "5DB01B7FFED6B67E6B0414DED11E051D2EE2B7619CE0EAA6286D67A3A4D5BDB3",
+            amount: "1000000",
+            id: None,
+            secret: None,
+            seed: Some(""),
+            seed_hex: Some(""),
+            passphrase: None,
+            key_type: Some(CryptoAlgorithm::SECP256K1),
+        };
+        let expected_error = XrplChannelAuthorizeException::DefineExactlyOneOf {
+            field1: "secret",
+            field2: "seed",
+            field3: "seed_hex",
+            field4: "passphrase",
+            resource: "",
+        };
+        assert_eq!(
+            channel_authorize.validate().unwrap_err().to_string().as_str(),
+            "The field `secret` can not be defined with `seed`, `seed_hex`, `passphrase`. Define exactly one of them. For more information see: "
+        );
     }
 }
