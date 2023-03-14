@@ -102,7 +102,7 @@ pub struct TrustSet<'a> {
     ///
     /// See TrustSet fields:
     /// `<https://xrpl.org/trustset.html#trustset-fields>`
-    pub limit_amount: Amount,
+    pub limit_amount: Amount<'a>,
     pub quality_in: Option<u32>,
     pub quality_out: Option<u32>,
 }
@@ -160,7 +160,7 @@ impl<'a> Transaction for TrustSet<'a> {
 impl<'a> TrustSet<'a> {
     fn new(
         account: &'a str,
-        limit_amount: Amount,
+        limit_amount: Amount<'a>,
         fee: Option<&'a str>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,

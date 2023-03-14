@@ -74,7 +74,7 @@ pub struct PaymentChannelFund<'a> {
     ///
     /// See PaymentChannelFund fields:
     /// `<https://xrpl.org/paymentchannelfund.html#paymentchannelfund-fields>`
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     pub channel: &'a str,
     pub expiration: Option<u32>,
 }
@@ -114,7 +114,7 @@ impl<'a> PaymentChannelFund<'a> {
     fn new(
         account: &'a str,
         channel: &'a str,
-        amount: Amount,
+        amount: Amount<'a>,
         fee: Option<&'a str>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,

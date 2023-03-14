@@ -15,12 +15,12 @@ pub struct BookOffers<'a> {
     /// the offer would receive, as an object with currency
     /// and issuer fields (omit issuer for XRP),
     /// like currency amounts.
-    pub taker_gets: Currency,
+    pub taker_gets: Currency<'a>,
     /// Specification of which currency the account taking
     /// the offer would pay, as an object with currency and
     /// issuer fields (omit issuer for XRP),
     /// like currency amounts.
-    pub taker_pays: Currency,
+    pub taker_pays: Currency<'a>,
     /// The unique request id.
     pub id: Option<&'a str>,
     /// A 20-byte hex string for the ledger version to use.
@@ -62,8 +62,8 @@ impl<'a> Model for BookOffers<'a> {}
 
 impl<'a> BookOffers<'a> {
     fn new(
-        taker_gets: Currency,
-        taker_pays: Currency,
+        taker_gets: Currency<'a>,
+        taker_pays: Currency<'a>,
         id: Option<&'a str>,
         ledger_hash: Option<&'a str>,
         ledger_index: Option<&'a str>,

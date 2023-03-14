@@ -73,7 +73,7 @@ pub struct PaymentChannelCreate<'a> {
     ///
     /// See PaymentChannelCreate fields:
     /// `<https://xrpl.org/paymentchannelcreate.html#paymentchannelcreate-fields>`
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     pub destination: &'a str,
     pub settle_delay: u32,
     pub public_key: &'a str,
@@ -118,7 +118,7 @@ impl<'a> Transaction for PaymentChannelCreate<'a> {
 impl<'a> PaymentChannelCreate<'a> {
     fn new(
         account: &'a str,
-        amount: Amount,
+        amount: Amount<'a>,
         destination: &'a str,
         settle_delay: u32,
         public_key: &'a str,

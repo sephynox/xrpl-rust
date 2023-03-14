@@ -10,9 +10,9 @@ use crate::models::{default_false, Currency, Model, RequestMethod, StreamParamet
 /// `<https://xrpl.org/unsubscribe.html>`
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
-pub struct Book {
-    pub taker_gets: Currency,
-    pub taker_pays: Currency,
+pub struct Book<'a> {
+    pub taker_gets: Currency<'a>,
+    pub taker_pays: Currency<'a>,
     #[serde(default = "default_false")]
     pub both: Option<bool>,
 }
@@ -33,7 +33,7 @@ pub struct Unsubscribe<'a> {
     /// Array of objects defining order books to unsubscribe
     /// from, as explained below.
     // TODO: USE `UnsubscribeBookFields` AS SOON AS LIFETIME ISSUES ARE FIXED
-    pub books: Option<Vec<Book>>,
+    pub books: Option<Vec<Book<'a>>>,
     /// Array of string names of generic streams to unsubscribe
     /// from, including ledger, server, transactions,
     /// and transactions_proposed.
@@ -74,7 +74,7 @@ impl<'a> Model for Unsubscribe<'a> {}
 impl<'a> Unsubscribe<'a> {
     fn new(
         id: Option<&'a str>,
-        books: Option<Vec<Book>>,
+        books: Option<Vec<Book<'a>>>,
         streams: Option<Vec<StreamParameter>>,
         accounts: Option<Vec<&'a str>>,
         accounts_proposed: Option<Vec<&'a str>>,

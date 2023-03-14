@@ -107,13 +107,13 @@ pub struct Payment<'a> {
     ///
     /// See Payment fields:
     /// `<https://xrpl.org/payment.html#payment-fields>`
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     pub destination: &'a str,
     pub destination_tag: Option<u32>,
     pub invoice_id: Option<u32>,
     pub paths: Option<Vec<Vec<PathStep<'a>>>>,
-    pub send_max: Option<Amount>,
-    pub deliver_min: Option<Amount>,
+    pub send_max: Option<Amount<'a>>,
+    pub deliver_min: Option<Amount<'a>>,
 }
 
 impl<'a> Default for Payment<'a> {
@@ -240,7 +240,7 @@ impl<'a> PaymentError for Payment<'a> {
 impl<'a> Payment<'a> {
     fn new(
         account: &'a str,
-        amount: Amount,
+        amount: Amount<'a>,
         destination: &'a str,
         fee: Option<&'a str>,
         sequence: Option<u32>,
@@ -256,8 +256,8 @@ impl<'a> Payment<'a> {
         destination_tag: Option<u32>,
         invoice_id: Option<u32>,
         paths: Option<Vec<Vec<PathStep<'a>>>>,
-        send_max: Option<Amount>,
-        deliver_min: Option<Amount>,
+        send_max: Option<Amount<'a>>,
+        deliver_min: Option<Amount<'a>>,
     ) -> Self {
         Self {
             transaction_type: TransactionType::Payment,

@@ -75,7 +75,7 @@ pub struct CheckCreate<'a> {
     /// See CheckCreate fields:
     /// `<https://xrpl.org/checkcreate.html#checkcreate-fields>`
     pub destination: &'a str,
-    pub send_max: Amount,
+    pub send_max: Amount<'a>,
     pub destination_tag: Option<u32>,
     pub expiration: Option<u32>,
     #[serde(rename = "InvoiceID")]
@@ -119,7 +119,7 @@ impl<'a> CheckCreate<'a> {
     fn new(
         account: &'a str,
         destination: &'a str,
-        send_max: Amount,
+        send_max: Amount<'a>,
         fee: Option<&'a str>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,

@@ -110,8 +110,8 @@ pub struct OfferCreate<'a> {
     ///
     /// See OfferCreate fields:
     /// `<https://xrpl.org/offercreate.html#offercreate-fields>`
-    pub taker_gets: Amount,
-    pub taker_pays: Amount,
+    pub taker_gets: Amount<'a>,
+    pub taker_pays: Amount<'a>,
     pub expiration: Option<u32>,
     pub offer_sequence: Option<u32>,
 }
@@ -171,8 +171,8 @@ impl<'a> Transaction for OfferCreate<'a> {
 impl<'a> OfferCreate<'a> {
     fn new(
         account: &'a str,
-        taker_gets: Amount,
-        taker_pays: Amount,
+        taker_gets: Amount<'a>,
+        taker_pays: Amount<'a>,
         fee: Option<&'a str>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,

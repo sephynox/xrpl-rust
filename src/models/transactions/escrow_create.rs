@@ -77,7 +77,7 @@ pub struct EscrowCreate<'a> {
     ///
     /// See EscrowCreate fields:
     /// `<https://xrpl.org/escrowcreate.html#escrowcreate-flags>`
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     pub destination: &'a str,
     pub destination_tag: Option<u32>,
     pub cancel_after: Option<u32>,
@@ -148,7 +148,7 @@ impl<'a> EscrowCreateError for EscrowCreate<'a> {
 impl<'a> EscrowCreate<'a> {
     fn new(
         account: &'a str,
-        amount: Amount,
+        amount: Amount<'a>,
         destination: &'a str,
         fee: Option<&'a str>,
         sequence: Option<u32>,

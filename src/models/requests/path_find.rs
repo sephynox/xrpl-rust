@@ -72,12 +72,12 @@ pub struct PathFind<'a> {
     /// the value field (for non-XRP currencies). This requests a path
     /// to deliver as much as possible, while spending no more than
     /// the amount specified in send_max (if provided).
-    pub destination_amount: Currency,
+    pub destination_amount: Currency<'a>,
     /// The unique request id.
     pub id: Option<&'a str>,
     /// Currency Amount that would be spent in the transaction.
     /// Not compatible with source_currencies.
-    pub send_max: Option<Currency>,
+    pub send_max: Option<Currency<'a>>,
     /// Array of arrays of objects, representing payment paths to check.
     /// You can use this to keep updated on changes to particular paths
     /// you already know about, or to check the overall cost to make a
@@ -110,9 +110,9 @@ impl<'a> PathFind<'a> {
         subcommand: PathFindSubcommand,
         source_account: &'a str,
         destination_account: &'a str,
-        destination_amount: Currency,
+        destination_amount: Currency<'a>,
         id: Option<&'a str>,
-        send_max: Option<Currency>,
+        send_max: Option<Currency<'a>>,
         paths: Option<Vec<Vec<PathStep<'a>>>>,
     ) -> Self {
         Self {

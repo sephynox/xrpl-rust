@@ -134,32 +134,32 @@ pub enum AccountObjectType {
 /// Specifies a currency.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
-pub enum Currency {
+pub enum Currency<'a> {
     /// Specifies an issued currency.
     IssuedCurrency {
-        currency: Cow<'static, str>,
-        issuer: Cow<'static, str>,
+        currency: Cow<'a, str>,
+        issuer: Cow<'a, str>,
     },
     /// Specifies XRP.
     #[serde(with = "currency_xrp")]
     Xrp,
 }
 
-impl<'a> From<Amount<'a>> for Currency {
+impl<'a> From<Amount<'a>> for Currency<'a> {
     fn from(value: Amount<'a>) -> Self {
         todo!()
     }
 }
 
-impl Default for Currency {
+impl<'a> Default for Currency<'a> {
     fn default() -> Self {
         Self::Xrp
     }
 }
 
-impl<'a> Model for Currency {}
+impl<'a> Model for Currency<'a> {}
 
-impl Currency {
+impl<'a> Currency<'a> {
     /// Check whether the defined currency is XRP.
     fn is_xrp(&self) -> bool {
         match self {
@@ -176,7 +176,7 @@ impl Currency {
         !self.is_xrp()
     }
 
-    fn to_amount(&self, value: Cow<'static, str>) {
+    fn to_amount(&self, value: Cow<'a, str>) {
         match self {
             Currency::IssuedCurrency { .. } => {}
             Currency::Xrp => {}
@@ -206,7 +206,7 @@ impl<'a> TryInto<Decimal> for Amount<'a> {
 
     fn try_into(self) -> Result<Decimal, Self::Error> {
         match self {
-            Amount::IssuedCurrencyAmount(value, ..) => Decimal::from_str(&*value),
+            Amount::IssuedCurrency { value, .. } => Decimal::from_str(&*value),
             Amount::Xrp(value) => Decimal::from_str(&*value),
         }
     }
@@ -221,30 +221,6 @@ impl<'a> Default for Amount<'a> {
 impl<'a> Model for Amount<'a> {}
 
 impl<'a> Amount<'a> {
-    /// Returns the specified currency value as `u32`.
-    fn get_value_as_u32(&self) -> u32 {
-        match self {
-            Amount::IssuedCurrency {
-                currency: _,
-                issuer: _,
-                value,
-            } => {
-                let value_as_u32: u32 = value
-                    .as_ref()
-                    .parse()
-                    .expect("Could not parse u32 from `value`");
-                value_as_u32
-            }
-            Amount::Xrp(value) => {
-                let value_as_u32: u32 = value
-                    .as_ref()
-                    .parse()
-                    .expect("Could not parse u32 from `value`");
-                value_as_u32
-            }
-        }
-    }
-
     /// Check wether the defined currency amount is a XRP amount.
     fn is_xrp(&self) -> bool {
         match self {
@@ -376,7 +352,7 @@ pub struct Signer<'a> {
 }
 
 /// Returns a Currency as XRP for the currency, without a value.
-fn default_xrp_currency() -> Currency {
+fn default_xrp_currency<'a>() -> Currency<'a> {
     Currency::Xrp
 }
 

@@ -1,4 +1,6 @@
 use alloc::vec::Vec;
+use core::convert::TryInto;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -82,7 +84,7 @@ pub struct NFTokenAcceptOffer<'a> {
     #[serde(rename = "NFTokenBuyOffer")]
     pub nftoken_buy_offer: Option<&'a str>,
     #[serde(rename = "NFTokenBrokerFee")]
-    pub nftoken_broker_fee: Option<Amount>,
+    pub nftoken_broker_fee: Option<Amount<'a>>,
 }
 
 impl<'a> Default for NFTokenAcceptOffer<'a> {
@@ -141,11 +143,14 @@ impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
         }
     }
     fn _get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException> {
-        match self.nftoken_broker_fee.as_ref() {
-            Some(nftoken_broker_fee) => match nftoken_broker_fee.get_value_as_u32() == 0 {
-                true => Err(NFTokenAcceptOfferException::InvalidBrokerFeeMustBeGreaterZero),
-                false => Ok(()),
-            },
+        match &self.nftoken_broker_fee {
+            Some(nftoken_broker_fee) => {
+                let as_decimal: Decimal = nftoken_broker_fee.clone().try_into().unwrap();
+                match as_decimal.is_zero() {
+                    true => Err(NFTokenAcceptOfferException::InvalidBrokerFeeMustBeGreaterZero),
+                    false => Ok(()),
+                }
+            }
             None => Ok(()),
         }
     }
@@ -166,7 +171,7 @@ impl<'a> NFTokenAcceptOffer<'a> {
         signers: Option<Vec<Signer<'a>>>,
         nftoken_sell_offer: Option<&'a str>,
         nftoken_buy_offer: Option<&'a str>,
-        nftoken_broker_fee: Option<Amount>,
+        nftoken_broker_fee: Option<Amount<'a>>,
     ) -> Self {
         Self {
             transaction_type: TransactionType::NFTokenAcceptOffer,

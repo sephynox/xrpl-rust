@@ -1,4 +1,6 @@
 use alloc::vec::Vec;
+use core::convert::TryInto;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
@@ -102,7 +104,7 @@ pub struct NFTokenCreateOffer<'a> {
     /// `<https://xrpl.org/nftokencreateoffer.html#nftokencreateoffer-fields>`
     #[serde(rename = "NFTokenID")]
     pub nftoken_id: &'a str,
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     pub owner: Option<&'a str>,
     pub expiration: Option<u32>,
     pub destination: Option<&'a str>,
@@ -181,9 +183,10 @@ impl<'a> Transaction for NFTokenCreateOffer<'a> {
 
 impl<'a> NFTokenCreateOfferError for NFTokenCreateOffer<'a> {
     fn _get_amount_error(&self) -> Result<(), NFTokenCreateOfferException> {
+        let amount_as_decimal: Decimal = self.amount.clone().try_into().unwrap();
         match !self.has_flag(&Flag::NFTokenCreateOffer(
             NFTokenCreateOfferFlag::TfSellOffer,
-        )) && self.amount.get_value_as_u32() == 0
+        )) && amount_as_decimal.is_zero()
         {
             true => Err(NFTokenCreateOfferException::InvalidAmountMustBeGreaterZero),
             false => Ok(()),
@@ -225,7 +228,7 @@ impl<'a> NFTokenCreateOffer<'a> {
     fn new(
         account: &'a str,
         nftoken_id: &'a str,
-        amount: Amount,
+        amount: Amount<'a>,
         fee: Option<&'a str>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,

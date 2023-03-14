@@ -11,8 +11,8 @@ use crate::models::{default_false, Currency, Model, RequestMethod, StreamParamet
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct Book<'a> {
-    pub taker_gets: Currency,
-    pub taker_pays: Currency,
+    pub taker_gets: Currency<'a>,
+    pub taker_pays: Currency<'a>,
     pub taker: &'a str,
     #[serde(default = "default_false")]
     pub snapshot: Option<bool>,

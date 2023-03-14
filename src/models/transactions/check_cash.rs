@@ -82,8 +82,8 @@ pub struct CheckCash<'a> {
     /// `<https://xrpl.org/checkcash.html#checkcash-fields>`
     #[serde(rename = "CheckID")]
     pub check_id: &'a str,
-    pub amount: Option<Amount>,
-    pub deliver_min: Option<Amount>,
+    pub amount: Option<Amount<'a>>,
+    pub deliver_min: Option<Amount<'a>>,
 }
 
 impl<'a> Default for CheckCash<'a> {
@@ -152,8 +152,8 @@ impl<'a> CheckCash<'a> {
         txn_signature: Option<&'a str>,
         memos: Option<Vec<Memo<'a>>>,
         signers: Option<Vec<Signer<'a>>>,
-        amount: Option<Amount>,
-        deliver_min: Option<Amount>,
+        amount: Option<Amount<'a>>,
+        deliver_min: Option<Amount<'a>>,
     ) -> Self {
         Self {
             transaction_type: TransactionType::CheckCash,
