@@ -146,7 +146,7 @@ pub enum Currency<'a> {
 }
 
 impl<'a> From<Amount<'a>> for Currency<'a> {
-    fn from(value: Amount<'a>) -> Self {
+    fn from(_value: Amount<'a>) -> Self {
         todo!()
     }
 }
@@ -176,10 +176,19 @@ impl<'a> Currency<'a> {
         !self.is_xrp()
     }
 
-    fn to_amount(&self, value: Cow<'a, str>) {
+    fn to_amount(&self, value: Cow<'a, str>) -> Amount {
         match self {
-            Currency::IssuedCurrency { .. } => {}
-            Currency::Xrp => {}
+            Currency::IssuedCurrency { currency, issuer } => {
+                let currency = currency.clone();
+                let issuer = issuer.clone();
+
+                Amount::IssuedCurrency {
+                    currency,
+                    issuer,
+                    value,
+                }
+            }
+            Currency::Xrp => Amount::Xrp(value),
         }
     }
 }
@@ -206,8 +215,8 @@ impl<'a> TryInto<Decimal> for Amount<'a> {
 
     fn try_into(self) -> Result<Decimal, Self::Error> {
         match self {
-            Amount::IssuedCurrency { value, .. } => Decimal::from_str(&*value),
-            Amount::Xrp(value) => Decimal::from_str(&*value),
+            Amount::IssuedCurrency { value, .. } => Decimal::from_str(&value),
+            Amount::Xrp(value) => Decimal::from_str(&value),
         }
     }
 }
