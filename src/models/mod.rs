@@ -176,6 +176,7 @@ impl<'a> Currency<'a> {
         !self.is_xrp()
     }
 
+    /// Turns a `Currency` into a `Amount` giving a `value`.
     fn to_amount(&self, value: Cow<'a, str>) -> Amount {
         match self {
             Currency::IssuedCurrency { currency, issuer } => {
