@@ -18,6 +18,9 @@ use crate::_serde::currency_xrp;
 use crate::serialize_with_tag;
 
 use alloc::borrow::Cow;
+use core::convert::TryInto;
+use core::str::FromStr;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use strum_macros::AsRefStr;
@@ -142,8 +145,22 @@ pub enum Currency {
     Xrp,
 }
 
+impl<'a> From<Amount<'a>> for Currency {
+    fn from(value: Amount<'a>) -> Self {
+        todo!()
+    }
+}
+
+impl Default for Currency {
+    fn default() -> Self {
+        Self::Xrp
+    }
+}
+
+impl<'a> Model for Currency {}
+
 impl Currency {
-    /// Check wether the defined currency is XRP.
+    /// Check whether the defined currency is XRP.
     fn is_xrp(&self) -> bool {
         match self {
             Currency::IssuedCurrency {
@@ -151,6 +168,18 @@ impl Currency {
                 issuer: _,
             } => false,
             Currency::Xrp => true,
+        }
+    }
+
+    /// Check whether the defined currency is an issued currency.
+    fn is_issued_currency(&self) -> bool {
+        !self.is_xrp()
+    }
+
+    fn to_amount(&self, value: Cow<'static, str>) {
+        match self {
+            Currency::IssuedCurrency { .. } => {}
+            Currency::Xrp => {}
         }
     }
 }
@@ -161,24 +190,37 @@ impl Currency {
 /// `<https://xrpl.org/currency-formats.html#specifying-currency-amounts>`
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
-pub enum Amount {
+pub enum Amount<'a> {
     /// Specifies an amount in an issued currency.
     IssuedCurrency {
-        currency: Cow<'static, str>,
-        issuer: Cow<'static, str>,
-        value: Cow<'static, str>,
+        currency: Cow<'a, str>,
+        issuer: Cow<'a, str>,
+        value: Cow<'a, str>,
     },
     /// Specifies an amount in XRP.
-    Xrp(Cow<'static, str>),
+    Xrp(Cow<'a, str>),
 }
 
-impl Default for Amount {
-    fn default() -> Self {
-        Self::Xrp(Cow::Borrowed("()"))
+impl<'a> TryInto<Decimal> for Amount<'a> {
+    type Error = rust_decimal::Error;
+
+    fn try_into(self) -> Result<Decimal, Self::Error> {
+        match self {
+            Amount::IssuedCurrencyAmount(value, ..) => Decimal::from_str(&*value),
+            Amount::Xrp(value) => Decimal::from_str(&*value),
+        }
     }
 }
 
-impl Amount {
+impl<'a> Default for Amount<'a> {
+    fn default() -> Self {
+        Self::Xrp(Cow::Borrowed("0"))
+    }
+}
+
+impl<'a> Model for Amount<'a> {}
+
+impl<'a> Amount<'a> {
     /// Returns the specified currency value as `u32`.
     fn get_value_as_u32(&self) -> u32 {
         match self {
@@ -206,13 +248,14 @@ impl Amount {
     /// Check wether the defined currency amount is a XRP amount.
     fn is_xrp(&self) -> bool {
         match self {
-            Amount::IssuedCurrency {
-                currency: _,
-                issuer: _,
-                value: _,
-            } => false,
-            Amount::Xrp(_) => true,
+            Amount::IssuedCurrency { .. } => false,
+            Amount::Xrp(..) => true,
         }
+    }
+
+    /// Check whether the defined currency amount is a issued currency amount.
+    fn is_issued_currency(&self) -> bool {
+        !self.is_xrp()
     }
 }
 
