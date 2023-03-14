@@ -1,6 +1,7 @@
 //! Top-level modules for the models package.
 
 pub mod exceptions;
+pub mod ledger;
 pub mod model;
 #[allow(clippy::too_many_arguments)]
 pub mod requests;
