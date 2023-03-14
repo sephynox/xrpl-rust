@@ -107,6 +107,34 @@ pub struct AccountRoot<'a> {
     wallet_size: Option<u32>,
 }
 
+impl<'a> Default for AccountRoot<'a> {
+    fn default() -> Self {
+        Self {
+            ledger_entry_type: LedgerEntryType::AccountRoot,
+            account: Default::default(),
+            flags: Default::default(),
+            owner_count: Default::default(),
+            previous_txn_id: Default::default(),
+            previous_txn_lgr_seq: Default::default(),
+            sequence: Default::default(),
+            account_txn_id: Default::default(),
+            balance: Default::default(),
+            burned_nftokens: Default::default(),
+            domain: Default::default(),
+            email_hash: Default::default(),
+            message_key: Default::default(),
+            minted_nftokens: Default::default(),
+            nftoken_minter: Default::default(),
+            regular_key: Default::default(),
+            ticket_count: Default::default(),
+            tick_size: Default::default(),
+            transfer_rate: Default::default(),
+            wallet_locator: Default::default(),
+            wallet_size: Default::default(),
+        }
+    }
+}
+
 impl<'a> Model for AccountRoot<'a> {}
 
 impl<'a> AccountRoot<'a> {
