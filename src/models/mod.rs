@@ -146,8 +146,13 @@ pub enum Currency<'a> {
 }
 
 impl<'a> From<Amount<'a>> for Currency<'a> {
-    fn from(_value: Amount<'a>) -> Self {
-        todo!()
+    fn from(value: Amount<'a>) -> Self {
+        match value {
+            Amount::IssuedCurrency {
+                currency, issuer, ..
+            } => Currency::IssuedCurrency { currency, issuer },
+            Amount::Xrp(..) => Currency::Xrp,
+        }
     }
 }
 
