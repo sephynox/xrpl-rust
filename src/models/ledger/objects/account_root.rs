@@ -105,6 +105,8 @@ pub struct AccountRoot<'a> {
     wallet_locator: Option<&'a str>,
     /// Unused. (The code supports this field but there is no way to set it.)
     wallet_size: Option<u32>,
+    #[serde(rename = "index")]
+    index: &'a str,
 }
 
 impl<'a> Default for AccountRoot<'a> {
@@ -131,6 +133,7 @@ impl<'a> Default for AccountRoot<'a> {
             transfer_rate: Default::default(),
             wallet_locator: Default::default(),
             wallet_size: Default::default(),
+            index: Default::default(),
         }
     }
 }
@@ -141,6 +144,7 @@ impl<'a> AccountRoot<'a> {
     fn new(
         account: &'a str,
         flags: Vec<AccountRootFlag>,
+        index: &'a str,
         owner_count: u32,
         previous_txn_id: &'a str,
         previous_txn_lgr_seq: u32,
@@ -164,6 +168,7 @@ impl<'a> AccountRoot<'a> {
             ledger_entry_type: LedgerEntryType::AccountRoot,
             account,
             flags,
+            index,
             owner_count,
             previous_txn_id,
             previous_txn_lgr_seq,
