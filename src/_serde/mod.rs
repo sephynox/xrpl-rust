@@ -83,7 +83,7 @@ pub mod currency_xrp {
         }
 
         // TODO: utilize anyhow and thiserror
-        Err("Could not deserialize XRP currency.").map_err(D::Error::custom)
+        Err("Could not deserialize XRP currency.").map_err(Error::custom)
     }
 }
 
@@ -107,19 +107,19 @@ macro_rules! serde_with_tag {
             )*
         }
 
+        #[derive(Serialize, Deserialize)]
+        #[serde(rename_all = "PascalCase")]
+        pub struct Helper<$lt> {
+            $(
+                $field: $ty,
+            )*
+        }
+
         impl<$lt> ::serde::Serialize for $name<$lt> {
             fn serialize<S>(&self, serializer: S) -> ::core::result::Result<S::Ok, S::Error>
             where
                 S: ::serde::Serializer
             {
-                #[derive(Serialize)]
-                #[serde(rename_all = "PascalCase")]
-                pub struct Helper<$lt> {
-                    $(
-                        $field: $ty,
-                    )*
-                }
-
                 let helper = Helper {
                     $(
                         $field: self.$field.clone(),
@@ -139,14 +139,14 @@ macro_rules! serde_with_tag {
             where
                 D: serde::Deserializer<'de>,
             {
-                #[derive(Deserialize)]
-                pub struct Helper<$lt> {
-                    #[serde(borrow = "'a")]
-                    $name: $name<$lt>
-                }
-                let helper: Helper = Helper::deserialize(deserializer)?;
+                let hash_map: HashMap<&$lt str, Helper<$lt>> = HashMap::deserialize(deserializer)?;
+                let helper = hash_map.get(stringify!($name)).unwrap();
 
-                Ok(helper.$name)
+                Ok(Self {
+                    $(
+                        $field: helper.$field.into(),
+                    )*
+                })
             }
         }
     };
@@ -165,20 +165,19 @@ macro_rules! serde_with_tag {
             )*
         }
 
+        #[derive(Serialize, Deserialize)]
+        #[serde(rename_all = "PascalCase")]
+        pub struct Helper {
+            $(
+                $field: $ty,
+            )*
+        }
+
         impl ::serde::Serialize for $name {
             fn serialize<S>(&self, serializer: S) -> ::core::result::Result<S::Ok, S::Error>
             where
                 S: ::serde::Serializer
             {
-                #[derive(Serialize)]
-                #[serde(rename_all = "PascalCase")]
-                $(#[$attr])*
-                pub struct Helper {
-                    $(
-                        $field: $ty,
-                    )*
-                }
-
                 let helper = Helper {
                     $(
                         $field: self.$field.clone(),
@@ -198,14 +197,14 @@ macro_rules! serde_with_tag {
             where
                 D: serde::Deserializer<'de>,
             {
-                #[derive(Deserialize)]
-                pub struct Helper {
-                    $name: $name
-                }
+                let hash_map: HashMap<&'de str, Helper> = HashMap::deserialize(deserializer)?;
+                let helper = hash_map.get(stringify!($name)).unwrap();
 
-                let helper: Helper = Helper::deserialize(deserializer)?;
-
-                Ok(helper.$name)
+                Ok(Self {
+                    $(
+                        $field: helper.$field.clone().into(),
+                    )*
+                })
             }
         }
     };

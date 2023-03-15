@@ -397,30 +397,30 @@ mod test_serde {
         assert_eq!(txn_json, default_json);
     }
 
-    // #[test]
-    // fn test_deserialize() {
-    //     let default_txn = NFTokenMint::new(
-    //         "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
-    //         0,
-    //         Some("10"),
-    //         None,
-    //         None,
-    //         None,
-    //         None,
-    //         None,
-    //         None,
-    //         None,
-    //         Some(vec![NFTokenMintFlag::TfTransferable]),
-    //         Some(vec![Memo::new(Some("72656E74"), None, Some("687474703A2F2F6578616D706C652E636F6D2F6D656D6F2F67656E65726963"))]),
-    //         None,
-    //         None,
-    //         Some(314),
-    //         Some("697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469"),
-    //     );
-    //     let default_json = r#"{"TransactionType":"NFTokenMint","Account":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B","TransferFee":314,"NFTokenTaxon":0,"Flags":8,"Fee":"10","URI":"697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469","Memos":[{"Memo":{"MemoType":"687474703A2F2F6578616D706C652E636F6D2F6D656D6F2F67656E65726963","MemoFormat":null,"MemoData":"72656E74"}}]}"#;
-    //
-    //     let txn_as_obj: NFTokenMint = serde_json::from_str(default_json).unwrap();
-    //
-    //     assert_eq!(txn_as_obj, default_txn);
-    // }
+    #[test]
+    fn test_deserialize() {
+        let default_txn = NFTokenMint::new(
+            "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+            0,
+            Some("10"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(vec![NFTokenMintFlag::TfTransferable]),
+            Some(vec![Memo::new(Some("72656E74"), None, Some("687474703A2F2F6578616D706C652E636F6D2F6D656D6F2F67656E65726963"))]),
+            None,
+            None,
+            Some(314),
+            Some("697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469"),
+        );
+        let default_json = r#"{"TransactionType":"NFTokenMint","Account":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B","TransferFee":314,"NFTokenTaxon":0,"Flags":8,"Fee":"10","URI":"697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469","Memos":[{"Memo":{"MemoType":"687474703A2F2F6578616D706C652E636F6D2F6D656D6F2F67656E65726963","MemoFormat":null,"MemoData":"72656E74"}}]}"#;
+
+        let txn_as_obj: NFTokenMint = serde_json::from_str(default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
+    }
 }
