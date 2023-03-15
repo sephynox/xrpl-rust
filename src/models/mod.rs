@@ -15,7 +15,7 @@ pub use model::Model;
 use serde::ser::SerializeMap;
 
 use crate::_serde::currency_xrp;
-use crate::serialize_with_tag;
+use crate::serde_with_tag;
 
 use alloc::borrow::Cow;
 use serde::{Deserialize, Serialize};
@@ -265,7 +265,7 @@ pub enum StreamParameter {
     Validations,
 }
 
-serialize_with_tag! {
+serde_with_tag! {
 /// An arbitrary piece of data attached to a transaction. A
 /// transaction can have multiple Memo objects as an array
 /// in the Memos field.
@@ -283,28 +283,6 @@ pub struct Memo<'a> {
     memo_format: Option<&'a str>,
     memo_type: Option<&'a str>,
 }
-}
-
-impl<'a, 'de: 'a> Deserialize<'de> for Memo<'a> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        use crate::_serde::HashMap;
-
-        let memo_map: HashMap<&str, HashMap<&str, Option<&str>>> =
-            HashMap::deserialize(deserializer)?;
-        let memo = memo_map.get("Memo").unwrap();
-        let memo_data = memo.get("MemoData").unwrap();
-        let memo_format = memo.get("MemoFormat").unwrap();
-        let memo_type = memo.get("MemoType").unwrap();
-
-        Ok(Self {
-            memo_data: *memo_data,
-            memo_format: *memo_format,
-            memo_type: *memo_type,
-        })
-    }
 }
 
 /// A PathStep represents an individual step along a Path.

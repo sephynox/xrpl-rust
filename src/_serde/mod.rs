@@ -91,7 +91,7 @@ pub mod currency_xrp {
 // TODO: Find a way to `#[skip_serializing_none]`
 // TODO: Find a more generic way
 #[macro_export]
-macro_rules! serialize_with_tag {
+macro_rules! serde_with_tag {
     (
         $(#[$attr:meta])*
         pub struct $name:ident<$lt:lifetime> {
@@ -114,7 +114,6 @@ macro_rules! serialize_with_tag {
             {
                 #[derive(Serialize)]
                 #[serde(rename_all = "PascalCase")]
-                $(#[$attr])*
                 pub struct Helper<$lt> {
                     $(
                         $field: $ty,
@@ -131,6 +130,23 @@ macro_rules! serialize_with_tag {
                 state.serialize_key(stringify!($name))?;
                 state.serialize_value(&helper)?;
                 state.end()
+            }
+        }
+
+        impl<'de: $lt, $lt> ::serde::Deserialize<'de> for $name<$lt> {
+            #[allow(non_snake_case)]
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                #[derive(Deserialize)]
+                pub struct Helper<$lt> {
+                    #[serde(borrow = "'a")]
+                    $name: $name<$lt>
+                }
+                let helper: Helper = Helper::deserialize(deserializer)?;
+
+                Ok(helper.$name)
             }
         }
     };
@@ -173,6 +189,23 @@ macro_rules! serialize_with_tag {
                 state.serialize_key(stringify!($name))?;
                 state.serialize_value(&helper)?;
                 state.end()
+            }
+        }
+
+        impl<'de> ::serde::Deserialize<'de> for $name {
+            #[allow(non_snake_case)]
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                #[derive(Deserialize)]
+                pub struct Helper {
+                    $name: $name
+                }
+
+                let helper: Helper = Helper::deserialize(deserializer)?;
+
+                Ok(helper.$name)
             }
         }
     };
