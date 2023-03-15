@@ -11,12 +11,11 @@ use crate::{
         model::Model,
         Memo, Signer, SignerListSetError, Transaction, TransactionType,
     },
-    serialize_with_tag,
+    serde_with_tag,
 };
 
-serialize_with_tag! {
-    // TODO: Impl Deserialize
-    #[derive(Debug, Deserialize, PartialEq, Eq, Default, Clone, new)]
+serde_with_tag! {
+    #[derive(Debug, PartialEq, Eq, Default, Clone, new)]
     #[skip_serializing_none]
     pub struct SignerEntry {
         account: Cow<'static, str>,
