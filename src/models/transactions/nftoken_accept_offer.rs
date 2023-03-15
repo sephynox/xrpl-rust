@@ -293,32 +293,32 @@ mod test_serde {
         assert_eq!(txn_json, default_json);
     }
 
-    // #[test]
-    // fn test_deserialize() {
-    //     let default_txn = NFTokenAcceptOffer::new(
-    //         "r9spUPhPBfB6kQeF6vPhwmtFwRhBh2JUCG",
-    //         Some("12"),
-    //         Some(68549302),
-    //         Some(75447550),
-    //         None,
-    //         None,
-    //         None,
-    //         None,
-    //         None,
-    //         Some(vec![Memo::new(
-    //             Some("61356534373538372D633134322D346663382D616466362D393666383562356435386437"),
-    //             None,
-    //             None,
-    //         )]),
-    //         None,
-    //         Some("68CD1F6F906494EA08C9CB5CAFA64DFA90D4E834B7151899B73231DE5A0C3B77"),
-    //         None,
-    //         None,
-    //     );
-    //     let default_json = r#"{"TransactionType":"NFTokenAcceptOffer","Account":"r9spUPhPBfB6kQeF6vPhwmtFwRhBh2JUCG","Fee":"12","LastLedgerSequence":75447550,"Memos":[{"Memo":{"MemoData":"61356534373538372D633134322D346663382D616466362D393666383562356435386437","MemoFormat":null,"MemoType":null}}],"NFTokenSellOffer":"68CD1F6F906494EA08C9CB5CAFA64DFA90D4E834B7151899B73231DE5A0C3B77","Sequence":68549302}"#;
-    //
-    //     let txn_as_obj: NFTokenAcceptOffer = serde_json::from_str(default_json).unwrap();
-    //
-    //     assert_eq!(txn_as_obj, default_txn);
-    // }
+    #[test]
+    fn test_deserialize() {
+        let default_txn = NFTokenAcceptOffer::new(
+            "r9spUPhPBfB6kQeF6vPhwmtFwRhBh2JUCG",
+            Some("12"),
+            Some(68549302),
+            Some(75447550),
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(vec![Memo::new(
+                Some("61356534373538372D633134322D346663382D616466362D393666383562356435386437"),
+                None,
+                None,
+            )]),
+            None,
+            Some("68CD1F6F906494EA08C9CB5CAFA64DFA90D4E834B7151899B73231DE5A0C3B77"),
+            None,
+            None,
+        );
+        let default_json = r#"{"TransactionType":"NFTokenAcceptOffer","Account":"r9spUPhPBfB6kQeF6vPhwmtFwRhBh2JUCG","Fee":"12","LastLedgerSequence":75447550,"Memos":[{"Memo":{"MemoData":"61356534373538372D633134322D346663382D616466362D393666383562356435386437","MemoFormat":null,"MemoType":null}}],"NFTokenSellOffer":"68CD1F6F906494EA08C9CB5CAFA64DFA90D4E834B7151899B73231DE5A0C3B77","Sequence":68549302}"#;
+
+        let txn_as_obj: NFTokenAcceptOffer = serde_json::from_str(default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
+    }
 }
