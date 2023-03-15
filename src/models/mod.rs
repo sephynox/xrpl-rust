@@ -144,6 +144,12 @@ pub enum Currency {
     Xrp,
 }
 
+impl Default for Currency {
+    fn default() -> Self {
+        Self::Xrp
+    }
+}
+
 impl Currency {
     /// Check wether the defined currency is XRP.
     fn is_xrp(&self) -> bool {

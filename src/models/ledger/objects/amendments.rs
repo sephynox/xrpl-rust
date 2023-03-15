@@ -2,14 +2,18 @@ use crate::models::ledger::LedgerEntryType;
 use crate::models::Model;
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
-use serde::{Deserialize, Serialize};
+use derive_new::new;
+use serde::{ser::SerializeMap, Deserialize, Serialize};
 
+use crate::serialize_with_tag;
 use serde_with::skip_serializing_none;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-pub enum Majority<'a> {
-    #[serde(rename_all = "PascalCase")]
-    Majority { amendment: &'a str, close_time: u32 },
+serialize_with_tag! {
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
+pub struct Majority<'a> {
+    amendment: &'a str,
+    close_time: u32,
+}
 }
 
 #[skip_serializing_none]
@@ -19,10 +23,10 @@ pub struct Amendments<'a> {
     ledger_entry_type: LedgerEntryType,
     amendments: Vec<Cow<'a, str>>,
     flags: u32,
-    #[serde(borrow = "'a")] // lifetime issue
-    majorities: Vec<Majority<'a>>,
     #[serde(rename = "index")]
     index: &'a str,
+    #[serde(borrow = "'a")] // lifetime issue
+    majorities: Vec<Majority<'a>>,
 }
 
 impl<'a> Model for Amendments<'a> {}
@@ -33,8 +37,8 @@ impl<'a> Default for Amendments<'a> {
             ledger_entry_type: LedgerEntryType::Amendments,
             amendments: Default::default(),
             flags: Default::default(),
-            majorities: Default::default(),
             index: Default::default(),
+            majorities: Default::default(),
         }
     }
 }
@@ -72,7 +76,7 @@ mod test_serde {
                 Cow::from("740352F2412A9909880C23A559FCECEDA3BE2126FED62FC7660D628A06927F11"),
             ],
             0,
-            vec![Majority::Majority {
+            vec![Majority {
                 amendment: "1562511F573A19AE9BD103B5D6B9E01B3B46805AEC5D3C4805C902B514399146",
                 close_time: 535589001,
             }],
@@ -80,8 +84,10 @@ mod test_serde {
         );
         let amendments_json = serde_json::to_string(&amendments).unwrap();
         let actual = amendments_json.as_str();
-        let expected = r#"{"LedgerEntryType":"Amendments","Amendments":["42426C4D4F1009EE67080A9B7965B44656D7714D104A72F9B4369F97ABF044EE","4C97EBA926031A7CF7D7B36FDE3ED66DDA5421192D63DE53FFB46E43B9DC8373","6781F8368C4771B83E8B821D88F580202BCB4228075297B19E4FDC5233F1EFDC","740352F2412A9909880C23A559FCECEDA3BE2126FED62FC7660D628A06927F11"],"Flags":0,"Majorities":[{"Majority":{"Amendment":"1562511F573A19AE9BD103B5D6B9E01B3B46805AEC5D3C4805C902B514399146","CloseTime":535589001}}],"index":"7DB0788C020F02780A673DC74757F23823FA3014C1866E72CC4CD8B226CD6EF4"}"#;
+        let expected = r#"{"LedgerEntryType":"Amendments","Amendments":["42426C4D4F1009EE67080A9B7965B44656D7714D104A72F9B4369F97ABF044EE","4C97EBA926031A7CF7D7B36FDE3ED66DDA5421192D63DE53FFB46E43B9DC8373","6781F8368C4771B83E8B821D88F580202BCB4228075297B19E4FDC5233F1EFDC","740352F2412A9909880C23A559FCECEDA3BE2126FED62FC7660D628A06927F11"],"Flags":0,"index":"7DB0788C020F02780A673DC74757F23823FA3014C1866E72CC4CD8B226CD6EF4","Majorities":[{"Majority":{"Amendment":"1562511F573A19AE9BD103B5D6B9E01B3B46805AEC5D3C4805C902B514399146","CloseTime":535589001}}]}"#;
 
         assert_eq!(expected, actual);
     }
+
+    // TODO: test_deserialize
 }

@@ -79,6 +79,8 @@ pub struct AccountRoot<'a> {
     /// The md5 hash of an email address. Clients can use this to look up an avatar through services
     /// such as Gravatar
     email_hash: Option<&'a str>,
+    #[serde(rename = "index")]
+    index: &'a str,
     /// A public key that may be used to send encrypted messages to this account. In JSON, uses
     /// hexadecimal. Must be exactly 33 bytes, with the first byte indicating the key type: 0x02 or
     /// 0x03 for secp256k1 keys, 0xED for Ed25519 keys.
@@ -105,16 +107,14 @@ pub struct AccountRoot<'a> {
     wallet_locator: Option<&'a str>,
     /// Unused. (The code supports this field but there is no way to set it.)
     wallet_size: Option<u32>,
-    #[serde(rename = "index")]
-    index: &'a str,
 }
 
 impl<'a> Default for AccountRoot<'a> {
     fn default() -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::AccountRoot,
             account: Default::default(),
             flags: Default::default(),
+            ledger_entry_type: LedgerEntryType::AccountRoot,
             owner_count: Default::default(),
             previous_txn_id: Default::default(),
             previous_txn_lgr_seq: Default::default(),
@@ -124,6 +124,7 @@ impl<'a> Default for AccountRoot<'a> {
             burned_nftokens: Default::default(),
             domain: Default::default(),
             email_hash: Default::default(),
+            index: Default::default(),
             message_key: Default::default(),
             minted_nftokens: Default::default(),
             nftoken_minter: Default::default(),
@@ -133,7 +134,6 @@ impl<'a> Default for AccountRoot<'a> {
             transfer_rate: Default::default(),
             wallet_locator: Default::default(),
             wallet_size: Default::default(),
-            index: Default::default(),
         }
     }
 }
