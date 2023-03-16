@@ -1,13 +1,12 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
-use crate::models::{Amount, Currency, Model};
-use alloc::borrow::Cow;
+use crate::models::{Amount, Model};
+
 use alloc::vec::Vec;
-use derive_new::new;
-use serde::{ser::SerializeMap, Deserialize, Serialize};
+
+use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::serialize_with_tag;
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
