@@ -1,7 +1,7 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
-use crate::models::{Amount, Currency, Model};
-use alloc::borrow::Cow;
+use crate::models::Model;
+
 use alloc::vec::Vec;
 use derive_new::new;
 use serde::{ser::SerializeMap, Deserialize, Serialize};
