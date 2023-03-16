@@ -46,6 +46,8 @@ pub struct AMM<'a> {
     auction_slot: Option<AuctionSlot<'a>>,
     /// Currently there are no flags for the AMM ledger object
     flags: u32,
+    /// The object ID of a single object to retrieve from the ledger, as a
+    /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     index: &'a str,
     #[serde(rename = "LPTokenBalance")]

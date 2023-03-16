@@ -23,6 +23,8 @@ pub struct Amendments<'a> {
     ledger_entry_type: LedgerEntryType,
     amendments: Vec<Cow<'a, str>>,
     flags: u32,
+    /// The object ID of a single object to retrieve from the ledger, as a
+    /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     index: &'a str,
     #[serde(borrow = "'a")] // lifetime issue

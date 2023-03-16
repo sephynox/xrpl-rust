@@ -18,6 +18,8 @@ pub struct DepositPreauth<'a> {
     /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no flags
     /// for DepositPreauth objects. The value is always 0.
     flags: u32,
+    /// The object ID of a single object to retrieve from the ledger, as a
+    /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     index: &'a str,
     /// A hint indicating which page of the sender's owner directory links to this object, in case

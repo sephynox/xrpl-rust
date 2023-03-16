@@ -80,6 +80,8 @@ pub struct AccountRoot<'a> {
     /// The md5 hash of an email address. Clients can use this to look up an avatar through services
     /// such as Gravatar
     email_hash: Option<&'a str>,
+    /// The object ID of a single object to retrieve from the ledger, as a
+    /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     index: &'a str,
     /// A public key that may be used to send encrypted messages to this account. In JSON, uses

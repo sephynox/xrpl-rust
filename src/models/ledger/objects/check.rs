@@ -29,6 +29,8 @@ pub struct Check<'a> {
     /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no flags
     /// for `Check` objects. The value is always 0.
     flags: u32,
+    /// The object ID of a single object to retrieve from the ledger, as a
+    /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     index: &'a str,
     /// Arbitrary 256-bit hash provided by the sender as a specific reason or identifier for this Check.
