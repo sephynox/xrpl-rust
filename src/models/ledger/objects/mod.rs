@@ -7,6 +7,7 @@ pub mod directory_node;
 pub mod escrow;
 pub mod fee_settings;
 pub mod ledger_hashes;
+pub mod negative_unl;
 
 pub use account_root::*;
 pub use amendments::*;
@@ -17,6 +18,7 @@ pub use directory_node::*;
 pub use escrow::*;
 pub use fee_settings::*;
 pub use ledger_hashes::*;
+pub use negative_unl::*;
 
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
@@ -32,4 +34,5 @@ pub enum LedgerEntryType {
     Escrow = 0x0075,
     FeeSettings = 0x0073,
     LedgerHashes = 0x0068,
+    NegativeUNL = 0x004E,
 }
