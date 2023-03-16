@@ -2,8 +2,10 @@
 //!
 //! Order of models:
 //! 1. Type of model
-//! 2. Common fields in alphabetical order
-//! 3. Specific fields in alphabetical order
+//! 2. Required common fields in alphabetical order
+//! 3. Optional common fields in alphabetical order
+//! 4. Required specific fields in alphabetical order
+//! 5. Optional specific fields in alphabetical order
 
 pub mod exceptions;
 pub mod ledger;

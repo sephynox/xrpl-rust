@@ -5,7 +5,7 @@ use fnv::FnvHasher;
 
 pub type HashMap<K, V> = hashbrown::HashMap<K, V, BuildHasherDefault<FnvHasher>>;
 
-pub mod txn_flags {
+pub(crate) mod txn_flags {
     use core::fmt::Debug;
 
     use alloc::vec::Vec;
@@ -54,8 +54,56 @@ pub mod txn_flags {
     }
 }
 
+pub(crate) mod lgr_obj_flags {
+    use core::fmt::Debug;
+
+    use alloc::vec::Vec;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use strum::IntoEnumIterator;
+
+    pub fn serialize<F, S>(flags: &Vec<F>, s: S) -> Result<S::Ok, S::Error>
+    where
+        F: Serialize,
+        S: Serializer,
+    {
+        if !flags.is_empty() {
+            let flags_as_value = serde_json::to_value(flags).unwrap();
+            let flag_num_vec: Vec<u32> = serde_json::from_value(flags_as_value).unwrap();
+
+            s.serialize_u32(flag_num_vec.iter().sum())
+        } else {
+            s.serialize_u32(0)
+        }
+    }
+
+    pub fn deserialize<'de, F, D>(d: D) -> Result<Vec<F>, D::Error>
+    where
+        F: Serialize + IntoEnumIterator + Debug,
+        D: Deserializer<'de>,
+    {
+        let flags_u32 = u32::deserialize(d)?;
+        if flags_u32 != 0 {
+            let mut flags_vec = Vec::new();
+            for flag in F::iter() {
+                let check_flag: u32 = serde_json::to_string(&flag)
+                    .unwrap()
+                    .as_str()
+                    .parse::<u32>()
+                    .unwrap();
+                if check_flag & flags_u32 == check_flag {
+                    flags_vec.push(flag);
+                }
+            }
+
+            Ok(flags_vec)
+        } else {
+            Ok(Vec::new())
+        }
+    }
+}
+
 /// Used for tagged variants in an `untagged` enum
-pub mod currency_xrp {
+pub(crate) mod currency_xrp {
     use super::HashMap;
     use serde::de::Error;
     use serde::{ser::SerializeMap, Deserialize};

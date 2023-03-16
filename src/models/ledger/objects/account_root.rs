@@ -1,3 +1,4 @@
+use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
 use crate::models::{Amount, Model};
 use alloc::vec::Vec;
@@ -50,6 +51,7 @@ pub struct AccountRoot<'a> {
     /// object.
     pub ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean flags enabled for this account.
+    #[serde(with = "lgr_obj_flags")]
     pub flags: Vec<AccountRootFlag>,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
