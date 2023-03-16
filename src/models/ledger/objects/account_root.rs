@@ -46,17 +46,18 @@ pub enum AccountRootFlag {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AccountRoot<'a> {
+    /// The value 0x0061, mapped to the string AccountRoot, indicates that this is an AccountRoot
+    /// object.
+    ledger_entry_type: LedgerEntryType,
     /// The identifying (classic) address of this account.
     account: &'a str,
     /// A bit-map of boolean flags enabled for this account.
     flags: Vec<AccountRootFlag>,
-    /// The value 0x0061, mapped to the string AccountRoot, indicates that this is an AccountRoot
-    /// object.
-    ledger_entry_type: LedgerEntryType,
     /// The number of objects this account owns in the ledger, which contributes to its owner
     /// reserve.
     owner_count: u32,
     /// The identifying hash of the transaction that most recently modified this object.
+    #[serde(rename = "PreviousTxnID")]
     previous_txn_id: &'a str,
     /// The index of the ledger that contains the transaction that most recently modified this object.
     previous_txn_lgr_seq: u32,

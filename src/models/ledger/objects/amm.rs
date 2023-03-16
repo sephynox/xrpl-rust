@@ -29,7 +29,7 @@ serialize_with_tag! {
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
 pub struct VoteEntry<'a> {
     account: Cow<'a, str>,
-    trading_fee: u32,
+    trading_fee: u16,
     vote_weight: u32,
 }
 }
