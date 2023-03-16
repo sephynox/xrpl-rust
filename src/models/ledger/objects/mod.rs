@@ -10,6 +10,11 @@ pub mod ledger_hashes;
 pub mod negative_unl;
 pub mod nftoken_offer;
 pub mod nftoken_page;
+pub mod offer;
+pub mod pay_channel;
+pub mod ripple_state;
+pub mod signer_list;
+pub mod ticket;
 
 pub use account_root::*;
 pub use amendments::*;
@@ -23,6 +28,11 @@ pub use ledger_hashes::*;
 pub use negative_unl::*;
 pub use nftoken_offer::*;
 pub use nftoken_page::*;
+pub use offer::*;
+pub use pay_channel::*;
+pub use ripple_state::*;
+pub use ripple_state::*;
+pub use ticket::*;
 
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
@@ -41,4 +51,9 @@ pub enum LedgerEntryType {
     NegativeUNL = 0x004E,
     NFTokenOffer = 0x0037,
     NFTokenPage = 0x0050,
+    Offer = 0x006F,
+    PayChannel = 0x0078,
+    RippleState = 0x0072,
+    SignerList = 0x0053,
+    Ticket = 0x0054,
 }
