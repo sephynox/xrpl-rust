@@ -71,7 +71,6 @@ impl<'a> Model for DirectoryNode<'a> {}
 
 impl<'a> DirectoryNode<'a> {
     pub fn new(
-        flags: u32,
         index: &'a str,
         indexes: Vec<&'a str>,
         root_index: &'a str,
@@ -86,7 +85,7 @@ impl<'a> DirectoryNode<'a> {
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::DirectoryNode,
-            flags,
+            flags: 0,
             index,
             exchange_rate,
             indexes,
@@ -110,7 +109,6 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let directory_node = DirectoryNode::new(
-            0,
             "1BBEF97EDE88D40CEE2ADE6FEF121166AFE80D99EBADB01A4F069BA8FF484000",
             vec!["AD7EAE148287EF12D213A251015F86E6D4BD34B3C4A0A1ED9A17198373F908AD"],
             "1BBEF97EDE88D40CEE2ADE6FEF121166AFE80D99EBADB01A4F069BA8FF484000",

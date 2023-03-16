@@ -80,7 +80,6 @@ impl<'a> Model for Check<'a> {}
 
 impl<'a> Check<'a> {
     pub fn new(
-        flags: u32,
         index: &'a str,
         account: &'a str,
         destination: &'a str,
@@ -97,7 +96,7 @@ impl<'a> Check<'a> {
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::Check,
-            flags,
+            flags: 0,
             index,
             account,
             destination,
@@ -123,7 +122,6 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let check = Check::new(
-            0,
             "49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0",
             "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
             "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",

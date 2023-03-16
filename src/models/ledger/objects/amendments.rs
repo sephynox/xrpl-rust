@@ -47,14 +47,13 @@ impl<'a> Default for Amendments<'a> {
 
 impl<'a> Amendments<'a> {
     pub fn new(
-        flags: u32,
         index: &'a str,
         amendments: Vec<Cow<'a, str>>,
         majorities: Vec<Majority<'a>>,
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::Amendments,
-            flags,
+            flags: 0,
             index,
             amendments,
             majorities,
@@ -71,7 +70,6 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let amendments = Amendments::new(
-            0,
             "7DB0788C020F02780A673DC74757F23823FA3014C1866E72CC4CD8B226CD6EF4",
             vec![
                 Cow::from("42426C4D4F1009EE67080A9B7965B44656D7714D104A72F9B4369F97ABF044EE"),

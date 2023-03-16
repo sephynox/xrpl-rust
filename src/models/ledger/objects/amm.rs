@@ -77,7 +77,6 @@ impl<'a> Model for AMM<'a> {}
 
 impl<'a> AMM<'a> {
     pub fn new(
-        flags: u32,
         index: &'a str,
         amm_account: &'a str,
         asset: Currency,
@@ -89,7 +88,7 @@ impl<'a> AMM<'a> {
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::AMM,
-            flags,
+            flags: 0,
             index,
             amm_account,
             asset,
@@ -112,7 +111,6 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let amm = AMM::new(
-            0,
             "ForTest",
             "rE54zDvgnghAoPopCgvtiqWNq3dU5y836S",
             Currency::Xrp,

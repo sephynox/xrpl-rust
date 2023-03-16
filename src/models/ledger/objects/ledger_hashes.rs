@@ -37,7 +37,6 @@ impl<'a> Model for LedgerHashes<'a> {}
 
 impl<'a> LedgerHashes<'a> {
     pub fn new(
-        flags: u32,
         index: &'a str,
         first_ledger_sequence: u32,
         hashes: Vec<&'a str>,
@@ -45,7 +44,7 @@ impl<'a> LedgerHashes<'a> {
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::LedgerHashes,
-            flags,
+            flags: 0,
             index,
             first_ledger_sequence,
             hashes,
@@ -62,7 +61,6 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let ledger_hashes = LedgerHashes::new(
-            0,
             "B4979A36CDC7F3D3D5C31A4EAE2AC7D7209DDA877588B9AFC66799692AB0D66B",
             2,
             vec![

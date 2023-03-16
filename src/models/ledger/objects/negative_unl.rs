@@ -50,7 +50,6 @@ impl<'a> Model for NegativeUNL<'a> {}
 
 impl<'a> NegativeUNL<'a> {
     pub fn new(
-        flags: u32,
         index: &'a str,
         disabled_validators: Option<Vec<DisabledValidator<'a>>>,
         validator_to_disable: Option<&'a str>,
@@ -58,7 +57,7 @@ impl<'a> NegativeUNL<'a> {
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::NegativeUNL,
-            flags,
+            flags: 0,
             index,
             disabled_validators,
             validator_to_disable,
@@ -75,7 +74,6 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let negative_unl = NegativeUNL::new(
-            0,
             "2E8A59AA9D3B5B186B0B9E0F62E6C02587CA74A4D778938E957B6357D364B244",
             Some(vec![DisabledValidator::new(
                 1609728,

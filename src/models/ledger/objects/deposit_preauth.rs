@@ -51,7 +51,6 @@ impl<'a> Model for DepositPreauth<'a> {}
 
 impl<'a> DepositPreauth<'a> {
     pub fn new(
-        flags: u32,
         index: &'a str,
         account: &'a str,
         authorize: &'a str,
@@ -61,7 +60,7 @@ impl<'a> DepositPreauth<'a> {
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::DepositPreauth,
-            flags,
+            flags: 0,
             index,
             account,
             authorize,
@@ -79,7 +78,6 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let deposit_preauth = DepositPreauth::new(
-            0,
             "4A255038CC3ADCC1A9C91509279B59908251728D0DAADB248FFE297D0F7E068C",
             "rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8",
             "rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de",

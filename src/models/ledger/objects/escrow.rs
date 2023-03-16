@@ -55,7 +55,6 @@ impl<'a> Model for Escrow<'a> {}
 
 impl<'a> Escrow<'a> {
     pub fn new(
-        flags: u32,
         index: &'a str,
         account: &'a str,
         amount: Amount,
@@ -72,7 +71,7 @@ impl<'a> Escrow<'a> {
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::Escrow,
-            flags,
+            flags: 0,
             index,
             account,
             amount,
@@ -98,7 +97,6 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let escrow = Escrow::new(
-            0,
             "DC5F3851D8A1AB622F957761E5963BC5BD439D5C24AC6AD7AC4523F0640244AC",
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
             Amount::Xrp(Cow::from("10000")),

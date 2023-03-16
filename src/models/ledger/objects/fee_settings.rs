@@ -46,7 +46,6 @@ impl<'a> Model for FeeSettings<'a> {}
 
 impl<'a> FeeSettings<'a> {
     pub fn new(
-        flags: u32,
         index: &'a str,
         base_fee: &'a str,
         reference_fee_units: u32,
@@ -55,7 +54,7 @@ impl<'a> FeeSettings<'a> {
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::FeeSettings,
-            flags,
+            flags: 0,
             index,
             base_fee,
             reference_fee_units,
@@ -72,7 +71,6 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let fee_settings = FeeSettings::new(
-            0,
             "4BC50C9B0D8515D3EAAE1E74B29A95804346C491EE1A95BF25E4AAB854A6A651",
             "000000000000000A",
             10,
