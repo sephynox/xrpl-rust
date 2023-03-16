@@ -48,75 +48,76 @@ pub enum AccountRootFlag {
 pub struct AccountRoot<'a> {
     /// The value 0x0061, mapped to the string AccountRoot, indicates that this is an AccountRoot
     /// object.
-    ledger_entry_type: LedgerEntryType,
-    /// The identifying (classic) address of this account.
-    account: &'a str,
+    pub ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean flags enabled for this account.
-    flags: Vec<AccountRootFlag>,
+    pub flags: Vec<AccountRootFlag>,
+    /// The object ID of a single object to retrieve from the ledger, as a
+    /// 64-character (256-bit) hexadecimal string.
+    #[serde(rename = "index")]
+    pub index: &'a str,
+    /// The identifying (classic) address of this account.
+    pub account: &'a str,
     /// The number of objects this account owns in the ledger, which contributes to its owner
     /// reserve.
-    owner_count: u32,
+    pub owner_count: u32,
     /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
-    previous_txn_id: &'a str,
+    pub previous_txn_id: &'a str,
     /// The index of the ledger that contains the transaction that most recently modified this object.
-    previous_txn_lgr_seq: u32,
+    pub previous_txn_lgr_seq: u32,
     /// The sequence number of the next valid transaction for this account.
-    sequence: u32,
+    pub sequence: u32,
     /// The identifying hash of the transaction most recently sent by this account. This field must
     /// be enabled to use the `AccountTxnID` transaction field. To enable it, send an `AccountSet`
     /// transaction with the `asfAccountTxnID` flag enabled.
     #[serde(rename = "AccountTxnID")]
-    account_txn_id: Option<&'a str>,
+    pub account_txn_id: Option<&'a str>,
     /// The account's current XRP balance in drops, represented as a string.
-    balance: Option<Amount>,
+    pub balance: Option<Amount>,
     /// How many total of this account's issued non-fungible tokens have been burned. This number
     /// is always equal or less than `MintedNFTokens`.
     #[serde(rename = "BurnedNFTokens")]
-    burned_nftokens: Option<u32>,
+    pub burned_nftokens: Option<u32>,
     /// A domain associated with this account. In JSON, this is the hexadecimal for the ASCII
     /// representation of the domain. Cannot be more than 256 bytes in length.
-    domain: Option<&'a str>,
+    pub domain: Option<&'a str>,
     /// The md5 hash of an email address. Clients can use this to look up an avatar through services
     /// such as Gravatar
-    email_hash: Option<&'a str>,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    index: &'a str,
+    pub email_hash: Option<&'a str>,
     /// A public key that may be used to send encrypted messages to this account. In JSON, uses
     /// hexadecimal. Must be exactly 33 bytes, with the first byte indicating the key type: 0x02 or
     /// 0x03 for secp256k1 keys, 0xED for Ed25519 keys.
-    message_key: Option<&'a str>,
+    pub message_key: Option<&'a str>,
     /// How many total non-fungible tokens have been minted by and on behalf of this account.
     #[serde(rename = "MintedNFTokens")]
-    minted_nftokens: Option<u32>,
+    pub minted_nftokens: Option<u32>,
     /// Another account that can mint non-fungible tokens on behalf of this account.
     #[serde(rename = "NFTokenMinter")]
-    nftoken_minter: Option<&'a str>,
+    pub nftoken_minter: Option<&'a str>,
     /// The address of a key pair that can be used to sign transactions for this account instead of
     /// the master key. Use a SetRegularKey transaction to change this value.
-    regular_key: Option<&'a str>,
+    pub regular_key: Option<&'a str>,
     /// How many `Tickets` this account owns in the ledger. This is updated automatically to ensure
     /// that the account stays within the hard limit of 250 Tickets at a time. This field is omitted
     /// if the account has zero Tickets.
-    ticket_count: Option<u8>,
+    pub ticket_count: Option<u8>,
     /// How many significant digits to use for exchange rates of Offers involving currencies issued
     /// by this address. Valid values are 3 to 15, inclusive.
-    tick_size: Option<u8>,
+    pub tick_size: Option<u8>,
     /// A transfer fee to charge other users for sending currency issued by this account to each other.
-    transfer_rate: Option<u32>,
+    pub transfer_rate: Option<u32>,
     /// An arbitrary 256-bit value that users can set.
-    wallet_locator: Option<&'a str>,
+    pub wallet_locator: Option<&'a str>,
     /// Unused. (The code supports this field but there is no way to set it.)
-    wallet_size: Option<u32>,
+    pub wallet_size: Option<u32>,
 }
 
 impl<'a> Default for AccountRoot<'a> {
     fn default() -> Self {
         Self {
-            account: Default::default(),
             flags: Default::default(),
+            index: Default::default(),
+            account: Default::default(),
             ledger_entry_type: LedgerEntryType::AccountRoot,
             owner_count: Default::default(),
             previous_txn_id: Default::default(),
@@ -127,7 +128,6 @@ impl<'a> Default for AccountRoot<'a> {
             burned_nftokens: Default::default(),
             domain: Default::default(),
             email_hash: Default::default(),
-            index: Default::default(),
             message_key: Default::default(),
             minted_nftokens: Default::default(),
             nftoken_minter: Default::default(),
@@ -144,10 +144,10 @@ impl<'a> Default for AccountRoot<'a> {
 impl<'a> Model for AccountRoot<'a> {}
 
 impl<'a> AccountRoot<'a> {
-    fn new(
-        account: &'a str,
+    pub fn new(
         flags: Vec<AccountRootFlag>,
         index: &'a str,
+        account: &'a str,
         owner_count: u32,
         previous_txn_id: &'a str,
         previous_txn_lgr_seq: u32,
@@ -169,9 +169,9 @@ impl<'a> AccountRoot<'a> {
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::AccountRoot,
-            account,
             flags,
             index,
+            account,
             owner_count,
             previous_txn_id,
             previous_txn_lgr_seq,

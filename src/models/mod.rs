@@ -1,4 +1,9 @@
 //! Top-level modules for the models package.
+//!
+//! Order of models:
+//! 1. Type of model
+//! 2. Common fields in alphabetical order
+//! 3. Specific fields in alphabetical order
 
 pub mod exceptions;
 pub mod ledger;
@@ -287,9 +292,9 @@ serde_with_tag! {
 #[derive(Debug, PartialEq, Eq, Default, Clone, new)]
 #[skip_serializing_none]
 pub struct Memo<'a> {
-    memo_data: Option<&'a str>,
-    memo_format: Option<&'a str>,
-    memo_type: Option<&'a str>,
+    pub memo_data: Option<&'a str>,
+    pub memo_format: Option<&'a str>,
+    pub memo_type: Option<&'a str>,
 }
 }
 

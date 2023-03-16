@@ -12,59 +12,59 @@ use serde_with::skip_serializing_none;
 #[serde(rename_all = "PascalCase")]
 pub struct Check<'a> {
     /// The value 0x0043, mapped to the string Check, indicates that this object is a Check object.
-    ledger_entry_type: LedgerEntryType,
-    /// The sender of the Check. Cashing the Check debits this address's balance.
-    account: &'a str,
-    /// The intended recipient of the Check. Only this address can cash the Check, using a `CheckCash`
-    /// transaction.
-    destination: &'a str,
-    /// A hint indicating which page of the destination's owner directory links to this object, in
-    /// case the directory consists of multiple pages.
-    destination_node: Option<&'a str>,
-    /// An arbitrary tag to further specify the destination for this `Check`, such as a hosted
-    /// recipient at the destination address.
-    destination_tag: Option<u32>,
-    /// Indicates the time after which this `Check` is considered expired.
-    expiration: Option<u32>,
+    pub ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no flags
     /// for `Check` objects. The value is always 0.
-    flags: u32,
+    pub flags: u32,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    index: &'a str,
+    pub index: &'a str,
+    /// The sender of the Check. Cashing the Check debits this address's balance.
+    pub account: &'a str,
+    /// The intended recipient of the Check. Only this address can cash the Check, using a `CheckCash`
+    /// transaction.
+    pub destination: &'a str,
+    /// A hint indicating which page of the destination's owner directory links to this object, in
+    /// case the directory consists of multiple pages.
+    pub destination_node: Option<&'a str>,
+    /// An arbitrary tag to further specify the destination for this `Check`, such as a hosted
+    /// recipient at the destination address.
+    pub destination_tag: Option<u32>,
+    /// Indicates the time after which this `Check` is considered expired.
+    pub expiration: Option<u32>,
     /// Arbitrary 256-bit hash provided by the sender as a specific reason or identifier for this Check.
     #[serde(rename = "InvoiceID")]
-    invoice_id: Option<&'a str>,
+    pub invoice_id: Option<&'a str>,
     /// A hint indicating which page of the sender's owner directory links to this object, in case
     /// the directory consists of multiple pages.
-    owner_node: &'a str,
+    pub owner_node: &'a str,
     /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
-    previous_txn_id: &'a str,
+    pub previous_txn_id: &'a str,
     /// The index of the ledger that contains the transaction that most recently modified this object.
-    previous_txn_lgr_seq: u32,
+    pub previous_txn_lgr_seq: u32,
     /// The maximum amount of currency this Check can debit the sender. If the Check is successfully
     /// cashed, the destination is credited in the same currency for up to this amount.
-    send_max: Amount,
+    pub send_max: Amount,
     /// The sequence number of the CheckCreate transaction that created this check.
-    sequence: u32,
+    pub sequence: u32,
     /// An arbitrary tag to further specify the source for this Check, such as a hosted recipient at
     /// the sender's address.
-    source_tag: Option<u32>,
+    pub source_tag: Option<u32>,
 }
 
 impl<'a> Default for Check<'a> {
     fn default() -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::Check,
+            flags: Default::default(),
+            index: Default::default(),
             account: Default::default(),
             destination: Default::default(),
             destination_node: Default::default(),
             destination_tag: Default::default(),
             expiration: Default::default(),
-            flags: Default::default(),
-            index: Default::default(),
             invoice_id: Default::default(),
             owner_node: Default::default(),
             previous_txn_id: Default::default(),
@@ -80,10 +80,10 @@ impl<'a> Model for Check<'a> {}
 
 impl<'a> Check<'a> {
     pub fn new(
-        account: &'a str,
-        destination: &'a str,
         flags: u32,
         index: &'a str,
+        account: &'a str,
+        destination: &'a str,
         owner_node: &'a str,
         previous_txn_id: &'a str,
         previous_txn_lgr_seq: u32,
@@ -97,13 +97,13 @@ impl<'a> Check<'a> {
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::Check,
+            flags,
+            index,
             account,
             destination,
             destination_node,
             destination_tag,
             expiration,
-            flags,
-            index,
             invoice_id,
             owner_node,
             previous_txn_id,
@@ -123,10 +123,10 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let check = Check::new(
-            "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
-            "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
             0,
             "49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0",
+            "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
+            "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
             "0000000000000000",
             "5463C6E08862A1FAE5EDAC12D70ADB16546A1F674930521295BC082494B62924",
             6,
@@ -140,7 +140,7 @@ mod test_serde {
         );
         let check_json = serde_json::to_string(&check).unwrap();
         let actual = check_json.as_str();
-        let expected = r#"{"LedgerEntryType":"Check","Account":"rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo","Destination":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","DestinationNode":"0000000000000000","DestinationTag":1,"Expiration":570113521,"Flags":0,"index":"49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0","InvoiceID":"46060241FABCF692D4D934BA2A6C4427CD4279083E38C77CBE642243E43BE291","OwnerNode":"0000000000000000","PreviousTxnID":"5463C6E08862A1FAE5EDAC12D70ADB16546A1F674930521295BC082494B62924","PreviousTxnLgrSeq":6,"SendMax":"100000000","Sequence":2}"#;
+        let expected = r#"{"LedgerEntryType":"Check","Flags":0,"index":"49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0","Account":"rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo","Destination":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","DestinationNode":"0000000000000000","DestinationTag":1,"Expiration":570113521,"InvoiceID":"46060241FABCF692D4D934BA2A6C4427CD4279083E38C77CBE642243E43BE291","OwnerNode":"0000000000000000","PreviousTxnID":"5463C6E08862A1FAE5EDAC12D70ADB16546A1F674930521295BC082494B62924","PreviousTxnLgrSeq":6,"SendMax":"100000000","Sequence":2}"#;
 
         assert_eq!(expected, actual)
     }
