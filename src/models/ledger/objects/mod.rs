@@ -4,6 +4,7 @@ pub mod amm;
 pub mod check;
 pub mod deposit_preauth;
 pub mod directory_node;
+pub mod escrow;
 
 pub use account_root::*;
 pub use amendments::*;
@@ -11,6 +12,7 @@ pub use amm::*;
 pub use check::*;
 pub use deposit_preauth::*;
 pub use directory_node::*;
+pub use escrow::*;
 
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
@@ -23,4 +25,5 @@ pub enum LedgerEntryType {
     Check = 0x0043,
     DepositPreauth = 0x0070,
     DirectoryNode = 0x0064,
+    Escrow = 0x0075,
 }
