@@ -2,11 +2,13 @@ pub mod account_root;
 pub mod amendments;
 pub mod amm;
 pub mod check;
+pub mod deposit_preauth;
 
 pub use account_root::*;
 pub use amendments::*;
 pub use amm::*;
 pub use check::*;
+pub use deposit_preauth::*;
 
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
@@ -17,4 +19,5 @@ pub enum LedgerEntryType {
     Amendments = 0x0066,
     AMM = 0x0079,
     Check = 0x0043,
+    DepositPreauth = 0x0070,
 }
