@@ -158,7 +158,7 @@ impl<'a> LedgerEntryError for LedgerEntry<'a> {
             signing_methods += 1
         }
         if signing_methods != 1 {
-            return Err(XRPLLedgerEntryException::DefineExactlyOneOf {
+            Err(XRPLLedgerEntryException::DefineExactlyOneOf {
                 field1: "index",
                 field2: "account_root",
                 field3: "check",
@@ -170,10 +170,10 @@ impl<'a> LedgerEntryError for LedgerEntry<'a> {
                 field9: "deposit_preauth",
                 field10: "ticket",
                 resource: "",
-            });
+            })
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
