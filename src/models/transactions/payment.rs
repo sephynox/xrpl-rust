@@ -187,23 +187,24 @@ impl<'a> PaymentError for Payment<'a> {
     fn _get_xrp_transaction_error(&self) -> Result<(), XRPLPaymentException> {
         if self.amount.is_xrp() && self.send_max.is_none() {
             if self.paths.is_some() {
-                return Err(XRPLPaymentException::IllegalOption {
+                Err(XRPLPaymentException::IllegalOption {
                     field: "paths",
                     context: "XRP to XRP payments",
                     resource: "",
-                });
-            }
-            if self.account == self.destination {
-                return Err(XRPLPaymentException::ValueEqualsValueInContext {
+                })
+            } else if self.account == self.destination {
+                Err(XRPLPaymentException::ValueEqualsValueInContext {
                     field1: "account",
                     field2: "destination",
                     context: "XRP to XRP Payments",
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     fn _get_partial_payment_error(&self) -> Result<(), XRPLPaymentException> {
@@ -212,29 +213,33 @@ impl<'a> PaymentError for Payment<'a> {
                 && send_max.is_xrp()
                 && self.amount.is_xrp()
             {
-                return Err(XRPLPaymentException::IllegalOption {
+                Err(XRPLPaymentException::IllegalOption {
                     field: "send_max",
                     context: "XRP to XRP non-partial payments",
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
         } else if self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment)) {
-            return Err(XRPLPaymentException::FlagRequiresField {
+            Err(XRPLPaymentException::FlagRequiresField {
                 flag: PaymentFlag::TfPartialPayment,
                 field: "send_max",
                 resource: "",
-            });
+            })
         } else if !self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment)) {
             if let Some(_deliver_min) = &self.deliver_min {
-                return Err(XRPLPaymentException::IllegalOption {
+                Err(XRPLPaymentException::IllegalOption {
                     field: "deliver_min",
                     context: "XRP to XRP non-partial payments",
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     fn _get_exchange_error(&self) -> Result<(), XRPLPaymentException> {
