@@ -96,6 +96,7 @@ macro_rules! serde_with_tag {
         $(#[$attr:meta])*
         pub struct $name:ident<$lt:lifetime> {
             $(
+                $(#[$doc:meta])*
                 $field:ident : $ty:ty,
             )*
         }
@@ -103,6 +104,7 @@ macro_rules! serde_with_tag {
         $(#[$attr])*
         pub struct $name<$lt> {
             $(
+                $(#[$doc])*
                 $field: $ty,
             )*
         }
@@ -154,6 +156,7 @@ macro_rules! serde_with_tag {
         $(#[$attr:meta])*
         pub struct $name:ident {
             $(
+                $(#[$doc:meta])*
                 $field:ident : $ty:ty,
             )*
         }
@@ -161,6 +164,7 @@ macro_rules! serde_with_tag {
         $(#[$attr])*
         pub struct $name {
             $(
+                $(#[$doc])*
                 $field: $ty,
             )*
         }
