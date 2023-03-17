@@ -125,14 +125,14 @@ impl<'a> Transaction for NFTokenCancelOffer<'a> {
 impl<'a> NFTokenCancelOfferError for NFTokenCancelOffer<'a> {
     fn _get_nftoken_offers_error(&self) -> Result<(), XRPLNFTokenCancelOfferException> {
         if self.nftoken_offers.is_empty() {
-            return Err(XRPLNFTokenCancelOfferException::CollectionEmpty {
+            Err(XRPLNFTokenCancelOfferException::CollectionEmpty {
                 field: "nftoken_offers",
                 r#type: stringify!(Vec),
                 resource: "",
-            });
+            })
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
