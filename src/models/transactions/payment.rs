@@ -307,7 +307,6 @@ mod test_payment_error {
     use alloc::string::ToString;
     use alloc::{borrow::Cow, vec};
 
-    use crate::models::transactions::XRPLPaymentException;
     use crate::models::{Amount, Model, PathStep, PaymentFlag, TransactionType};
 
     use super::Payment;

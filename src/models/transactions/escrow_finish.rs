@@ -181,7 +181,7 @@ impl<'a> EscrowFinish<'a> {
 
 #[cfg(test)]
 mod test_escrow_finish_errors {
-    use crate::models::transactions::XRPLEscrowFinishException;
+
     use crate::models::{Model, TransactionType};
     use alloc::string::ToString;
 

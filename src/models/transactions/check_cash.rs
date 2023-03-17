@@ -186,8 +186,6 @@ mod test_check_cash_error {
     use crate::models::{Model, TransactionType};
     use alloc::string::ToString;
 
-    use crate::models::transactions::XRPLCheckCashException;
-
     use super::CheckCash;
 
     #[test]

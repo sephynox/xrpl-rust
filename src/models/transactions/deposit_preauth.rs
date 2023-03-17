@@ -176,7 +176,7 @@ impl<'a> DepositPreauth<'a> {
 
 #[cfg(test)]
 mod test_deposit_preauth_exception {
-    use crate::models::transactions::XRPLDepositPreauthException;
+
     use crate::models::{Model, TransactionType};
     use alloc::string::ToString;
 

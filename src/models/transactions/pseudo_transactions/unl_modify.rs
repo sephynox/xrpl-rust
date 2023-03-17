@@ -121,7 +121,7 @@ impl<'a> UNLModify<'a> {
 
 #[cfg(test)]
 mod test_unl_modify_error {
-    use crate::models::transactions::XRPLUNLModifyException;
+
     use crate::models::{Model, TransactionType};
     use alloc::string::ToString;
 

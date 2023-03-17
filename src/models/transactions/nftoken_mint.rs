@@ -275,10 +275,9 @@ impl<'a> NFTokenMint<'a> {
 
 #[cfg(test)]
 mod test_nftoken_mint_error {
-    use crate::constants::{MAX_TRANSFER_FEE, MAX_URI_LENGTH};
-    use crate::models::transactions::XRPLNFTokenMintException;
+
     use crate::models::{Model, TransactionType};
-    use alloc::string::{String, ToString};
+    use alloc::string::ToString;
 
     use super::NFTokenMint;
 

@@ -203,7 +203,6 @@ mod test_nftoken_accept_offer_error {
     use alloc::borrow::Cow;
     use alloc::string::ToString;
 
-    use crate::models::transactions::XRPLNFTokenAcceptOfferException;
     use crate::models::{Amount, Model, TransactionType};
 
     use super::NFTokenAcceptOffer;
