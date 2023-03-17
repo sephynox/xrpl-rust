@@ -79,15 +79,15 @@ impl<'a> UNLModifyError for UNLModify<'a> {
     fn _get_unl_modify_error(&self) -> Result<(), XRPLUNLModifyException> {
         let possible_unlmodify_disabling: [u8; 2] = [0, 1];
         if !possible_unlmodify_disabling.contains(&self.unlmodify_disabling) {
-            return Err(XRPLUNLModifyException::InvalidValue {
+            Err(XRPLUNLModifyException::InvalidValue {
                 field: "unlmodify_disabling",
                 expected: "0 or 1",
                 found: self.unlmodify_disabling as u32,
                 resource: "",
-            });
+            })
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
