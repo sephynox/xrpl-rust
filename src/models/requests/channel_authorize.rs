@@ -146,7 +146,7 @@ impl<'a> ChannelAuthorize<'a> {
 
 #[cfg(test)]
 mod test_channel_authorize_errors {
-    use crate::models::requests::XRPLChannelAuthorizeException;
+
     use crate::{
         constants::CryptoAlgorithm,
         models::{Model, RequestMethod},

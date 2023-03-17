@@ -432,11 +432,8 @@ impl<'a> AccountSet<'a> {
 }
 #[cfg(test)]
 mod test_account_set_errors {
-    use crate::models::transactions::XRPLAccountSetException;
-    use crate::{
-        constants::{MAX_DOMAIN_LENGTH, MAX_TRANSFER_RATE, MIN_TRANSFER_RATE},
-        models::{AccountSetFlag, Model},
-    };
+
+    use crate::models::{AccountSetFlag, Model};
     use alloc::string::ToString;
 
     use super::AccountSet;

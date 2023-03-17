@@ -197,7 +197,6 @@ impl<'a> EscrowCreate<'a> {
 mod test_escrow_create_errors {
     use crate::models::{Amount, Model, TransactionType};
 
-    use crate::models::transactions::XRPLEscrowCreateException;
     use alloc::borrow::Cow;
     use alloc::string::ToString;
 

@@ -288,7 +288,6 @@ mod test_nftoken_create_offer_error {
     use alloc::string::ToString;
     use alloc::{borrow::Cow, vec};
 
-    use crate::models::transactions::XRPLNFTokenCreateOfferException;
     use crate::models::{Amount, Model, NFTokenCreateOfferFlag, TransactionType};
 
     use super::NFTokenCreateOffer;

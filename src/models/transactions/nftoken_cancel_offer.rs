@@ -175,7 +175,6 @@ mod test_nftoken_cancel_offer_error {
     use alloc::string::ToString;
     use alloc::vec::Vec;
 
-    use crate::models::transactions::XRPLNFTokenCancelOfferException;
     use crate::models::{Model, TransactionType};
 
     use super::NFTokenCancelOffer;
