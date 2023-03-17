@@ -131,21 +131,17 @@ impl<'a> Transaction for EscrowCreate<'a> {
 
 impl<'a> EscrowCreateError for EscrowCreate<'a> {
     fn _get_finish_after_error(&self) -> Result<(), XRPLEscrowCreateException> {
-        if let Some(finish_after) = self.finish_after {
-            if let Some(cancel_after) = self.cancel_after {
-                if finish_after >= cancel_after {
-                    return Err(XRPLEscrowCreateException::ValueBelowValue {
-                        field1: "cancel_after",
-                        field2: "finish_after",
-                        field1_val: cancel_after,
-                        field2_val: finish_after,
-                        resource: "",
-                    });
-                }
-            }
-        }
-
-        Ok(())
+        if let (Some(finish_after), Some(cancel_after)) = (self.finish_after, self.cancel_after) {
+            if finish_after >= cancel_after {
+                 Err(XRPLEscrowCreateException::ValueBelowValue {
+                    field1: "cancel_after",
+                    field2: "finish_after",
+                    field1_val: cancel_after,
+                    field2_val: finish_after,
+                    resource: "",
+                })
+            } else { Ok(()) }
+        } else { Ok(()) }
     }
 }
 
