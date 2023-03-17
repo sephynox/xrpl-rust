@@ -269,7 +269,7 @@ macro_rules! serde_with_tag {
                     )*
                 }
 
-                let hash_map: $crate::_serde::HashMap<&'de str, Helper> = crate::_serde::HashMap::deserialize(deserializer)?;
+                let hash_map: $crate::_serde::HashMap<&'de str, Helper> = $crate::_serde::HashMap::deserialize(deserializer)?;
                 let helper = hash_map.get(stringify!($name)).unwrap();
 
                 Ok(Self {
