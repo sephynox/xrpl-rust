@@ -147,14 +147,16 @@ impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
     fn _get_nftoken_broker_fee_error(&self) -> Result<(), XRPLNFTokenAcceptOfferException> {
         if let Some(nftoken_broker_fee) = &self.nftoken_broker_fee {
             if nftoken_broker_fee.get_value_as_u32() == 0 {
-                return Err(XRPLNFTokenAcceptOfferException::ValueZero {
+                Err(XRPLNFTokenAcceptOfferException::ValueZero {
                     field: "nftoken_broker_fee",
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
