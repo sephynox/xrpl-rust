@@ -1,5 +1,6 @@
 use crate::models::ledger::LedgerEntryType;
 use crate::models::Model;
+use alloc::borrow::Cow;
 use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
@@ -21,9 +22,9 @@ pub struct FeeSettings<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// The transaction cost of the "reference transaction" in drops of XRP as hexadecimal.
-    pub base_fee: &'a str,
+    pub base_fee: Cow<'a, str>,
     /// The BaseFee translated into "fee units".
     pub reference_fee_units: u32,
     /// The base reserve for an account in the XRP Ledger, as drops of XRP.
@@ -50,8 +51,8 @@ impl<'a> Model for FeeSettings<'a> {}
 
 impl<'a> FeeSettings<'a> {
     pub fn new(
-        index: &'a str,
-        base_fee: &'a str,
+        index: Cow<'a, str>,
+        base_fee: Cow<'a, str>,
         reference_fee_units: u32,
         reserve_base: u32,
         reserve_increment: u32,
@@ -75,8 +76,8 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let fee_settings = FeeSettings::new(
-            "4BC50C9B0D8515D3EAAE1E74B29A95804346C491EE1A95BF25E4AAB854A6A651",
-            "000000000000000A",
+            Cow::from("4BC50C9B0D8515D3EAAE1E74B29A95804346C491EE1A95BF25E4AAB854A6A651"),
+            Cow::from("000000000000000A"),
             10,
             20000000,
             5000000,

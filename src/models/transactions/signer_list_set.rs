@@ -19,8 +19,8 @@ serde_with_tag! {
     #[derive(Debug, PartialEq, Eq, Default, Clone, new)]
     #[skip_serializing_none]
     pub struct SignerEntry {
-        account: Cow<'static, str>,
-        signer_weight: u16,
+        pub account: Cow<'static, str>,
+        pub signer_weight: u16,
     }
 }
 

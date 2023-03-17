@@ -1,5 +1,6 @@
 use crate::models::ledger::LedgerEntryType;
 use crate::models::Model;
+use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
@@ -31,11 +32,11 @@ pub struct DirectoryNode<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// (`Offer` Directories only) DEPRECATED. Do not use.
-    pub exchange_rate: Option<&'a str>,
+    pub exchange_rate: Option<Cow<'a, str>>,
     /// The contents of this `Directory`: an array of IDs of other objects.
-    pub indexes: Vec<&'a str>,
+    pub indexes: Vec<Cow<'a, str>>,
     /// If this `Directory` consists of multiple pages, this ID links to the next object in the chain,
     /// wrapping around at the end.
     pub index_next: Option<u64>,
@@ -43,21 +44,21 @@ pub struct DirectoryNode<'a> {
     /// chain, wrapping around at the beginning.
     pub index_previous: Option<u64>,
     /// (Owner Directories only) The address of the account that owns the objects in this directory.
-    pub owner: Option<&'a str>,
+    pub owner: Option<Cow<'a, str>>,
     /// The ID of root object for this directory.
-    pub root_index: &'a str,
+    pub root_index: Cow<'a, str>,
     /// (`Offer` `Directories` only) The currency code of the `TakerGets` amount from the offers in this
     /// directory.
-    pub taker_gets_currency: Option<&'a str>,
+    pub taker_gets_currency: Option<Cow<'a, str>>,
     /// (`Offer` `Directories` only) The issuer of the `TakerGets` amount from the offers in this
     /// directory.
-    pub taker_gets_issuer: Option<&'a str>,
+    pub taker_gets_issuer: Option<Cow<'a, str>>,
     /// (`Offer` `Directories` only) The currency code of the `TakerPays` amount from the offers in this
     /// directory.
-    pub taker_pays_currency: Option<&'a str>,
+    pub taker_pays_currency: Option<Cow<'a, str>>,
     /// (`Offer` `Directories` only) The issuer of the `TakerPays` amount from the offers in this
     /// directory.
-    pub taker_pays_issuer: Option<&'a str>,
+    pub taker_pays_issuer: Option<Cow<'a, str>>,
 }
 
 impl<'a> Default for DirectoryNode<'a> {
@@ -84,17 +85,17 @@ impl<'a> Model for DirectoryNode<'a> {}
 
 impl<'a> DirectoryNode<'a> {
     pub fn new(
-        index: &'a str,
-        indexes: Vec<&'a str>,
-        root_index: &'a str,
-        exchange_rate: Option<&'a str>,
+        index: Cow<'a, str>,
+        indexes: Vec<Cow<'a, str>>,
+        root_index: Cow<'a, str>,
+        exchange_rate: Option<Cow<'a, str>>,
         index_next: Option<u64>,
         index_previous: Option<u64>,
-        owner: Option<&'a str>,
-        taker_gets_currency: Option<&'a str>,
-        taker_gets_issuer: Option<&'a str>,
-        taker_pays_currency: Option<&'a str>,
-        taker_pays_issuer: Option<&'a str>,
+        owner: Option<Cow<'a, str>>,
+        taker_gets_currency: Option<Cow<'a, str>>,
+        taker_gets_issuer: Option<Cow<'a, str>>,
+        taker_pays_currency: Option<Cow<'a, str>>,
+        taker_pays_issuer: Option<Cow<'a, str>>,
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::DirectoryNode,
@@ -122,17 +123,19 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let directory_node = DirectoryNode::new(
-            "1BBEF97EDE88D40CEE2ADE6FEF121166AFE80D99EBADB01A4F069BA8FF484000",
-            vec!["AD7EAE148287EF12D213A251015F86E6D4BD34B3C4A0A1ED9A17198373F908AD"],
-            "1BBEF97EDE88D40CEE2ADE6FEF121166AFE80D99EBADB01A4F069BA8FF484000",
-            Some("4F069BA8FF484000"),
+            Cow::from("1BBEF97EDE88D40CEE2ADE6FEF121166AFE80D99EBADB01A4F069BA8FF484000"),
+            vec![Cow::from(
+                "AD7EAE148287EF12D213A251015F86E6D4BD34B3C4A0A1ED9A17198373F908AD",
+            )],
+            Cow::from("1BBEF97EDE88D40CEE2ADE6FEF121166AFE80D99EBADB01A4F069BA8FF484000"),
+            Some(Cow::from("4F069BA8FF484000")),
             None,
             None,
             None,
-            Some("0000000000000000000000000000000000000000"),
-            Some("0000000000000000000000000000000000000000"),
-            Some("0000000000000000000000004A50590000000000"),
-            Some("5BBC0F22F61D9224A110650CFE21CC0C4BE13098"),
+            Some(Cow::from("0000000000000000000000000000000000000000")),
+            Some(Cow::from("0000000000000000000000000000000000000000")),
+            Some(Cow::from("0000000000000000000000004A50590000000000")),
+            Some(Cow::from("5BBC0F22F61D9224A110650CFE21CC0C4BE13098")),
         );
         let directory_node_json = serde_json::to_string(&directory_node).unwrap();
         let actual = directory_node_json.as_str();

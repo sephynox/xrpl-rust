@@ -1,5 +1,6 @@
 use crate::models::ledger::LedgerEntryType;
 use crate::models::{Amount, Model};
+use alloc::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
@@ -21,18 +22,18 @@ pub struct Check<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// The sender of the `Check`. Cashing the `Check` debits this address's balance.
-    pub account: &'a str,
+    pub account: Cow<'a, str>,
     /// The intended recipient of the `Check`. Only this address can cash the `Check`, using a
     /// `CheckCash` transaction.
-    pub destination: &'a str,
+    pub destination: Cow<'a, str>,
     /// A hint indicating which page of the sender's owner directory links to this object, in case
     /// the directory consists of multiple pages.
-    pub owner_node: &'a str,
+    pub owner_node: Cow<'a, str>,
     /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
-    pub previous_txn_id: &'a str,
+    pub previous_txn_id: Cow<'a, str>,
     /// The index of the ledger that contains the transaction that most recently modified this object.
     pub previous_txn_lgr_seq: u32,
     /// The maximum amount of currency this Check can debit the sender. If the Check is successfully
@@ -42,7 +43,7 @@ pub struct Check<'a> {
     pub sequence: u32,
     /// A hint indicating which page of the destination's owner directory links to this object, in
     /// case the directory consists of multiple pages.
-    pub destination_node: Option<&'a str>,
+    pub destination_node: Option<Cow<'a, str>>,
     /// An arbitrary tag to further specify the destination for this `Check`, such as a hosted
     /// recipient at the destination address.
     pub destination_tag: Option<u32>,
@@ -50,7 +51,7 @@ pub struct Check<'a> {
     pub expiration: Option<u32>,
     /// Arbitrary 256-bit hash provided by the sender as a specific reason or identifier for this Check.
     #[serde(rename = "InvoiceID")]
-    pub invoice_id: Option<&'a str>,
+    pub invoice_id: Option<Cow<'a, str>>,
     /// An arbitrary tag to further specify the source for this Check, such as a hosted recipient at
     /// the sender's address.
     pub source_tag: Option<u32>,
@@ -82,18 +83,18 @@ impl<'a> Model for Check<'a> {}
 
 impl<'a> Check<'a> {
     pub fn new(
-        index: &'a str,
-        account: &'a str,
-        destination: &'a str,
-        owner_node: &'a str,
-        previous_txn_id: &'a str,
+        index: Cow<'a, str>,
+        account: Cow<'a, str>,
+        destination: Cow<'a, str>,
+        owner_node: Cow<'a, str>,
+        previous_txn_id: Cow<'a, str>,
         previous_txn_lgr_seq: u32,
         send_max: Amount,
         sequence: u32,
-        destination_node: Option<&'a str>,
+        destination_node: Option<Cow<'a, str>>,
         destination_tag: Option<u32>,
         expiration: Option<u32>,
-        invoice_id: Option<&'a str>,
+        invoice_id: Option<Cow<'a, str>>,
         source_tag: Option<u32>,
     ) -> Self {
         Self {
@@ -124,18 +125,20 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let check = Check::new(
-            "49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0",
-            "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
-            "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
-            "0000000000000000",
-            "5463C6E08862A1FAE5EDAC12D70ADB16546A1F674930521295BC082494B62924",
+            Cow::from("49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0"),
+            Cow::from("rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo"),
+            Cow::from("rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy"),
+            Cow::from("0000000000000000"),
+            Cow::from("5463C6E08862A1FAE5EDAC12D70ADB16546A1F674930521295BC082494B62924"),
             6,
             Amount::Xrp(Cow::from("100000000")),
             2,
-            Some("0000000000000000"),
+            Some(Cow::from("0000000000000000")),
             Some(1),
             Some(570113521),
-            Some("46060241FABCF692D4D934BA2A6C4427CD4279083E38C77CBE642243E43BE291"),
+            Some(Cow::from(
+                "46060241FABCF692D4D934BA2A6C4427CD4279083E38C77CBE642243E43BE291",
+            )),
             None,
         );
         let check_json = serde_json::to_string(&check).unwrap();

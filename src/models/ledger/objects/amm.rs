@@ -5,14 +5,14 @@ use alloc::vec::Vec;
 use derive_new::new;
 use serde::{ser::SerializeMap, Deserialize, Serialize};
 
-use crate::serialize_with_tag;
+use crate::serde_with_tag;
 use serde_with::skip_serializing_none;
 
-serialize_with_tag! {
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
-pub struct AuthAccount<'a> {
-    pub account: Cow<'a, str>,
-}
+serde_with_tag! {
+    #[derive(Debug, PartialEq, Eq, Clone, new, Default)]
+    pub struct AuthAccount<'a> {
+        pub account: Cow<'a, str>,
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new, Default)]
@@ -31,16 +31,17 @@ pub struct AuctionSlot<'a> {
     pub price: Amount,
     /// A list of at most 4 additional accounts that are authorized to trade at the discounted fee
     /// for this AMM instance.
+    #[serde(borrow = "'a")]
     pub auth_accounts: Option<Vec<AuthAccount<'a>>>,
 }
 
-serialize_with_tag! {
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
-pub struct VoteEntry<'a> {
-    pub account: Cow<'a, str>,
-    pub trading_fee: u16,
-    pub vote_weight: u32,
-}
+serde_with_tag! {
+    #[derive(Debug, PartialEq, Eq, Clone, new, Default)]
+    pub struct VoteEntry<'a> {
+        pub account: Cow<'a, str>,
+        pub trading_fee: u16,
+        pub vote_weight: u32,
+    }
 }
 
 /// The `AMM` object type describes a single Automated Market Maker (`AMM`) instance.
@@ -57,10 +58,10 @@ pub struct AMM<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// The address of the special account that holds this `AMM's` assets.
     #[serde(rename = "AMMAccount")]
-    pub amm_account: &'a str,
+    pub amm_account: Cow<'a, str>,
     /// The definition for one of the two assets this `AMM` holds. In JSON, this is an object with
     /// `currency` and `issuer` fields.
     pub asset: Currency,
@@ -77,6 +78,7 @@ pub struct AMM<'a> {
     /// in units of 1/100,000. The maximum value is 1000, for a 1% fee.
     pub trading_fee: u16,
     /// Details of the current owner of the auction slot, as an `AuctionSlot` object.
+    #[serde(borrow = "'a")]
     pub auction_slot: Option<AuctionSlot<'a>>,
     /// A list of vote objects, representing votes on the pool's trading fee.
     pub vote_slots: Option<Vec<VoteEntry<'a>>>,
@@ -103,8 +105,8 @@ impl<'a> Model for AMM<'a> {}
 
 impl<'a> AMM<'a> {
     pub fn new(
-        index: &'a str,
-        amm_account: &'a str,
+        index: Cow<'a, str>,
+        amm_account: Cow<'a, str>,
         asset: Currency,
         asset2: Currency,
         lptoken_balance: Amount,
@@ -137,8 +139,8 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let amm = AMM::new(
-            "ForTest",
-            "rE54zDvgnghAoPopCgvtiqWNq3dU5y836S",
+            Cow::from("ForTest"),
+            Cow::from("rE54zDvgnghAoPopCgvtiqWNq3dU5y836S"),
             Currency::Xrp,
             Currency::IssuedCurrency {
                 currency: Cow::from("TST"),

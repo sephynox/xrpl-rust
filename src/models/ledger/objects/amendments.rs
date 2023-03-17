@@ -5,15 +5,15 @@ use alloc::vec::Vec;
 use derive_new::new;
 use serde::{ser::SerializeMap, Deserialize, Serialize};
 
-use crate::serialize_with_tag;
+use crate::serde_with_tag;
 use serde_with::skip_serializing_none;
 
-serialize_with_tag! {
+serde_with_tag! {
     /// `<https://xrpl.org/amendments-object.html#amendments-fields>`
-    #[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
+    #[derive(Debug, PartialEq, Eq, Clone, new, Default)]
     pub struct Majority<'a> {
         /// The Amendment ID of the pending amendment.
-        pub amendment: &'a str,
+        pub amendment: Cow<'a, str>,
         /// The `close_time` field of the ledger version where this amendment most recently gained a
         /// majority.
         pub close_time: u32,
@@ -37,12 +37,13 @@ pub struct Amendments<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// Array of 256-bit amendment IDs for all currently enabled amendments. If omitted, there are
     /// no enabled amendments.
     pub amendments: Option<Vec<Cow<'a, str>>>,
     /// Array of objects describing the status of amendments that have majority support but are not
     /// yet enabled. If omitted, there are no pending amendments with majority support.
+    #[serde(borrow = "'a")]
     pub majorities: Option<Vec<Majority<'a>>>,
 }
 
@@ -62,7 +63,7 @@ impl<'a> Default for Amendments<'a> {
 
 impl<'a> Amendments<'a> {
     pub fn new(
-        index: &'a str,
+        index: Cow<'a, str>,
         amendments: Option<Vec<Cow<'a, str>>>,
         majorities: Option<Vec<Majority<'a>>>,
     ) -> Self {
@@ -85,7 +86,7 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let amendments = Amendments::new(
-            "7DB0788C020F02780A673DC74757F23823FA3014C1866E72CC4CD8B226CD6EF4",
+            Cow::from("7DB0788C020F02780A673DC74757F23823FA3014C1866E72CC4CD8B226CD6EF4"),
             Some(vec![
                 Cow::from("42426C4D4F1009EE67080A9B7965B44656D7714D104A72F9B4369F97ABF044EE"),
                 Cow::from("4C97EBA926031A7CF7D7B36FDE3ED66DDA5421192D63DE53FFB46E43B9DC8373"),
@@ -93,7 +94,9 @@ mod test_serde {
                 Cow::from("740352F2412A9909880C23A559FCECEDA3BE2126FED62FC7660D628A06927F11"),
             ]),
             Some(vec![Majority {
-                amendment: "1562511F573A19AE9BD103B5D6B9E01B3B46805AEC5D3C4805C902B514399146",
+                amendment: Cow::from(
+                    "1562511F573A19AE9BD103B5D6B9E01B3B46805AEC5D3C4805C902B514399146",
+                ),
                 close_time: 535589001,
             }]),
         );

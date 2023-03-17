@@ -131,7 +131,7 @@ pub(crate) mod currency_xrp {
         }
 
         // TODO: utilize anyhow and thiserror
-        Err("Could not deserialize XRP currency.").map_err(D::Error::custom)
+        Err("Could not deserialize XRP currency.").map_err(Error::custom)
     }
 }
 
@@ -139,18 +139,20 @@ pub(crate) mod currency_xrp {
 // TODO: Find a way to `#[skip_serializing_none]`
 // TODO: Find a more generic way
 #[macro_export]
-macro_rules! serialize_with_tag {
+macro_rules! serde_with_tag {
     (
         $(#[$attr:meta])*
         pub struct $name:ident<$lt:lifetime> {
             $(
-                pub $field:ident : $ty:ty,
+                $(#[$doc:meta])*
+                pub $field:ident: $ty:ty,
             )*
         }
     ) => {
         $(#[$attr])*
         pub struct $name<$lt> {
             $(
+                $(#[$doc])*
                 pub $field: $ty,
             )*
         }
@@ -162,8 +164,8 @@ macro_rules! serialize_with_tag {
             {
                 #[derive(Serialize)]
                 #[serde(rename_all = "PascalCase")]
-                $(#[$attr])*
-                pub struct Helper<$lt> {
+                #[skip_serializing_none]
+                struct Helper<$lt> {
                     $(
                         $field: $ty,
                     )*
@@ -181,19 +183,47 @@ macro_rules! serialize_with_tag {
                 state.end()
             }
         }
+
+        impl<'de: $lt, $lt> ::serde::Deserialize<'de> for $name<$lt> {
+            #[allow(non_snake_case)]
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                #[derive(Deserialize)]
+                #[serde(rename_all = "PascalCase")]
+                #[skip_serializing_none]
+                struct Helper<$lt> {
+                    $(
+                        $field: $ty,
+                    )*
+                }
+
+                let hash_map: crate::_serde::HashMap<&$lt str, Helper<$lt>> = crate::_serde::HashMap::deserialize(deserializer)?;
+                let helper = hash_map.get(stringify!($name)).unwrap();
+
+                Ok(Self {
+                    $(
+                        $field: helper.$field.clone().into(),
+                    )*
+                })
+            }
+        }
     };
     (
         $(#[$attr:meta])*
         pub struct $name:ident {
             $(
-                $field:ident : $ty:ty,
+                $(#[$doc:meta])*
+                pub $field:ident: $ty:ty,
             )*
         }
     ) => {
         $(#[$attr])*
         pub struct $name {
             $(
-                $field: $ty,
+                $(#[$doc])*
+                pub $field: $ty,
             )*
         }
 
@@ -204,8 +234,8 @@ macro_rules! serialize_with_tag {
             {
                 #[derive(Serialize)]
                 #[serde(rename_all = "PascalCase")]
-                $(#[$attr])*
-                pub struct Helper {
+                #[skip_serializing_none]
+                struct Helper {
                     $(
                         $field: $ty,
                     )*
@@ -221,6 +251,32 @@ macro_rules! serialize_with_tag {
                 state.serialize_key(stringify!($name))?;
                 state.serialize_value(&helper)?;
                 state.end()
+            }
+        }
+
+        impl<'de> ::serde::Deserialize<'de> for $name {
+            #[allow(non_snake_case)]
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                #[derive(Deserialize)]
+                #[serde(rename_all = "PascalCase")]
+                #[skip_serializing_none]
+                struct Helper {
+                    $(
+                        $field: $ty,
+                    )*
+                }
+
+                let hash_map: crate::_serde::HashMap<&'de str, Helper> = crate::_serde::HashMap::deserialize(deserializer)?;
+                let helper = hash_map.get(stringify!($name)).unwrap();
+
+                Ok(Self {
+                    $(
+                        $field: helper.$field.clone().into(),
+                    )*
+                })
             }
         }
     };

@@ -1,6 +1,7 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
 use crate::models::Model;
+use alloc::borrow::Cow;
 
 use alloc::vec::Vec;
 use derive_new::new;
@@ -8,7 +9,7 @@ use serde::{ser::SerializeMap, Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum_macros::{AsRefStr, Display, EnumIter};
 
-use crate::serialize_with_tag;
+use crate::serde_with_tag;
 use serde_with::skip_serializing_none;
 
 #[derive(
@@ -20,19 +21,19 @@ pub enum SignerListFlag {
     LsfOneOwnerCount = 0x00010000,
 }
 
-serialize_with_tag! {
+serde_with_tag! {
     /// Each member of the SignerEntries field is an object that describes that signer in the list.
     ///
     /// `<https://xrpl.org/signerlist.html#signer-entry-object>`
-    #[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
+    #[derive(Debug, PartialEq, Eq, Clone, new, Default)]
     pub struct SignerEntry<'a>{
         /// An XRP Ledger address whose signature contributes to the multi-signature.
-        pub account: &'a str,
+        pub account: Cow<'a, str>,
         /// The weight of a signature from this signer.
         pub signer_weight: u16,
         /// Arbitrary hexadecimal data. This can be used to identify the signer or for
         /// other, related purposes.
-        pub wallet_locator: Option<&'a str>,
+        pub wallet_locator: Option<Cow<'a, str>>,
     }
 }
 
@@ -53,18 +54,19 @@ pub struct SignerList<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// A hint indicating which page of the owner directory links to this object, in case
     /// the directory consists of multiple pages.
-    pub owner_node: &'a str,
+    pub owner_node: Cow<'a, str>,
     /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
-    pub previous_txn_id: &'a str,
+    pub previous_txn_id: Cow<'a, str>,
     /// The index of the ledger that contains the transaction that most recently
     /// modified this object.
     pub previous_txn_lgr_seq: u32,
     /// An array of Signer Entry objects representing the parties who are part of this
     /// signer list.
+    #[serde(borrow = "'a")]
     pub signer_entries: Vec<SignerEntry<'a>>,
     /// An ID for this signer list. Currently always set to 0.
     #[serde(rename = "SignerListID")]
@@ -96,9 +98,9 @@ impl<'a> Model for SignerList<'a> {}
 impl<'a> SignerList<'a> {
     pub fn new(
         flags: Vec<SignerListFlag>,
-        index: &'a str,
-        owner_node: &'a str,
-        previous_txn_id: &'a str,
+        index: Cow<'a, str>,
+        owner_node: Cow<'a, str>,
+        previous_txn_id: Cow<'a, str>,
         previous_txn_lgr_seq: u32,
         signer_entries: Vec<SignerEntry<'a>>,
         signer_list_id: u32,
@@ -127,14 +129,14 @@ mod test_serde {
     fn test_serialize() {
         let signer_list = SignerList::new(
             vec![],
-            "A9C28A28B85CD533217F5C0A0C7767666B093FA58A0F2D80026FCC4CD932DDC7",
-            "0000000000000000",
-            "5904C0DC72C58A83AEFED2FFC5386356AA83FCA6A88C89D00646E51E687CDBE4",
+            Cow::from("A9C28A28B85CD533217F5C0A0C7767666B093FA58A0F2D80026FCC4CD932DDC7"),
+            Cow::from("0000000000000000"),
+            Cow::from("5904C0DC72C58A83AEFED2FFC5386356AA83FCA6A88C89D00646E51E687CDBE4"),
             16061435,
             vec![
-                SignerEntry::new("rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW", 2, None),
-                SignerEntry::new("raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n", 1, None),
-                SignerEntry::new("rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v", 1, None),
+                SignerEntry::new(Cow::from("rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW"), 2, None),
+                SignerEntry::new(Cow::from("raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n"), 1, None),
+                SignerEntry::new(Cow::from("rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v"), 1, None),
             ],
             0,
             3,

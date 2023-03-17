@@ -1,6 +1,7 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
 use crate::models::{Amount, Model};
+use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -58,15 +59,15 @@ pub struct AccountRoot<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// The identifying (classic) address of this account.
-    pub account: &'a str,
+    pub account: Cow<'a, str>,
     /// The number of objects this account owns in the ledger, which contributes to its owner
     /// reserve.
     pub owner_count: u32,
     /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
-    pub previous_txn_id: &'a str,
+    pub previous_txn_id: Cow<'a, str>,
     /// The index of the ledger that contains the transaction that most recently modified this object.
     pub previous_txn_lgr_seq: u32,
     /// The sequence number of the next valid transaction for this account.
@@ -75,7 +76,7 @@ pub struct AccountRoot<'a> {
     /// be enabled to use the `AccountTxnID` transaction field. To enable it, send an `AccountSet`
     /// transaction with the `asfAccountTxnID` flag enabled.
     #[serde(rename = "AccountTxnID")]
-    pub account_txn_id: Option<&'a str>,
+    pub account_txn_id: Option<Cow<'a, str>>,
     /// The account's current XRP balance in drops, represented as a string.
     pub balance: Option<Amount>,
     /// How many total of this account's issued non-fungible tokens have been burned. This number
@@ -84,23 +85,23 @@ pub struct AccountRoot<'a> {
     pub burned_nftokens: Option<u32>,
     /// A domain associated with this account. In JSON, this is the hexadecimal for the ASCII
     /// representation of the domain. Cannot be more than 256 bytes in length.
-    pub domain: Option<&'a str>,
+    pub domain: Option<Cow<'a, str>>,
     /// The md5 hash of an email address. Clients can use this to look up an avatar through services
     /// such as Gravatar
-    pub email_hash: Option<&'a str>,
+    pub email_hash: Option<Cow<'a, str>>,
     /// A public key that may be used to send encrypted messages to this account. In JSON, uses
     /// hexadecimal. Must be exactly 33 bytes, with the first byte indicating the key type: 0x02 or
     /// 0x03 for secp256k1 keys, 0xED for Ed25519 keys.
-    pub message_key: Option<&'a str>,
+    pub message_key: Option<Cow<'a, str>>,
     /// How many total non-fungible tokens have been minted by and on behalf of this account.
     #[serde(rename = "MintedNFTokens")]
     pub minted_nftokens: Option<u32>,
     /// Another account that can mint non-fungible tokens on behalf of this account.
     #[serde(rename = "NFTokenMinter")]
-    pub nftoken_minter: Option<&'a str>,
+    pub nftoken_minter: Option<Cow<'a, str>>,
     /// The address of a key pair that can be used to sign transactions for this account instead of
     /// the master key. Use a `SetRegularKey` transaction to change this value.
-    pub regular_key: Option<&'a str>,
+    pub regular_key: Option<Cow<'a, str>>,
     /// How many `Tickets` this account owns in the ledger. This is updated automatically to ensure
     /// that the account stays within the hard limit of 250 Tickets at a time. This field is omitted
     /// if the account has zero `Tickets`.
@@ -111,7 +112,7 @@ pub struct AccountRoot<'a> {
     /// A transfer fee to charge other users for sending currency issued by this account to each other.
     pub transfer_rate: Option<u32>,
     /// An arbitrary 256-bit value that users can set.
-    pub wallet_locator: Option<&'a str>,
+    pub wallet_locator: Option<Cow<'a, str>>,
     /// Unused. (The code supports this field but there is no way to set it.)
     pub wallet_size: Option<u32>,
 }
@@ -150,25 +151,25 @@ impl<'a> Model for AccountRoot<'a> {}
 impl<'a> AccountRoot<'a> {
     pub fn new(
         flags: Vec<AccountRootFlag>,
-        index: &'a str,
-        account: &'a str,
+        index: Cow<'a, str>,
+        account: Cow<'a, str>,
         owner_count: u32,
-        previous_txn_id: &'a str,
+        previous_txn_id: Cow<'a, str>,
         previous_txn_lgr_seq: u32,
         sequence: u32,
-        account_txn_id: Option<&'a str>,
+        account_txn_id: Option<Cow<'a, str>>,
         balance: Option<Amount>,
         burned_nftokens: Option<u32>,
-        domain: Option<&'a str>,
-        email_hash: Option<&'a str>,
-        message_key: Option<&'a str>,
+        domain: Option<Cow<'a, str>>,
+        email_hash: Option<Cow<'a, str>>,
+        message_key: Option<Cow<'a, str>>,
         minted_nftokens: Option<u32>,
-        nftoken_minter: Option<&'a str>,
-        regular_key: Option<&'a str>,
+        nftoken_minter: Option<Cow<'a, str>>,
+        regular_key: Option<Cow<'a, str>>,
         ticket_count: Option<u8>,
         tick_size: Option<u8>,
         transfer_rate: Option<u32>,
-        wallet_locator: Option<&'a str>,
+        wallet_locator: Option<Cow<'a, str>>,
         wallet_size: Option<u32>,
     ) -> Self {
         Self {
@@ -208,18 +209,20 @@ mod test_serde {
     fn test_serialize() {
         let account_root = AccountRoot::new(
             vec![AccountRootFlag::LsfDefaultRipple],
-            "13F1A95D7AAB7108D5CE7EEAF504B2894B8C674E6D68499076441C4837282BF8",
-            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            Cow::from("13F1A95D7AAB7108D5CE7EEAF504B2894B8C674E6D68499076441C4837282BF8"),
+            Cow::from("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
             3,
-            "0D5FB50FA65C9FE1538FD7E398FFFE9D1908DFA4576D8D7A020040686F93C77D",
+            Cow::from("0D5FB50FA65C9FE1538FD7E398FFFE9D1908DFA4576D8D7A020040686F93C77D"),
             14091160,
             336,
-            Some("0D5FB50FA65C9FE1538FD7E398FFFE9D1908DFA4576D8D7A020040686F93C77D"),
+            Some(Cow::from(
+                "0D5FB50FA65C9FE1538FD7E398FFFE9D1908DFA4576D8D7A020040686F93C77D",
+            )),
             Some(Amount::Xrp(Cow::from("148446663"))),
             None,
-            Some("6D64756F31332E636F6D"),
-            Some("98B4375E1D753E5B91627516F6D70977"),
-            Some("0000000000000000000000070000000300"),
+            Some(Cow::from("6D64756F31332E636F6D")),
+            Some(Cow::from("98B4375E1D753E5B91627516F6D70977")),
+            Some(Cow::from("0000000000000000000000070000000300")),
             None,
             None,
             None,

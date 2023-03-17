@@ -1,5 +1,6 @@
 use crate::models::ledger::LedgerEntryType;
 use crate::models::Model;
+use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
@@ -29,12 +30,12 @@ pub struct LedgerHashes<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// **DEPRECATED** Do not use.
     pub first_ledger_sequence: u32,
     /// An array of up to 256 ledger hashes. The contents depend on which sub-type of `LedgerHashes`
     /// object this is.
-    pub hashes: Vec<&'a str>,
+    pub hashes: Vec<Cow<'a, str>>,
     /// The Ledger Index of the last entry in this object's `Hashes` array.
     pub last_ledger_sequence: u32,
 }
@@ -56,9 +57,9 @@ impl<'a> Model for LedgerHashes<'a> {}
 
 impl<'a> LedgerHashes<'a> {
     pub fn new(
-        index: &'a str,
+        index: Cow<'a, str>,
         first_ledger_sequence: u32,
-        hashes: Vec<&'a str>,
+        hashes: Vec<Cow<'a, str>>,
         last_ledger_sequence: u32,
     ) -> Self {
         Self {
@@ -80,14 +81,14 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let ledger_hashes = LedgerHashes::new(
-            "B4979A36CDC7F3D3D5C31A4EAE2AC7D7209DDA877588B9AFC66799692AB0D66B",
+            Cow::from("B4979A36CDC7F3D3D5C31A4EAE2AC7D7209DDA877588B9AFC66799692AB0D66B"),
             2,
             vec![
-                "D638208ADBD04CBB10DE7B645D3AB4BA31489379411A3A347151702B6401AA78",
-                "254D690864E418DDD9BCAC93F41B1F53B1AE693FC5FE667CE40205C322D1BE3B",
-                "A2B31D28905E2DEF926362822BC412B12ABF6942B73B72A32D46ED2ABB7ACCFA",
-                "AB4014846DF818A4B43D6B1686D0DE0644FE711577C5AB6F0B2A21CCEE280140",
-                "3383784E82A8BA45F4DD5EF4EE90A1B2D3B4571317DBAC37B859836ADDE644C1",
+                Cow::from("D638208ADBD04CBB10DE7B645D3AB4BA31489379411A3A347151702B6401AA78"),
+                Cow::from("254D690864E418DDD9BCAC93F41B1F53B1AE693FC5FE667CE40205C322D1BE3B"),
+                Cow::from("A2B31D28905E2DEF926362822BC412B12ABF6942B73B72A32D46ED2ABB7ACCFA"),
+                Cow::from("AB4014846DF818A4B43D6B1686D0DE0644FE711577C5AB6F0B2A21CCEE280140"),
+                Cow::from("3383784E82A8BA45F4DD5EF4EE90A1B2D3B4571317DBAC37B859836ADDE644C1"),
             ],
             33872029,
         );

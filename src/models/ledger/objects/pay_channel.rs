@@ -1,5 +1,6 @@
 use crate::models::ledger::LedgerEntryType;
 use crate::models::{Amount, Model};
+use alloc::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
@@ -22,9 +23,9 @@ pub struct PayChannel<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// The source address that owns this payment channel.
-    pub account: &'a str,
+    pub account: Cow<'a, str>,
     /// Total XRP, in drops, that has been allocated to this channel. This includes XRP
     /// that has been paid to the destination address.
     pub amount: Amount,
@@ -34,19 +35,19 @@ pub struct PayChannel<'a> {
     pub balance: Amount,
     /// The destination address for this payment channel. While the payment channel is open,
     /// this address is the only one that can receive XRP from the channel.
-    pub destination: &'a str,
+    pub destination: Cow<'a, str>,
     /// A hint indicating which page of the source address's owner directory links to this
     /// object, in case the directory consists of multiple pages.
-    pub owner_node: &'a str,
+    pub owner_node: Cow<'a, str>,
     /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
-    pub previous_txn_id: &'a str,
+    pub previous_txn_id: Cow<'a, str>,
     /// The index of the ledger that contains the transaction that most recently modified
     /// this object.
     pub previous_txn_lgr_seq: u32,
     /// Public key, in hexadecimal, of the key pair that can be used to sign claims against
     /// this channel. This can be any valid secp256k1 or Ed25519 public key.
-    pub public_key: &'a str,
+    pub public_key: Cow<'a, str>,
     /// Number of seconds the source address must wait to close the channel if it still has
     /// any XRP in it.
     pub settle_delay: u32,
@@ -57,7 +58,7 @@ pub struct PayChannel<'a> {
     pub destination_tag: Option<u32>,
     /// A hint indicating which page of the destination's owner directory links to this object,
     /// in case the directory consists of multiple pages.
-    pub destination_node: Option<&'a str>,
+    pub destination_node: Option<Cow<'a, str>>,
     /// The mutable expiration time for this payment channel, in seconds since the Ripple Epoch.
     pub expiration: Option<u32>,
     /// An arbitrary tag to further specify the source for this payment channel, such as a
@@ -93,19 +94,19 @@ impl<'a> Model for PayChannel<'a> {}
 
 impl<'a> PayChannel<'a> {
     pub fn new(
-        index: &'a str,
-        account: &'a str,
+        index: Cow<'a, str>,
+        account: Cow<'a, str>,
         amount: Amount,
         balance: Amount,
-        destination: &'a str,
-        owner_node: &'a str,
-        previous_txn_id: &'a str,
+        destination: Cow<'a, str>,
+        owner_node: Cow<'a, str>,
+        previous_txn_id: Cow<'a, str>,
         previous_txn_lgr_seq: u32,
-        public_key: &'a str,
+        public_key: Cow<'a, str>,
         settle_delay: u32,
         cancel_after: Option<u32>,
         destination_tag: Option<u32>,
-        destination_node: Option<&'a str>,
+        destination_node: Option<Cow<'a, str>>,
         expiration: Option<u32>,
         source_tag: Option<u32>,
     ) -> Self {
@@ -139,19 +140,19 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let pay_channel = PayChannel::new(
-            "96F76F27D8A327FC48753167EC04A46AA0E382E6F57F32FD12274144D00F1797",
-            "rBqb89MRQJnMPq8wTwEbtz4kvxrEDfcYvt",
+            Cow::from("96F76F27D8A327FC48753167EC04A46AA0E382E6F57F32FD12274144D00F1797"),
+            Cow::from("rBqb89MRQJnMPq8wTwEbtz4kvxrEDfcYvt"),
             Amount::Xrp(Cow::from("4325800")),
             Amount::Xrp(Cow::from("2323423")),
-            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            "0000000000000000",
-            "F0AB71E777B2DA54B86231E19B82554EF1F8211F92ECA473121C655BFC5329BF",
+            Cow::from("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
+            Cow::from("0000000000000000"),
+            Cow::from("F0AB71E777B2DA54B86231E19B82554EF1F8211F92ECA473121C655BFC5329BF"),
             14524914,
-            "32D2471DB72B27E3310F355BB33E339BF26F8392D5A93D3BC0FC3B566612DA0F0A",
+            Cow::from("32D2471DB72B27E3310F355BB33E339BF26F8392D5A93D3BC0FC3B566612DA0F0A"),
             3600,
             Some(536891313),
             Some(1002341),
-            Some("0000000000000000"),
+            Some(Cow::from("0000000000000000")),
             Some(536027313),
             Some(0),
         );

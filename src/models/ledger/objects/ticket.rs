@@ -1,5 +1,6 @@
 use crate::models::ledger::LedgerEntryType;
 use crate::models::Model;
+use alloc::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
@@ -20,15 +21,15 @@ pub struct Ticket<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// The account that owns this Ticket.
-    pub account: &'a str,
+    pub account: Cow<'a, str>,
     /// A hint indicating which page of the owner directory links to this object, in case the
     /// directory consists of multiple pages.
-    pub owner_node: &'a str,
+    pub owner_node: Cow<'a, str>,
     /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
-    pub previous_txn_id: &'a str,
+    pub previous_txn_id: Cow<'a, str>,
     /// The index of the ledger that contains the transaction that most recently
     /// modified this object.
     pub previous_txn_lgr_seq: u32,
@@ -55,10 +56,10 @@ impl<'a> Model for Ticket<'a> {}
 
 impl<'a> Ticket<'a> {
     pub fn new(
-        index: &'a str,
-        account: &'a str,
-        owner_node: &'a str,
-        previous_txn_id: &'a str,
+        index: Cow<'a, str>,
+        account: Cow<'a, str>,
+        owner_node: Cow<'a, str>,
+        previous_txn_id: Cow<'a, str>,
         previous_txn_lgr_seq: u32,
         ticket_sequence: u32,
     ) -> Self {
@@ -82,10 +83,10 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let ticket = Ticket::new(
-            "ForTest",
-            "rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de",
-            "0000000000000000",
-            "F19AD4577212D3BEACA0F75FE1BA1644F2E854D46E8D62E9C95D18E9708CBFB1",
+            Cow::from("ForTest"),
+            Cow::from("rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de"),
+            Cow::from("0000000000000000"),
+            Cow::from("F19AD4577212D3BEACA0F75FE1BA1644F2E854D46E8D62E9C95D18E9708CBFB1"),
             4,
             3,
         );

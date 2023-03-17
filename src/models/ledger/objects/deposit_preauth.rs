@@ -1,5 +1,6 @@
 use crate::models::ledger::LedgerEntryType;
 use crate::models::Model;
+use alloc::borrow::Cow;
 use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
@@ -21,17 +22,17 @@ pub struct DepositPreauth<'a> {
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
-    pub index: &'a str,
+    pub index: Cow<'a, str>,
     /// The account that granted the preauthorization.
-    pub account: &'a str,
+    pub account: Cow<'a, str>,
     /// The account that received the preauthorization.
-    pub authorize: &'a str,
+    pub authorize: Cow<'a, str>,
     /// A hint indicating which page of the sender's owner directory links to this object, in case
     /// the directory consists of multiple pages.
-    pub owner_node: &'a str,
+    pub owner_node: Cow<'a, str>,
     /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
-    pub previous_txn_id: &'a str,
+    pub previous_txn_id: Cow<'a, str>,
     /// The index of the ledger that contains the transaction that most recently modified this object.
     pub previous_txn_lgr_seq: u32,
 }
@@ -55,11 +56,11 @@ impl<'a> Model for DepositPreauth<'a> {}
 
 impl<'a> DepositPreauth<'a> {
     pub fn new(
-        index: &'a str,
-        account: &'a str,
-        authorize: &'a str,
-        owner_node: &'a str,
-        previous_txn_id: &'a str,
+        index: Cow<'a, str>,
+        account: Cow<'a, str>,
+        authorize: Cow<'a, str>,
+        owner_node: Cow<'a, str>,
+        previous_txn_id: Cow<'a, str>,
         previous_txn_lgr_seq: u32,
     ) -> Self {
         Self {
@@ -82,11 +83,11 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let deposit_preauth = DepositPreauth::new(
-            "4A255038CC3ADCC1A9C91509279B59908251728D0DAADB248FFE297D0F7E068C",
-            "rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8",
-            "rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de",
-            "0000000000000000",
-            "3E8964D5A86B3CD6B9ECB33310D4E073D64C865A5B866200AD2B7E29F8326702",
+            Cow::from("4A255038CC3ADCC1A9C91509279B59908251728D0DAADB248FFE297D0F7E068C"),
+            Cow::from("rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8"),
+            Cow::from("rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de"),
+            Cow::from("0000000000000000"),
+            Cow::from("3E8964D5A86B3CD6B9ECB33310D4E073D64C865A5B866200AD2B7E29F8326702"),
             7,
         );
         let deposit_preauth_json = serde_json::to_string(&deposit_preauth).unwrap();
