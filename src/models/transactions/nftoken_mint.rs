@@ -278,7 +278,7 @@ mod test_nftoken_mint_error {
     use crate::constants::{MAX_TRANSFER_FEE, MAX_URI_LENGTH};
     use crate::models::transactions::XRPLNFTokenMintException;
     use crate::models::{Model, TransactionType};
-    use alloc::string::ToString;
+    use alloc::string::{String, ToString};
 
     use super::NFTokenMint;
 
@@ -303,11 +303,7 @@ mod test_nftoken_mint_error {
             transfer_fee: None,
             uri: None,
         };
-        let _expected_error = XRPLNFTokenMintException::ValueEqualsValue {
-            field1: "issuer",
-            field2: "account",
-            resource: "",
-        };
+
         assert_eq!(
             nftoken_mint.validate().unwrap_err().to_string().as_str(),
             "The value of the field `issuer` is not allowed to be the same as the value of the field `account`. For more information see: "
@@ -335,12 +331,7 @@ mod test_nftoken_mint_error {
             transfer_fee: Some(50001),
             uri: None,
         };
-        let _expected_error = XRPLNFTokenMintException::ValueTooHigh {
-            field: "transfer_fee",
-            max: MAX_TRANSFER_FEE,
-            found: nftoken_mint.transfer_fee.unwrap(),
-            resource: "",
-        };
+
         assert_eq!(
             nftoken_mint.validate().unwrap_err().to_string().as_str(),
             "The field `transfer_fee` exceeds its maximum value (max 50000, found 50001). For more information see: "
@@ -366,14 +357,9 @@ mod test_nftoken_mint_error {
             nftoken_taxon: 0,
             issuer: None,
             transfer_fee: None,
-            uri: Some("wss://xrplcluster.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+            uri: Some(&*(0..513).map(|_| "a").collect::<String>()),
         };
-        let _expected_error = XRPLNFTokenMintException::ValueTooLong {
-            field: "uri",
-            max: MAX_URI_LENGTH,
-            found: nftoken_mint.uri.unwrap().len(),
-            resource: "",
-        };
+
         assert_eq!(
             nftoken_mint.validate().unwrap_err().to_string().as_str(),
             "The value of the field `uri` exceeds its maximum length of characters (max 512, found 513). For more information see: "
