@@ -127,14 +127,14 @@ impl<'a> DepositPreauthError for DepositPreauth<'a> {
         if (self.authorize.is_none() && self.unauthorize.is_none())
             || (self.authorize.is_some() && self.unauthorize.is_some())
         {
-            return Err(XRPLDepositPreauthException::DefineExactlyOneOf {
+            Err(XRPLDepositPreauthException::DefineExactlyOneOf {
                 field1: "authorize",
                 field2: "unauthorize",
                 resource: "",
-            });
+            })
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
