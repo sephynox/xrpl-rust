@@ -132,14 +132,14 @@ impl<'a> CheckCashError for CheckCash<'a> {
         if (self.amount.is_none() && self.deliver_min.is_none())
             || (self.amount.is_some() && self.deliver_min.is_some())
         {
-            return Err(XRPLCheckCashException::DefineExactlyOneOf {
+            Err(XRPLCheckCashException::DefineExactlyOneOf {
                 field1: "amount",
                 field2: "deliver_min",
                 resource: "",
-            });
+            })
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
