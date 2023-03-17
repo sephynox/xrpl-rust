@@ -198,11 +198,7 @@ mod test_nftoken_cancel_offer_error {
             signers: None,
             nftoken_offers: Vec::new(),
         };
-        let _expected_error = XRPLNFTokenCancelOfferException::CollectionEmpty {
-            field: "nftoken_offers",
-            r#type: stringify!(Vec),
-            resource: "",
-        };
+
         assert_eq!(
             nftoken_cancel_offer.validate().unwrap_err().to_string().as_str(),
             "The value of the field `nftoken_offers` is not allowed to be empty (type `Vec`). If the field is optional, define it to be `None`. For more information see: "

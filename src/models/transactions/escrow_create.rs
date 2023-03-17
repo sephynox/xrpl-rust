@@ -226,13 +226,7 @@ mod test_escrow_create_errors {
             finish_after: Some(14359039),
             condition: None,
         };
-        let _expected_error = XRPLEscrowCreateException::ValueBelowValue {
-            field1: "cancel_after",
-            field2: "finish_after",
-            field1_val: 13298498,
-            field2_val: 14359039,
-            resource: "",
-        };
+
         assert_eq!(
             escrow_create.validate().unwrap_err().to_string().as_str(),
             "The value of the field `cancel_after` is not allowed to be below the value of the field `finish_after` (max 14359039, found 13298498). For more information see: "

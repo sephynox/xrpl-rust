@@ -292,11 +292,7 @@ mod test_signer_list_set_error {
                 signer_weight: 2,
             }]),
         };
-        let _expected_error = XRPLSignerListSetException::ValueCausesValueDeletion {
-            field1: "signer_entries",
-            field2: "signer_quorum",
-            resource: "",
-        };
+
         assert_eq!(
             signer_list_set.validate().unwrap_err().to_string().as_str(),
             "The value of the field `signer_entries` can not be defined with the field `signer_quorum` because it would cause the deletion of `signer_entries`. For more information see: "
@@ -304,12 +300,7 @@ mod test_signer_list_set_error {
 
         signer_list_set.signer_quorum = 3;
         signer_list_set.signer_entries = None;
-        let _expected_error = XRPLSignerListSetException::InvalidValueForValueDeletion {
-            field: "signer_quorum",
-            expected: 0,
-            found: signer_list_set.signer_quorum,
-            resource: "",
-        };
+
         assert_eq!(
             signer_list_set.validate().unwrap_err().to_string().as_str(),
             "The field `signer_quorum` has the wrong value to be deleted (expected 0, found 3). For more information see: "
@@ -335,12 +326,7 @@ mod test_signer_list_set_error {
             signer_quorum: 3,
             signer_entries: Some(vec![]),
         };
-        let _expected_error = XRPLSignerListSetException::CollectionTooFewItems {
-            field: "signer_entries",
-            min: 1_usize,
-            found: signer_list_set.signer_entries.clone().unwrap().len(),
-            resource: "",
-        };
+
         assert_eq!(
             signer_list_set.validate().unwrap_err().to_string().as_str(),
             "The value of the field `signer_entries` has too few items in it (min 1, found 0). For more information see: "
@@ -384,12 +370,7 @@ mod test_signer_list_set_error {
                 signer_weight: 2,
             },
         ]);
-        let _expected_error = XRPLSignerListSetException::CollectionTooManyItems {
-            field: "signer_entries",
-            max: 8_usize,
-            found: signer_list_set.signer_entries.clone().unwrap().len(),
-            resource: "",
-        };
+
         assert_eq!(
             signer_list_set.validate().unwrap_err().to_string().as_str(),
             "The value of the field `signer_entries` has too many items in it (max 8, found 9). For more information see: "
@@ -409,11 +390,7 @@ mod test_signer_list_set_error {
                 signer_weight: 2,
             },
         ]);
-        let _expected_error = XRPLSignerListSetException::CollectionInvalidItem {
-            field: "signer_entries",
-            found: signer_list_set.account,
-            resource: "",
-        };
+
         assert_eq!(
             signer_list_set.validate().unwrap_err().to_string().as_str(),
             "The field `signer_entries` contains an invalid value (found rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb). For more information see: "
@@ -424,11 +401,7 @@ mod test_signer_list_set_error {
             signer_weight: 3,
         }]);
         signer_list_set.signer_quorum = 10;
-        let _expected_error = XRPLSignerListSetException::SignerQuorumExceedsSignerWeight {
-            max: 3,
-            found: signer_list_set.signer_quorum,
-            resource: "",
-        };
+
         assert_eq!(
             signer_list_set.validate().unwrap_err().to_string().as_str(),
             "The field `signer_quorum` must be below or equal to the sum of `signer_weight` in `signer_entries`. For more information see: "
@@ -445,11 +418,7 @@ mod test_signer_list_set_error {
             },
         ]);
         signer_list_set.signer_quorum = 2;
-        let _expected_error = XRPLSignerListSetException::CollectionItemDuplicate {
-            field: "signer_entries",
-            found: "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
-            resource: "",
-        };
+
         assert_eq!(
             signer_list_set.validate().unwrap_err().to_string().as_str(),
             "The value of the field `signer_entries` has a duplicate in it (found rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW). For more information see: "

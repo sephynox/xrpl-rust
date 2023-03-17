@@ -168,13 +168,7 @@ mod test_channel_authorize_errors {
             passphrase: None,
             key_type: Some(CryptoAlgorithm::SECP256K1),
         };
-        let _expected_error = XRPLChannelAuthorizeException::DefineExactlyOneOf {
-            field1: "secret",
-            field2: "seed",
-            field3: "seed_hex",
-            field4: "passphrase",
-            resource: "",
-        };
+
         assert_eq!(
             channel_authorize.validate().unwrap_err().to_string().as_str(),
             "The field `secret` can not be defined with `seed`, `seed_hex`, `passphrase`. Define exactly one of them. For more information see: "

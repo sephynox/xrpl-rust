@@ -143,12 +143,7 @@ mod test_unl_modify_error {
             unlmodify_validator:
                 "ED6629D456285AE3613B285F65BBFF168D695BA3921F309949AFCD2CA7AFEC16FE",
         };
-        let _expected_error = XRPLUNLModifyException::InvalidValue {
-            field: "unlmodify_disabling",
-            expected: "0 or 1",
-            found: unl_modify.unlmodify_disabling as u32,
-            resource: "",
-        };
+
         assert_eq!(
             unl_modify.validate().unwrap_err().to_string().as_str(),
             "The field `unlmodify_disabling` has an invalid value (expected 0 or 1, found 3). For more information see: "
