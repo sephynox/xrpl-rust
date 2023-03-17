@@ -143,31 +143,31 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
     fn _get_signer_entries_error(&self) -> Result<(), XRPLSignerListSetException> {
         if let Some(signer_entries) = &self.signer_entries {
             if self.signer_quorum == 0 {
-                return Err(XRPLSignerListSetException::ValueCausesValueDeletion {
+                Err(XRPLSignerListSetException::ValueCausesValueDeletion {
                     field1: "signer_entries",
                     field2: "signer_quorum",
                     resource: "",
-                });
-            }
-            if signer_entries.is_empty() {
-                return Err(XRPLSignerListSetException::CollectionTooFewItems {
+                })
+            } else if signer_entries.is_empty() {
+                Err(XRPLSignerListSetException::CollectionTooFewItems {
                     field: "signer_entries",
                     min: 1_usize,
                     found: signer_entries.len(),
                     resource: "",
-                });
-            }
-            if signer_entries.len() > 8 {
-                return Err(XRPLSignerListSetException::CollectionTooManyItems {
+                })
+            } else if signer_entries.len() > 8 {
+                Err(XRPLSignerListSetException::CollectionTooManyItems {
                     field: "signer_entries",
                     max: 8_usize,
                     found: signer_entries.len(),
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     fn _get_signer_quorum_error(&self) -> Result<(), XRPLSignerListSetException> {
@@ -189,36 +189,38 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
                     found: account,
                     resource: "",
                 });
+            } else {
+                check_account.push(account);
             }
-            check_account.push(account);
         }
         if let Some(_signer_entries) = &self.signer_entries {
             if accounts.contains(&&Cow::Borrowed(self.account)) {
-                return Err(XRPLSignerListSetException::CollectionInvalidItem {
+                Err(XRPLSignerListSetException::CollectionInvalidItem {
                     field: "signer_entries",
                     found: self.account,
                     resource: "",
-                });
-            }
-            if self.signer_quorum > signer_weight_sum {
-                return Err(
+                })
+            } else if self.signer_quorum > signer_weight_sum {
+                Err(
                     XRPLSignerListSetException::SignerQuorumExceedsSignerWeight {
                         max: signer_weight_sum,
                         found: self.signer_quorum,
                         resource: "",
                     },
-                );
+                )
+            } else {
+                Ok(())
             }
         } else if self.signer_quorum != 0 {
-            return Err(XRPLSignerListSetException::InvalidValueForValueDeletion {
+            Err(XRPLSignerListSetException::InvalidValueForValueDeletion {
                 field: "signer_quorum",
                 expected: 0,
                 found: self.signer_quorum,
                 resource: "",
-            });
+            })
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
