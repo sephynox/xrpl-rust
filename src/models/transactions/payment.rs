@@ -12,7 +12,7 @@ use alloc::string::ToString;
 
 use crate::Err;
 use crate::_serde::txn_flags;
-use crate::models::transactions::XrplPaymentException;
+use crate::models::transactions::XRPLPaymentException;
 
 /// Transactions of the Payment type support additional values
 /// in the Flags field. This enum represents those options.
@@ -184,17 +184,17 @@ impl<'a> Transaction for Payment<'a> {
 }
 
 impl<'a> PaymentError for Payment<'a> {
-    fn _get_xrp_transaction_error(&self) -> Result<(), XrplPaymentException> {
+    fn _get_xrp_transaction_error(&self) -> Result<(), XRPLPaymentException> {
         if self.amount.is_xrp() && self.send_max.is_none() {
             if self.paths.is_some() {
-                return Err(XrplPaymentException::IllegalOption {
+                return Err(XRPLPaymentException::IllegalOption {
                     field: "paths",
                     context: "XRP to XRP payments",
                     resource: "",
                 });
             }
             if self.account == self.destination {
-                return Err(XrplPaymentException::ValueEqualsValueInContext {
+                return Err(XRPLPaymentException::ValueEqualsValueInContext {
                     field1: "account",
                     field2: "destination",
                     context: "XRP to XRP Payments",
@@ -206,27 +206,27 @@ impl<'a> PaymentError for Payment<'a> {
         Ok(())
     }
 
-    fn _get_partial_payment_error(&self) -> Result<(), XrplPaymentException> {
+    fn _get_partial_payment_error(&self) -> Result<(), XRPLPaymentException> {
         if let Some(send_max) = &self.send_max {
             if !self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment))
                 && send_max.is_xrp()
                 && self.amount.is_xrp()
             {
-                return Err(XrplPaymentException::IllegalOption {
+                return Err(XRPLPaymentException::IllegalOption {
                     field: "send_max",
                     context: "XRP to XRP non-partial payments",
                     resource: "",
                 });
             }
         } else if self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment)) {
-            return Err(XrplPaymentException::FlagRequiresField {
+            return Err(XRPLPaymentException::FlagRequiresField {
                 flag: PaymentFlag::TfPartialPayment,
                 field: "send_max",
                 resource: "",
             });
         } else if !self.has_flag(&Flag::Payment(PaymentFlag::TfPartialPayment)) {
             if let Some(_deliver_min) = &self.deliver_min {
-                return Err(XrplPaymentException::IllegalOption {
+                return Err(XRPLPaymentException::IllegalOption {
                     field: "deliver_min",
                     context: "XRP to XRP non-partial payments",
                     resource: "",
@@ -237,9 +237,9 @@ impl<'a> PaymentError for Payment<'a> {
         Ok(())
     }
 
-    fn _get_exchange_error(&self) -> Result<(), XrplPaymentException> {
+    fn _get_exchange_error(&self) -> Result<(), XRPLPaymentException> {
         if self.account == self.destination && self.send_max.is_none() {
-            return Err(XrplPaymentException::OptionRequired {
+            return Err(XRPLPaymentException::OptionRequired {
                 field: "send_max",
                 context: "exchanges",
                 resource: "",
@@ -302,7 +302,7 @@ mod test_payment_error {
     use alloc::string::ToString;
     use alloc::{borrow::Cow, vec};
 
-    use crate::models::transactions::XrplPaymentException;
+    use crate::models::transactions::XRPLPaymentException;
     use crate::models::{Amount, Model, PathStep, PaymentFlag, TransactionType};
 
     use super::Payment;
@@ -337,7 +337,7 @@ mod test_payment_error {
             send_max: None,
             deliver_min: None,
         };
-        let _expected_error = XrplPaymentException::IllegalOption {
+        let _expected_error = XRPLPaymentException::IllegalOption {
             field: "paths",
             context: "XRP to XRP payments",
             resource: "",
@@ -349,7 +349,7 @@ mod test_payment_error {
 
         payment.paths = None;
         payment.send_max = Some(Amount::Xrp(Cow::Borrowed("99999")));
-        let _expected_error = XrplPaymentException::IllegalOption {
+        let _expected_error = XRPLPaymentException::IllegalOption {
             field: "send_max",
             context: "XRP to XRP non-partial payments",
             resource: "",
@@ -361,7 +361,7 @@ mod test_payment_error {
 
         payment.send_max = None;
         payment.destination = "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb";
-        let _expected_error = XrplPaymentException::ValueEqualsValueInContext {
+        let _expected_error = XRPLPaymentException::ValueEqualsValueInContext {
             field1: "account",
             field2: "destination",
             context: "XRP to XRP Payments",
@@ -398,7 +398,7 @@ mod test_payment_error {
             deliver_min: None,
         };
         payment.flags = Some(vec![PaymentFlag::TfPartialPayment]);
-        let _expected_error = XrplPaymentException::FlagRequiresField {
+        let _expected_error = XRPLPaymentException::FlagRequiresField {
             flag: PaymentFlag::TfPartialPayment,
             field: "send_max",
             resource: "",
@@ -410,7 +410,7 @@ mod test_payment_error {
 
         payment.flags = None;
         payment.deliver_min = Some(Amount::Xrp(Cow::Borrowed("99999")));
-        let _expected_error = XrplPaymentException::IllegalOption {
+        let _expected_error = XRPLPaymentException::IllegalOption {
             field: "deliver_min",
             context: "XRP to XRP non-partial payments",
             resource: "",
@@ -449,7 +449,7 @@ mod test_payment_error {
             send_max: None,
             deliver_min: None,
         };
-        let _expected_error = XrplPaymentException::OptionRequired {
+        let _expected_error = XRPLPaymentException::OptionRequired {
             field: "send_max",
             context: "exchanges",
             resource: "",

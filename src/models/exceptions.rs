@@ -1,17 +1,17 @@
 //! General XRPL Model Exception.
 
-use crate::models::requests::XrplRequestException;
-use crate::models::transactions::XrplTransactionException;
+use crate::models::requests::XRPLRequestException;
+use crate::models::transactions::XRPLTransactionException;
 use alloc::string::String;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 
 #[derive(Debug, PartialEq, Display)]
 #[non_exhaustive]
-pub enum XrplModelException<'a> {
+pub enum XRPLModelException<'a> {
     InvalidICCannotBeXRP,
-    XrplTransactionError(XrplTransactionException<'a>),
-    XrplRequestError(XrplRequestException<'a>),
+    XRPLTransactionError(XRPLTransactionException<'a>),
+    XRPLRequestError(XRPLRequestException<'a>),
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
@@ -21,4 +21,4 @@ pub struct JSONRPCException {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplModelException<'a> {}
+impl<'a> alloc::error::Error for XRPLModelException<'a> {}

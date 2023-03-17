@@ -5,7 +5,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
-use crate::models::transactions::XrplUNLModifyException;
+use crate::models::transactions::XRPLUNLModifyException;
 use crate::models::{model::Model, Transaction, TransactionType, UNLModifyError};
 
 /// See UNLModify:
@@ -76,10 +76,10 @@ impl<'a> Transaction for UNLModify<'a> {
 
 // TODO: Enum for unlmodify_disabling to make looking for error obsolete
 impl<'a> UNLModifyError for UNLModify<'a> {
-    fn _get_unl_modify_error(&self) -> Result<(), XrplUNLModifyException> {
+    fn _get_unl_modify_error(&self) -> Result<(), XRPLUNLModifyException> {
         let possible_unlmodify_disabling: [u8; 2] = [0, 1];
         if !possible_unlmodify_disabling.contains(&self.unlmodify_disabling) {
-            return Err(XrplUNLModifyException::InvalidValue {
+            return Err(XRPLUNLModifyException::InvalidValue {
                 field: "unlmodify_disabling",
                 expected: "0 or 1",
                 found: self.unlmodify_disabling as u32,
@@ -121,7 +121,7 @@ impl<'a> UNLModify<'a> {
 
 #[cfg(test)]
 mod test_unl_modify_error {
-    use crate::models::transactions::XrplUNLModifyException;
+    use crate::models::transactions::XRPLUNLModifyException;
     use crate::models::{Model, TransactionType};
     use alloc::string::ToString;
 
@@ -143,7 +143,7 @@ mod test_unl_modify_error {
             unlmodify_validator:
                 "ED6629D456285AE3613B285F65BBFF168D695BA3921F309949AFCD2CA7AFEC16FE",
         };
-        let _expected_error = XrplUNLModifyException::InvalidValue {
+        let _expected_error = XRPLUNLModifyException::InvalidValue {
             field: "unlmodify_disabling",
             expected: "0 or 1",
             found: unl_modify.unlmodify_disabling as u32,

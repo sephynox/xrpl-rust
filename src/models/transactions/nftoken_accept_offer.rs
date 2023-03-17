@@ -6,7 +6,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
-use crate::models::transactions::XrplNFTokenAcceptOfferException;
+use crate::models::transactions::XRPLNFTokenAcceptOfferException;
 use crate::models::{
     model::Model, Amount, Memo, NFTokenAcceptOfferError, Signer, Transaction, TransactionType,
 };
@@ -130,10 +130,10 @@ impl<'a> Transaction for NFTokenAcceptOffer<'a> {
 }
 
 impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
-    fn _get_brokered_mode_error(&self) -> Result<(), XrplNFTokenAcceptOfferException> {
+    fn _get_brokered_mode_error(&self) -> Result<(), XRPLNFTokenAcceptOfferException> {
         if let Some(_nftoken_broker_fee) = &self.nftoken_broker_fee {
             if self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
-                return Err(XrplNFTokenAcceptOfferException::DefineOneOf {
+                return Err(XRPLNFTokenAcceptOfferException::DefineOneOf {
                     field1: "nftoken_sell_offer",
                     field2: "nftoken_buy_offer",
                     resource: "",
@@ -143,10 +143,10 @@ impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
 
         Ok(())
     }
-    fn _get_nftoken_broker_fee_error(&self) -> Result<(), XrplNFTokenAcceptOfferException> {
+    fn _get_nftoken_broker_fee_error(&self) -> Result<(), XRPLNFTokenAcceptOfferException> {
         if let Some(nftoken_broker_fee) = &self.nftoken_broker_fee {
             if nftoken_broker_fee.get_value_as_u32() == 0 {
-                return Err(XrplNFTokenAcceptOfferException::ValueZero {
+                return Err(XRPLNFTokenAcceptOfferException::ValueZero {
                     field: "nftoken_broker_fee",
                     resource: "",
                 });
@@ -200,7 +200,7 @@ mod test_nftoken_accept_offer_error {
     use alloc::borrow::Cow;
     use alloc::string::ToString;
 
-    use crate::models::transactions::XrplNFTokenAcceptOfferException;
+    use crate::models::transactions::XRPLNFTokenAcceptOfferException;
     use crate::models::{Amount, Model, TransactionType};
 
     use super::NFTokenAcceptOffer;
@@ -225,7 +225,7 @@ mod test_nftoken_accept_offer_error {
             nftoken_buy_offer: None,
             nftoken_broker_fee: Some(Amount::Xrp(Cow::Borrowed("100"))),
         };
-        let _expected_error = XrplNFTokenAcceptOfferException::DefineOneOf {
+        let _expected_error = XRPLNFTokenAcceptOfferException::DefineOneOf {
             field1: "nftoken_sell_offer",
             field2: "nftoken_buy_offer",
             resource: "",
@@ -256,7 +256,7 @@ mod test_nftoken_accept_offer_error {
             nftoken_buy_offer: None,
             nftoken_broker_fee: Some(Amount::Xrp(Cow::Borrowed("0"))),
         };
-        let _expected_error = XrplNFTokenAcceptOfferException::ValueZero {
+        let _expected_error = XRPLNFTokenAcceptOfferException::ValueZero {
             field: "nftoken_broker_fee",
             resource: "",
         };

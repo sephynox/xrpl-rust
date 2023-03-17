@@ -5,7 +5,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
-use crate::models::requests::XrplChannelAuthorizeException;
+use crate::models::requests::XRPLChannelAuthorizeException;
 use crate::{
     constants::CryptoAlgorithm,
     models::{ChannelAuthorizeError, Model, RequestMethod},
@@ -98,7 +98,7 @@ impl<'a> Model for ChannelAuthorize<'a> {
 }
 
 impl<'a> ChannelAuthorizeError for ChannelAuthorize<'a> {
-    fn _get_field_error(&self) -> Result<(), XrplChannelAuthorizeException> {
+    fn _get_field_error(&self) -> Result<(), XRPLChannelAuthorizeException> {
         let mut signing_methods = Vec::new();
         for method in [self.secret, self.seed, self.seed_hex, self.passphrase] {
             if method.is_some() {
@@ -106,7 +106,7 @@ impl<'a> ChannelAuthorizeError for ChannelAuthorize<'a> {
             }
         }
         if signing_methods.len() != 1 {
-            return Err(XrplChannelAuthorizeException::DefineExactlyOneOf {
+            return Err(XRPLChannelAuthorizeException::DefineExactlyOneOf {
                 field1: "secret",
                 field2: "seed",
                 field3: "seed_hex",
@@ -146,7 +146,7 @@ impl<'a> ChannelAuthorize<'a> {
 
 #[cfg(test)]
 mod test_channel_authorize_errors {
-    use crate::models::requests::XrplChannelAuthorizeException;
+    use crate::models::requests::XRPLChannelAuthorizeException;
     use crate::{
         constants::CryptoAlgorithm,
         models::{Model, RequestMethod},
@@ -168,7 +168,7 @@ mod test_channel_authorize_errors {
             passphrase: None,
             key_type: Some(CryptoAlgorithm::SECP256K1),
         };
-        let _expected_error = XrplChannelAuthorizeException::DefineExactlyOneOf {
+        let _expected_error = XRPLChannelAuthorizeException::DefineExactlyOneOf {
             field1: "secret",
             field2: "seed",
             field3: "seed_hex",

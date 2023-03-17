@@ -5,7 +5,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
-use crate::models::requests::XrplLedgerEntryException;
+use crate::models::requests::XRPLLedgerEntryException;
 use crate::models::{LedgerEntryError, Model, RequestMethod};
 
 /// Required fields for requesting a DepositPreauth if not
@@ -129,7 +129,7 @@ impl<'a: 'static> Model for LedgerEntry<'a> {
 }
 
 impl<'a> LedgerEntryError for LedgerEntry<'a> {
-    fn _get_field_error(&self) -> Result<(), XrplLedgerEntryException> {
+    fn _get_field_error(&self) -> Result<(), XRPLLedgerEntryException> {
         let mut signing_methods: u32 = 0;
         for method in [self.index, self.account_root, self.check] {
             if method.is_some() {
@@ -158,7 +158,7 @@ impl<'a> LedgerEntryError for LedgerEntry<'a> {
             signing_methods += 1
         }
         if signing_methods != 1 {
-            return Err(XrplLedgerEntryException::DefineExactlyOneOf {
+            return Err(XRPLLedgerEntryException::DefineExactlyOneOf {
                 field1: "index",
                 field2: "account_root",
                 field3: "check",
@@ -217,7 +217,7 @@ impl<'a> LedgerEntry<'a> {
 #[cfg(test)]
 mod test_ledger_entry_errors {
     use super::Offer;
-    use crate::models::requests::XrplLedgerEntryException;
+    use crate::models::requests::XRPLLedgerEntryException;
     use crate::models::{Model, RequestMethod};
     use alloc::string::ToString;
 
@@ -245,7 +245,7 @@ mod test_ledger_entry_errors {
             ledger_hash: None,
             ledger_index: None,
         };
-        let _expected = XrplLedgerEntryException::DefineExactlyOneOf {
+        let _expected = XRPLLedgerEntryException::DefineExactlyOneOf {
             field1: "index",
             field2: "account_root",
             field3: "check",

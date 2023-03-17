@@ -7,7 +7,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
-use crate::models::transactions::XrplSignerListSetException;
+use crate::models::transactions::XRPLSignerListSetException;
 use crate::{
     models::{model::Model, Memo, Signer, SignerListSetError, Transaction, TransactionType},
     serialize_with_tag, Err,
@@ -140,17 +140,17 @@ impl<'a> Transaction for SignerListSet<'a> {
 }
 
 impl<'a> SignerListSetError for SignerListSet<'a> {
-    fn _get_signer_entries_error(&self) -> Result<(), XrplSignerListSetException> {
+    fn _get_signer_entries_error(&self) -> Result<(), XRPLSignerListSetException> {
         if let Some(signer_entries) = &self.signer_entries {
             if self.signer_quorum == 0 {
-                return Err(XrplSignerListSetException::ValueCausesValueDeletion {
+                return Err(XRPLSignerListSetException::ValueCausesValueDeletion {
                     field1: "signer_entries",
                     field2: "signer_quorum",
                     resource: "",
                 });
             }
             if signer_entries.is_empty() {
-                return Err(XrplSignerListSetException::CollectionTooFewItems {
+                return Err(XRPLSignerListSetException::CollectionTooFewItems {
                     field: "signer_entries",
                     min: 1_usize,
                     found: signer_entries.len(),
@@ -158,7 +158,7 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
                 });
             }
             if signer_entries.len() > 8 {
-                return Err(XrplSignerListSetException::CollectionTooManyItems {
+                return Err(XRPLSignerListSetException::CollectionTooManyItems {
                     field: "signer_entries",
                     max: 8_usize,
                     found: signer_entries.len(),
@@ -170,7 +170,7 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
         Ok(())
     }
 
-    fn _get_signer_quorum_error(&self) -> Result<(), XrplSignerListSetException> {
+    fn _get_signer_quorum_error(&self) -> Result<(), XRPLSignerListSetException> {
         let mut accounts = Vec::new();
         let mut signer_weight_sum: u32 = 0;
         if self.signer_entries.is_some() {
@@ -184,7 +184,7 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
         let mut check_account = Vec::new();
         for account in accounts.clone() {
             if check_account.contains(&account) {
-                return Err(XrplSignerListSetException::CollectionItemDuplicate {
+                return Err(XRPLSignerListSetException::CollectionItemDuplicate {
                     field: "signer_entries",
                     found: account,
                     resource: "",
@@ -194,7 +194,7 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
         }
         if let Some(_signer_entries) = &self.signer_entries {
             if accounts.contains(&&Cow::Borrowed(self.account)) {
-                return Err(XrplSignerListSetException::CollectionInvalidItem {
+                return Err(XRPLSignerListSetException::CollectionInvalidItem {
                     field: "signer_entries",
                     found: self.account,
                     resource: "",
@@ -202,7 +202,7 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
             }
             if self.signer_quorum > signer_weight_sum {
                 return Err(
-                    XrplSignerListSetException::SignerQuorumExceedsSignerWeight {
+                    XRPLSignerListSetException::SignerQuorumExceedsSignerWeight {
                         max: signer_weight_sum,
                         found: self.signer_quorum,
                         resource: "",
@@ -210,7 +210,7 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
                 );
             }
         } else if self.signer_quorum != 0 {
-            return Err(XrplSignerListSetException::InvalidValueForValueDeletion {
+            return Err(XRPLSignerListSetException::InvalidValueForValueDeletion {
                 field: "signer_quorum",
                 expected: 0,
                 found: self.signer_quorum,
@@ -290,7 +290,7 @@ mod test_signer_list_set_error {
                 signer_weight: 2,
             }]),
         };
-        let _expected_error = XrplSignerListSetException::ValueCausesValueDeletion {
+        let _expected_error = XRPLSignerListSetException::ValueCausesValueDeletion {
             field1: "signer_entries",
             field2: "signer_quorum",
             resource: "",
@@ -302,7 +302,7 @@ mod test_signer_list_set_error {
 
         signer_list_set.signer_quorum = 3;
         signer_list_set.signer_entries = None;
-        let _expected_error = XrplSignerListSetException::InvalidValueForValueDeletion {
+        let _expected_error = XRPLSignerListSetException::InvalidValueForValueDeletion {
             field: "signer_quorum",
             expected: 0,
             found: signer_list_set.signer_quorum,
@@ -333,7 +333,7 @@ mod test_signer_list_set_error {
             signer_quorum: 3,
             signer_entries: Some(vec![]),
         };
-        let _expected_error = XrplSignerListSetException::CollectionTooFewItems {
+        let _expected_error = XRPLSignerListSetException::CollectionTooFewItems {
             field: "signer_entries",
             min: 1_usize,
             found: signer_list_set.signer_entries.clone().unwrap().len(),
@@ -382,7 +382,7 @@ mod test_signer_list_set_error {
                 signer_weight: 2,
             },
         ]);
-        let _expected_error = XrplSignerListSetException::CollectionTooManyItems {
+        let _expected_error = XRPLSignerListSetException::CollectionTooManyItems {
             field: "signer_entries",
             max: 8_usize,
             found: signer_list_set.signer_entries.clone().unwrap().len(),
@@ -407,7 +407,7 @@ mod test_signer_list_set_error {
                 signer_weight: 2,
             },
         ]);
-        let _expected_error = XrplSignerListSetException::CollectionInvalidItem {
+        let _expected_error = XRPLSignerListSetException::CollectionInvalidItem {
             field: "signer_entries",
             found: signer_list_set.account,
             resource: "",
@@ -422,7 +422,7 @@ mod test_signer_list_set_error {
             signer_weight: 3,
         }]);
         signer_list_set.signer_quorum = 10;
-        let _expected_error = XrplSignerListSetException::SignerQuorumExceedsSignerWeight {
+        let _expected_error = XRPLSignerListSetException::SignerQuorumExceedsSignerWeight {
             max: 3,
             found: signer_list_set.signer_quorum,
             resource: "",
@@ -443,7 +443,7 @@ mod test_signer_list_set_error {
             },
         ]);
         signer_list_set.signer_quorum = 2;
-        let _expected_error = XrplSignerListSetException::CollectionItemDuplicate {
+        let _expected_error = XRPLSignerListSetException::CollectionItemDuplicate {
             field: "signer_entries",
             found: "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
             resource: "",
