@@ -258,89 +258,94 @@ impl<'a> AccountSetError for AccountSet<'a> {
     fn _get_tick_size_error(&self) -> Result<(), XRPLAccountSetException> {
         if let Some(tick_size) = self.tick_size {
             if tick_size > MAX_TICK_SIZE {
-                return Err(XRPLAccountSetException::ValueTooHigh {
+                Err(XRPLAccountSetException::ValueTooHigh {
                     field: "tick_size",
                     max: MAX_TICK_SIZE,
                     found: tick_size,
                     resource: "",
-                });
-            }
-            if tick_size < MIN_TICK_SIZE && tick_size != DISABLE_TICK_SIZE {
-                return Err(XRPLAccountSetException::ValueTooLow {
+                })
+            } else if tick_size < MIN_TICK_SIZE && tick_size != DISABLE_TICK_SIZE {
+                Err(XRPLAccountSetException::ValueTooLow {
                     field: "tick_size",
                     min: MIN_TICK_SIZE,
                     found: tick_size,
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     fn _get_transfer_rate_error(&self) -> Result<(), XRPLAccountSetException> {
         if let Some(transfer_rate) = self.transfer_rate {
             if transfer_rate > MAX_TRANSFER_RATE {
-                return Err(XRPLAccountSetException::ValueTooHigh {
+                Err(XRPLAccountSetException::ValueTooHigh {
                     field: "transfer_rate",
                     max: MAX_TRANSFER_RATE,
                     found: transfer_rate,
                     resource: "",
-                });
-            }
-            if transfer_rate < MIN_TRANSFER_RATE && transfer_rate != SPECIAL_CASE_TRANFER_RATE {
-                return Err(XRPLAccountSetException::ValueTooLow {
+                })
+            } else if transfer_rate < MIN_TRANSFER_RATE
+                && transfer_rate != SPECIAL_CASE_TRANFER_RATE
+            {
+                Err(XRPLAccountSetException::ValueTooLow {
                     field: "transfer_rate",
                     min: MIN_TRANSFER_RATE,
                     found: transfer_rate,
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     fn _get_domain_error(&self) -> Result<(), XRPLAccountSetException> {
         if let Some(domain) = self.domain {
             if domain.to_lowercase().as_str() != domain {
-                return Err(XRPLAccountSetException::InvalidValueFormat {
+                Err(XRPLAccountSetException::InvalidValueFormat {
                     field: "domain",
                     found: domain,
                     format: "lowercase",
                     resource: "",
-                });
-            }
-            if domain.len() > MAX_DOMAIN_LENGTH {
-                return Err(XRPLAccountSetException::ValueTooLong {
+                })
+            } else if domain.len() > MAX_DOMAIN_LENGTH {
+                Err(XRPLAccountSetException::ValueTooLong {
                     field: "domain",
                     max: MAX_DOMAIN_LENGTH,
                     found: domain.len(),
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     fn _get_clear_flag_error(&self) -> Result<(), XRPLAccountSetException> {
         if self.clear_flag.is_some() && self.set_flag.is_some() && self.clear_flag == self.set_flag
         {
-            return Err(XRPLAccountSetException::SetAndUnsetSameFlag {
+            Err(XRPLAccountSetException::SetAndUnsetSameFlag {
                 found: self.clear_flag.clone().unwrap(),
                 resource: "",
-            });
+            })
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     fn _get_nftoken_minter_error(&self) -> Result<(), XRPLAccountSetException> {
         if let Some(_nftoken_minter) = self.nftoken_minter {
             if self.set_flag.is_none() {
                 if let Some(clear_flag) = &self.clear_flag {
-                    return match clear_flag {
+                    match clear_flag {
                         AccountSetFlag::AsfAuthorizedNFTokenMinter => {
                             Err(XRPLAccountSetException::SetFieldWhenUnsetRequiredFlag {
                                 field: "nftoken_minter",
@@ -349,16 +354,19 @@ impl<'a> AccountSetError for AccountSet<'a> {
                             })
                         }
                         _ => Ok(()),
-                    };
+                    }
+                } else {
+                    Err(XRPLAccountSetException::FieldRequiresFlag {
+                        field: "set_flag",
+                        flag: AccountSetFlag::AsfAuthorizedNFTokenMinter,
+                        resource: "",
+                    })
                 }
-                return Err(XRPLAccountSetException::FieldRequiresFlag {
-                    field: "set_flag",
-                    flag: AccountSetFlag::AsfAuthorizedNFTokenMinter,
-                    resource: "",
-                });
+            } else {
+                Ok(())
             }
         } else if let Some(set_flag) = &self.set_flag {
-            return match set_flag {
+            match set_flag {
                 AccountSetFlag::AsfAuthorizedNFTokenMinter => {
                     Err(XRPLAccountSetException::FlagRequiresField {
                         flag: AccountSetFlag::AsfAuthorizedNFTokenMinter,
@@ -367,10 +375,10 @@ impl<'a> AccountSetError for AccountSet<'a> {
                     })
                 }
                 _ => Ok(()),
-            };
+            }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
