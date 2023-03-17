@@ -182,23 +182,29 @@ impl<'a> NFTokenCreateOfferError for NFTokenCreateOffer<'a> {
             NFTokenCreateOfferFlag::TfSellOffer,
         )) && self.amount.get_value_as_u32() == 0
         {
-             Err(XRPLNFTokenCreateOfferException::ValueZero {
+            Err(XRPLNFTokenCreateOfferException::ValueZero {
                 field: "amount",
                 resource: "",
             })
-        } else { Ok(()) }
+        } else {
+            Ok(())
+        }
     }
 
     fn _get_destination_error(&self) -> Result<(), XRPLNFTokenCreateOfferException> {
         if let Some(destination) = self.destination {
             if destination == self.account {
-                 Err(XRPLNFTokenCreateOfferException::ValueEqualsValue {
+                Err(XRPLNFTokenCreateOfferException::ValueEqualsValue {
                     field1: "destination",
                     field2: "account",
                     resource: "",
                 })
-            } else { Ok(()) }
-        } else { Ok(()) }
+            } else {
+                Ok(())
+            }
+        } else {
+            Ok(())
+        }
     }
 
     fn _get_owner_error(&self) -> Result<(), XRPLNFTokenCreateOfferException> {
@@ -206,27 +212,31 @@ impl<'a> NFTokenCreateOfferError for NFTokenCreateOffer<'a> {
             if self.has_flag(&Flag::NFTokenCreateOffer(
                 NFTokenCreateOfferFlag::TfSellOffer,
             )) {
-                 Err(XRPLNFTokenCreateOfferException::IllegalOption {
+                Err(XRPLNFTokenCreateOfferException::IllegalOption {
                     field: "owner",
                     context: "NFToken sell offers",
                     resource: "",
                 })
             } else if owner == self.account {
-                 Err(XRPLNFTokenCreateOfferException::ValueEqualsValue {
+                Err(XRPLNFTokenCreateOfferException::ValueEqualsValue {
                     field1: "owner",
                     field2: "account",
                     resource: "",
                 })
-            } else { Ok(()) }
+            } else {
+                Ok(())
+            }
         } else if !self.has_flag(&Flag::NFTokenCreateOffer(
             NFTokenCreateOfferFlag::TfSellOffer,
         )) {
-             Err(XRPLNFTokenCreateOfferException::OptionRequired {
+            Err(XRPLNFTokenCreateOfferException::OptionRequired {
                 field: "owner",
                 context: "NFToken buy offers",
                 resource: "",
             })
-        } else { Ok(())}
+        } else {
+            Ok(())
+        }
     }
 }
 

@@ -184,45 +184,51 @@ impl<'a> NFTokenMintError for NFTokenMint<'a> {
     fn _get_issuer_error(&self) -> Result<(), XRPLNFTokenMintException> {
         if let Some(issuer) = self.issuer {
             if issuer == self.account {
-                return Err(XRPLNFTokenMintException::ValueEqualsValue {
+                Err(XRPLNFTokenMintException::ValueEqualsValue {
                     field1: "issuer",
                     field2: "account",
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     fn _get_transfer_fee_error(&self) -> Result<(), XRPLNFTokenMintException> {
         if let Some(transfer_fee) = self.transfer_fee {
             if transfer_fee > MAX_TRANSFER_FEE {
-                return Err(XRPLNFTokenMintException::ValueTooHigh {
+                Err(XRPLNFTokenMintException::ValueTooHigh {
                     field: "transfer_fee",
                     max: MAX_TRANSFER_FEE,
                     found: transfer_fee,
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     fn _get_uri_error(&self) -> Result<(), XRPLNFTokenMintException> {
         if let Some(uri) = self.uri {
             if uri.len() > MAX_URI_LENGTH {
-                return Err(XRPLNFTokenMintException::ValueTooLong {
+                Err(XRPLNFTokenMintException::ValueTooLong {
                     field: "uri",
                     max: MAX_URI_LENGTH,
                     found: uri.len(),
                     resource: "",
-                });
+                })
+            } else {
+                Ok(())
             }
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
