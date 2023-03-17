@@ -4,28 +4,70 @@ use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
 
+/// The `Escrow` object type represents a held payment of XRP waiting to be executed or canceled.
+/// An `EscrowCreate` transaction creates an `Escrow` object in the ledger. A successful `EscrowFinish`
+/// or `EscrowCancel` transaction deletes the object. If the `Escrow` object has a crypto-condition,
+/// the payment can only succeed if an `EscrowFinish` transaction provides the corresponding
+/// fulfillment that satisfies the condition.
+/// (The only supported crypto-condition type is PREIMAGE-SHA-256.) If the `Escrow` object has a
+/// `FinishAfter` time, the held payment can only execute after that time.
+///
+/// An `Escrow` object is associated with two addresses:
+/// - The owner, who provides the XRP when creating the `Escrow` object. If the held payment is
+/// canceled, the XRP returns to the owner.
+/// - The destination, where the XRP is paid when the held payment succeeds. The destination can
+/// be the same as the owner.
+///
+/// `<https://xrpl.org/escrow-object.html#escrow>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Escrow<'a> {
+    /// The value `0x0075`, mapped to the string `Escrow`, indicates that this object is an
+    /// `Escrow` object.
     pub ledger_entry_type: LedgerEntryType,
+    /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no
+    /// flags for `Escrow` objects. The value is always `0`.
     pub flags: u32,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
+    /// The address of the owner (sender) of this held payment. This is the account that provided
+    /// the XRP, and gets it back if the held payment is canceled.
     pub account: &'a str,
+    /// The amount of XRP, in drops, to be delivered by the held payment.
     pub amount: Amount,
-    pub cancel_after: Option<u32>,
-    pub condition: Option<&'a str>,
+    /// The destination address where the XRP is paid if the held payment is successful.
     pub destination: &'a str,
-    pub destination_node: Option<&'a str>,
-    pub destination_tag: Option<u32>,
-    pub finish_after: Option<u32>,
+    /// A hint indicating which page of the owner directory links to this object, in case the
+    /// directory consists of multiple pages. Note: The object does not contain a direct link
+    /// to the owner directory containing it, since that value can be derived from the Account.
     pub owner_node: &'a str,
     #[serde(rename = "PreviousTxnID")]
+    /// The identifying hash of the transaction that most recently modified this object.
     pub previous_txn_id: &'a str,
+    /// The index of the ledger that contains the transaction that most recently modified this object.
     pub previous_txn_lgr_seq: u32,
+    /// The held payment can be canceled if and only if this field is present and the time it
+    /// specifies has passed. Specifically, this is specified as seconds since the Ripple Epoch
+    /// and it "has passed" if it's earlier than the close time of the previous validated ledger.
+    pub cancel_after: Option<u32>,
+    /// A PREIMAGE-SHA-256 crypto-condition, as hexadecimal. If present, the `EscrowFinish`
+    /// transaction must contain a fulfillment that satisfies this condition.
+    pub condition: Option<&'a str>,
+    /// A hint indicating which page of the destination's owner directory links to this object,
+    /// in case the directory consists of multiple pages. Omitted on escrows created before
+    /// enabling the fix1523 amendment.
+    pub destination_node: Option<&'a str>,
+    /// An arbitrary tag to further specify the destination for this held payment, such as a
+    /// hosted recipient at the destination address.
+    pub destination_tag: Option<u32>,
+    /// The time, in seconds since the Ripple Epoch, after which this held payment can be finished.
+    /// Any `EscrowFinish` transaction before this time fails.
+    pub finish_after: Option<u32>,
+    /// An arbitrary tag to further specify the source for this held payment, such as a hosted
+    /// recipient at the owner's address.
     pub source_tag: Option<u32>,
 }
 
@@ -75,15 +117,15 @@ impl<'a> Escrow<'a> {
             index,
             account,
             amount,
-            cancel_after,
-            condition,
             destination,
-            destination_node,
-            destination_tag,
-            finish_after,
             owner_node,
             previous_txn_id,
             previous_txn_lgr_seq,
+            cancel_after,
+            condition,
+            destination_node,
+            destination_tag,
+            finish_after,
             source_tag,
         }
     }
@@ -113,7 +155,7 @@ mod test_serde {
         );
         let escrow_json = serde_json::to_string(&escrow).unwrap();
         let actual = escrow_json.as_str();
-        let expected = r#"{"LedgerEntryType":"Escrow","Flags":0,"index":"DC5F3851D8A1AB622F957761E5963BC5BD439D5C24AC6AD7AC4523F0640244AC","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Amount":"10000","CancelAfter":545440232,"Condition":"A0258020A82A88B2DF843A54F58772E4A3861866ECDB4157645DD9AE528C1D3AEEDABAB6810120","Destination":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","DestinationNode":"0000000000000000","DestinationTag":23480,"FinishAfter":545354132,"OwnerNode":"0000000000000000","PreviousTxnID":"C44F2EB84196B9AD820313DBEBA6316A15C9A2D35787579ED172B87A30131DA7","PreviousTxnLgrSeq":28991004,"SourceTag":11747}"#;
+        let expected = r#"{"LedgerEntryType":"Escrow","Flags":0,"index":"DC5F3851D8A1AB622F957761E5963BC5BD439D5C24AC6AD7AC4523F0640244AC","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Amount":"10000","Destination":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","OwnerNode":"0000000000000000","PreviousTxnID":"C44F2EB84196B9AD820313DBEBA6316A15C9A2D35787579ED172B87A30131DA7","PreviousTxnLgrSeq":28991004,"CancelAfter":545440232,"Condition":"A0258020A82A88B2DF843A54F58772E4A3861866ECDB4157645DD9AE528C1D3AEEDABAB6810120","DestinationNode":"0000000000000000","DestinationTag":23480,"FinishAfter":545354132,"SourceTag":11747}"#;
 
         assert_eq!(expected, actual);
     }

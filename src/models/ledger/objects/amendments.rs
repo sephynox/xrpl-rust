@@ -9,26 +9,41 @@ use crate::serialize_with_tag;
 use serde_with::skip_serializing_none;
 
 serialize_with_tag! {
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
-pub struct Majority<'a> {
-    pub amendment: &'a str,
-    pub close_time: u32,
-}
+    /// `<https://xrpl.org/amendments-object.html#amendments-fields>`
+    #[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
+    pub struct Majority<'a> {
+        /// The Amendment ID of the pending amendment.
+        pub amendment: &'a str,
+        /// The `close_time` field of the ledger version where this amendment most recently gained a
+        /// majority.
+        pub close_time: u32,
+    }
 }
 
+/// The `Amendments` object type contains a list of `Amendments` that are currently active.
+/// Each ledger version contains at most one Amendments`` object.
+///
+/// `<https://xrpl.org/amendments-object.html#amendments>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Amendments<'a> {
+    /// The value `0x0066`, mapped to the string `Amendments`, indicates that this object describes
+    /// the status of `amendments` to the XRP Ledger.
     pub ledger_entry_type: LedgerEntryType,
+    /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no flags
+    /// for `Amendments` objects. The value is always 0.
     pub flags: u32,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
-    pub amendments: Vec<Cow<'a, str>>,
-    #[serde(borrow = "'a")] // lifetime issue
-    pub majorities: Vec<Majority<'a>>,
+    /// Array of 256-bit amendment IDs for all currently enabled amendments. If omitted, there are
+    /// no enabled amendments.
+    pub amendments: Option<Vec<Cow<'a, str>>>,
+    /// Array of objects describing the status of amendments that have majority support but are not
+    /// yet enabled. If omitted, there are no pending amendments with majority support.
+    pub majorities: Option<Vec<Majority<'a>>>,
 }
 
 impl<'a> Model for Amendments<'a> {}
@@ -48,8 +63,8 @@ impl<'a> Default for Amendments<'a> {
 impl<'a> Amendments<'a> {
     pub fn new(
         index: &'a str,
-        amendments: Vec<Cow<'a, str>>,
-        majorities: Vec<Majority<'a>>,
+        amendments: Option<Vec<Cow<'a, str>>>,
+        majorities: Option<Vec<Majority<'a>>>,
     ) -> Self {
         Self {
             ledger_entry_type: LedgerEntryType::Amendments,
@@ -71,16 +86,16 @@ mod test_serde {
     fn test_serialize() {
         let amendments = Amendments::new(
             "7DB0788C020F02780A673DC74757F23823FA3014C1866E72CC4CD8B226CD6EF4",
-            vec![
+            Some(vec![
                 Cow::from("42426C4D4F1009EE67080A9B7965B44656D7714D104A72F9B4369F97ABF044EE"),
                 Cow::from("4C97EBA926031A7CF7D7B36FDE3ED66DDA5421192D63DE53FFB46E43B9DC8373"),
                 Cow::from("6781F8368C4771B83E8B821D88F580202BCB4228075297B19E4FDC5233F1EFDC"),
                 Cow::from("740352F2412A9909880C23A559FCECEDA3BE2126FED62FC7660D628A06927F11"),
-            ],
-            vec![Majority {
+            ]),
+            Some(vec![Majority {
                 amendment: "1562511F573A19AE9BD103B5D6B9E01B3B46805AEC5D3C4805C902B514399146",
                 close_time: 535589001,
-            }],
+            }]),
         );
         let amendments_json = serde_json::to_string(&amendments).unwrap();
         let actual = amendments_json.as_str();

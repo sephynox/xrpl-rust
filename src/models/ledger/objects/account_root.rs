@@ -43,11 +43,13 @@ pub enum AccountRootFlag {
 }
 
 /// The `AccountRoot` object type describes a single account, its settings, and XRP balance.
+///
+/// `<https://xrpl.org/accountroot.html#accountroot>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AccountRoot<'a> {
-    /// The value 0x0061, mapped to the string AccountRoot, indicates that this is an AccountRoot
+    /// The value `0x0061`, mapped to the string `AccountRoot`, indicates that this is an `AccountRoot`
     /// object.
     pub ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean flags enabled for this account.
@@ -97,11 +99,11 @@ pub struct AccountRoot<'a> {
     #[serde(rename = "NFTokenMinter")]
     pub nftoken_minter: Option<&'a str>,
     /// The address of a key pair that can be used to sign transactions for this account instead of
-    /// the master key. Use a SetRegularKey transaction to change this value.
+    /// the master key. Use a `SetRegularKey` transaction to change this value.
     pub regular_key: Option<&'a str>,
     /// How many `Tickets` this account owns in the ledger. This is updated automatically to ensure
     /// that the account stays within the hard limit of 250 Tickets at a time. This field is omitted
-    /// if the account has zero Tickets.
+    /// if the account has zero `Tickets`.
     pub ticket_count: Option<u8>,
     /// How many significant digits to use for exchange rates of Offers involving currencies issued
     /// by this address. Valid values are 3 to 15, inclusive.

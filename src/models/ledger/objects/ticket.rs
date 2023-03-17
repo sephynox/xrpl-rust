@@ -5,21 +5,34 @@ use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
 
+/// The `Ticket` object type represents a `Ticket`, which tracks an account sequence number that
+/// has been set aside for future use. You can create new tickets with a `TicketCreate` transaction.
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Ticket<'a> {
-    ledger_entry_type: LedgerEntryType,
-    flags: u32,
+    /// The value 0x0054, mapped to the string Ticket, indicates that this object
+    /// is a Ticket object.
+    pub ledger_entry_type: LedgerEntryType,
+    /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines
+    /// no flags for Ticket objects. The value is always 0.
+    pub flags: u32,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
+    /// The account that owns this Ticket.
     pub account: &'a str,
+    /// A hint indicating which page of the owner directory links to this object, in case the
+    /// directory consists of multiple pages.
     pub owner_node: &'a str,
+    /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
     pub previous_txn_id: &'a str,
+    /// The index of the ledger that contains the transaction that most recently
+    /// modified this object.
     pub previous_txn_lgr_seq: u32,
+    /// The Sequence Number this Ticket sets aside.
     pub ticket_sequence: u32,
 }
 

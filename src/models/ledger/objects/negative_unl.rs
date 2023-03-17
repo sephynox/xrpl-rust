@@ -9,17 +9,26 @@ use crate::serialize_with_tag;
 use serde_with::skip_serializing_none;
 
 serialize_with_tag! {
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
-pub struct DisabledValidator<'a> {
-    pub first_ledger_sequence: u32,
-    pub public_key: &'a str,
-}
+    /// Each `DisabledValidator` object represents one disabled validator.
+    #[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
+    pub struct DisabledValidator<'a> {
+        /// The ledger index when the validator was added to the Negative UNL.
+        pub first_ledger_sequence: u32,
+        /// The master public key of the validator, in hexadecimal.
+        pub public_key: &'a str,
+    }
 }
 
+/// The NegativeUNL object type contains the current status of the Negative UNL, a list of trusted
+/// validators currently believed to be offline.
+///
+/// `<https://xrpl.org/negativeunl.html#negativeunl>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NegativeUNL<'a> {
+    /// The value `0x004E`, mapped to the string `NegativeUNL`, indicates that this object is the
+    /// Negative UNL.
     pub ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean flags. No flags are defined for the NegativeUNL object type, so this
     /// value is always 0.
@@ -28,8 +37,14 @@ pub struct NegativeUNL<'a> {
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
+    /// A list of `DisabledValidator` objects (see below), each representing a trusted validator
+    /// that is currently disabled.
     pub disabled_validators: Option<Vec<DisabledValidator<'a>>>,
+    /// The public key of a trusted validator that is scheduled to be disabled in the
+    /// next flag ledger.
     pub validator_to_disable: Option<&'a str>,
+    /// The public key of a trusted validator in the Negative UNL that is scheduled to be
+    /// re-enabled in the next flag ledger.
     pub validator_to_re_enable: Option<&'a str>,
 }
 

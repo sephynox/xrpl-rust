@@ -5,6 +5,19 @@ use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
 
+/// The `DirectoryNode` object type provides a list of links to other objects in the ledger's state
+/// tree. A single conceptual Directory　takes the form of a doubly linked list, with one or more
+/// `DirectoryNode` objects each containing up to 32 IDs of other objects. The first object is called
+/// the root of the directory, and all objects other than the root object can be added or deleted
+/// as necessary.
+///
+/// There are two kinds of Directories:
+/// - `Owner` directories list other objects owned by an account, such as `RippleState` (trust line)
+/// or `Offer` objects.
+/// - `Offer` directories list the offers available in the decentralized exchange. A single `Offer`
+/// directory contains all the offers that have the same exchange rate for the same token.
+///
+/// `<https://xrpl.org/directorynode.html#directorynode>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]

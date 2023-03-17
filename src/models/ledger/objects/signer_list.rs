@@ -16,36 +16,62 @@ use serde_with::skip_serializing_none;
 )]
 #[repr(u32)]
 pub enum SignerListFlag {
+    /// If this flag is enabled, this SignerList counts as one item for purposes of the owner reserve.
     LsfOneOwnerCount = 0x00010000,
 }
 
 serialize_with_tag! {
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
-pub struct SignerEntry<'a>{
-    pub account: &'a str,
-    pub signer_weight: u16,
-    pub wallet_locator: Option<&'a str>,
-}
+    /// Each member of the SignerEntries field is an object that describes that signer in the list.
+    ///
+    /// `<https://xrpl.org/signerlist.html#signer-entry-object>`
+    #[derive(Debug, Deserialize, PartialEq, Eq, Clone, new, Default)]
+    pub struct SignerEntry<'a>{
+        /// An XRP Ledger address whose signature contributes to the multi-signature.
+        pub account: &'a str,
+        /// The weight of a signature from this signer.
+        pub signer_weight: u16,
+        /// Arbitrary hexadecimal data. This can be used to identify the signer or for
+        /// other, related purposes.
+        pub wallet_locator: Option<&'a str>,
+    }
 }
 
+/// The SignerList object type represents a list of parties that, as a group, are authorized
+/// to sign a transaction in place of an individual account.
+///
+/// `<https://xrpl.org/signerlist.html#signerlist>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct SignerList<'a> {
+    /// The value 0x0053, mapped to the string SignerList, indicates that this object is a
+    /// SignerList object.
     ledger_entry_type: LedgerEntryType,
+    /// A bit-map of Boolean flags enabled for this signer list.
     #[serde(with = "lgr_obj_flags")]
     flags: Vec<SignerListFlag>,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
+    /// A hint indicating which page of the owner directory links to this object, in case
+    /// the directory consists of multiple pages.
     pub owner_node: &'a str,
+    /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
     pub previous_txn_id: &'a str,
+    /// The index of the ledger that contains the transaction that most recently
+    /// modified this object.
     pub previous_txn_lgr_seq: u32,
+    /// An array of Signer Entry objects representing the parties who are part of this
+    /// signer list.
     pub signer_entries: Vec<SignerEntry<'a>>,
+    /// An ID for this signer list. Currently always set to 0.
     #[serde(rename = "SignerListID")]
     pub signer_list_id: u32,
+    /// A target number for signer weights. To produce a valid signature for the owner of
+    /// this SignerList, the signers must provide valid signatures whose weights sum to this
+    /// value or more.
     pub signer_quorum: u32,
 }
 

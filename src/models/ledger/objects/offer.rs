@@ -21,27 +21,50 @@ pub enum OfferFlag {
     LsfSell = 0x00020000,
 }
 
+/// The Offer ledger entry describes an Offer to exchange currencies in the XRP Ledger's
+/// decentralized exchange. (In finance, this is more traditionally known as an order.)
+/// An OfferCreate transaction only creates an Offer entry in the ledger when the Offer
+/// cannot be fully executed immediately by consuming other Offers already in the ledger.
+///
+/// `<https://xrpl.org/offer.html#offer>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Offer<'a> {
+    /// The value `0x006F`, mapped to the string `Offer`, indicates that this object
+    /// describes an `Offer`.
     ledger_entry_type: LedgerEntryType,
+    /// A bit-map of boolean flags enabled for this offer.
     #[serde(with = "lgr_obj_flags")]
     flags: Vec<OfferFlag>,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
+    /// The address of the account that owns this `Offer`.
     pub account: &'a str,
+    /// The ID of the `Offer Directory` that links to this Offer.
     pub book_directory: &'a str,
+    /// A hint indicating which page of the offer directory links to this object, in case
+    /// the directory consists of multiple pages.
     pub book_node: &'a str,
+    /// A hint indicating which page of the owner directory links to this object, in case
+    /// the directory consists of multiple pages.
     pub owner_node: &'a str,
+    /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
     pub previous_txn_id: &'a str,
+    /// The index of the ledger that contains the transaction that most recently modified
+    /// this object.
     pub previous_txn_lgr_seq: u32,
+    /// The `Sequence` value of the `OfferCreate` transaction that created this `Offer` object.
+    /// Used in combination with the `Account` to identify this `Offer`.
     pub sequence: u32,
+    /// The remaining amount and type of currency being provided by the `Offer` creator.
     pub taker_gets: Amount,
+    /// The remaining amount and type of currency requested by the `Offer` creator.
     pub taker_pays: Amount,
+    /// Indicates the time after which this Offer is considered unfunded.
     pub expiration: Option<u32>,
 }
 

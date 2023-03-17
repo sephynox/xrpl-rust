@@ -15,22 +15,40 @@ pub struct NFToken<'a> {
     uri: &'a str,
 }
 
+/// The `NFTokenPage` object represents a collection of `NFToken` objects owned by the same account.
+///
+/// `<https://xrpl.org/nftokenpage.html#nftokenpage>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NFTokenPage<'a> {
+    /// The value `0x0050`, mapped to the string `NFTokenPage`, indicates that this is a page
+    /// containing `NFToken` objects.
     pub ledger_entry_type: LedgerEntryType,
+    /// A bit-map of boolean flags. No flags are defined for the NegativeUNL object type, so this
+    /// value is always 0.
     pub flags: u32,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
+    /// The collection of NFToken objects contained in this `NFTokenPage` object.
+    /// This specification places an upper bound of 32 `NFToken` objects per page.
+    /// Objects are sorted from low to high with the `NFTokenID` used as the sorting parameter.
     #[serde(rename = "NFTokens")]
     pub nftokens: Vec<NFToken<'a>>,
+    /// The locator of the next page, if any. Details about this field and how it should be
+    /// used are outlined below.
     pub next_page_min: Option<&'a str>,
+    /// The locator of the previous page, if any. Details about this field and how it should
+    /// be used are outlined below.
     pub previous_page_min: Option<&'a str>,
+    /// Identifies the transaction ID of the transaction that most recently modified
+    /// this `NFTokenPage` object.
     #[serde(rename = "PreviousTxnID")]
     pub previous_txn_id: Option<&'a str>,
+    /// The sequence of the ledger that contains the transaction that most recently
+    /// modified this `NFTokenPage` object.
     pub previous_txn_lgr_seq: Option<u32>,
 }
 

@@ -7,11 +7,13 @@ use serde_with::skip_serializing_none;
 
 /// A Check object describes a check, similar to a paper personal check, which can be cashed by its
 /// destination to get money from its sender.
+///
+/// `<https://xrpl.org/check.html#check>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Check<'a> {
-    /// The value 0x0043, mapped to the string Check, indicates that this object is a Check object.
+    /// The value `0x0043`, mapped to the string `Check`, indicates that this object is a `Check` object.
     pub ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no flags
     /// for `Check` objects. The value is always 0.
@@ -20,22 +22,11 @@ pub struct Check<'a> {
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
-    /// The sender of the Check. Cashing the Check debits this address's balance.
+    /// The sender of the `Check`. Cashing the `Check` debits this address's balance.
     pub account: &'a str,
-    /// The intended recipient of the Check. Only this address can cash the Check, using a `CheckCash`
-    /// transaction.
+    /// The intended recipient of the `Check`. Only this address can cash the `Check`, using a
+    /// `CheckCash` transaction.
     pub destination: &'a str,
-    /// A hint indicating which page of the destination's owner directory links to this object, in
-    /// case the directory consists of multiple pages.
-    pub destination_node: Option<&'a str>,
-    /// An arbitrary tag to further specify the destination for this `Check`, such as a hosted
-    /// recipient at the destination address.
-    pub destination_tag: Option<u32>,
-    /// Indicates the time after which this `Check` is considered expired.
-    pub expiration: Option<u32>,
-    /// Arbitrary 256-bit hash provided by the sender as a specific reason or identifier for this Check.
-    #[serde(rename = "InvoiceID")]
-    pub invoice_id: Option<&'a str>,
     /// A hint indicating which page of the sender's owner directory links to this object, in case
     /// the directory consists of multiple pages.
     pub owner_node: &'a str,
@@ -47,8 +38,19 @@ pub struct Check<'a> {
     /// The maximum amount of currency this Check can debit the sender. If the Check is successfully
     /// cashed, the destination is credited in the same currency for up to this amount.
     pub send_max: Amount,
-    /// The sequence number of the CheckCreate transaction that created this check.
+    /// The sequence number of the `CheckCreate` transaction that created this check.
     pub sequence: u32,
+    /// A hint indicating which page of the destination's owner directory links to this object, in
+    /// case the directory consists of multiple pages.
+    pub destination_node: Option<&'a str>,
+    /// An arbitrary tag to further specify the destination for this `Check`, such as a hosted
+    /// recipient at the destination address.
+    pub destination_tag: Option<u32>,
+    /// Indicates the time after which this `Check` is considered expired.
+    pub expiration: Option<u32>,
+    /// Arbitrary 256-bit hash provided by the sender as a specific reason or identifier for this Check.
+    #[serde(rename = "InvoiceID")]
+    pub invoice_id: Option<&'a str>,
     /// An arbitrary tag to further specify the source for this Check, such as a hosted recipient at
     /// the sender's address.
     pub source_tag: Option<u32>,
@@ -100,15 +102,15 @@ impl<'a> Check<'a> {
             index,
             account,
             destination,
-            destination_node,
-            destination_tag,
-            expiration,
-            invoice_id,
             owner_node,
             previous_txn_id,
             previous_txn_lgr_seq,
             send_max,
             sequence,
+            destination_node,
+            destination_tag,
+            expiration,
+            invoice_id,
             source_tag,
         }
     }
@@ -138,7 +140,7 @@ mod test_serde {
         );
         let check_json = serde_json::to_string(&check).unwrap();
         let actual = check_json.as_str();
-        let expected = r#"{"LedgerEntryType":"Check","Flags":0,"index":"49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0","Account":"rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo","Destination":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","DestinationNode":"0000000000000000","DestinationTag":1,"Expiration":570113521,"InvoiceID":"46060241FABCF692D4D934BA2A6C4427CD4279083E38C77CBE642243E43BE291","OwnerNode":"0000000000000000","PreviousTxnID":"5463C6E08862A1FAE5EDAC12D70ADB16546A1F674930521295BC082494B62924","PreviousTxnLgrSeq":6,"SendMax":"100000000","Sequence":2}"#;
+        let expected = r#"{"LedgerEntryType":"Check","Flags":0,"index":"49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0","Account":"rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo","Destination":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","OwnerNode":"0000000000000000","PreviousTxnID":"5463C6E08862A1FAE5EDAC12D70ADB16546A1F674930521295BC082494B62924","PreviousTxnLgrSeq":6,"SendMax":"100000000","Sequence":2,"DestinationNode":"0000000000000000","DestinationTag":1,"Expiration":570113521,"InvoiceID":"46060241FABCF692D4D934BA2A6C4427CD4279083E38C77CBE642243E43BE291"}"#;
 
         assert_eq!(expected, actual)
     }

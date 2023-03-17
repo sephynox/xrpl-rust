@@ -5,18 +5,37 @@ use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
 
+/// The `LedgerHashes` object type contains a history of prior ledgers that led up to this
+/// ledger version, in the form of their hashes. Objects of this ledger type are modified
+/// automatically when closing a ledger. The `LedgerHashes` objects exist to make it possible
+/// to look up a previous ledger's hash with only the current ledger version and at most one
+/// lookup of a previous ledger version.
+///
+/// There are two kinds of LedgerHashes object. Both types have the same fields.
+/// Each ledger version contains:
+/// - Exactly one "recent history" LedgerHashes object
+/// - A number of "previous history" `LedgerHashes` objects based on the current ledger index.
+/// Specifically, the XRP Ledger adds a new "previous history" object every 65536 ledger versions.
+///
+/// `<https://xrpl.org/ledgerhashes.html#ledgerhashes>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct LedgerHashes<'a> {
+    /// The value `0x0068`, mapped to the string `LedgerHashes`, indicates that this object is a
+    /// list of ledger hashes.
     pub ledger_entry_type: LedgerEntryType,
     pub flags: u32,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
+    /// **DEPRECATED** Do not use.
     pub first_ledger_sequence: u32,
+    /// An array of up to 256 ledger hashes. The contents depend on which sub-type of `LedgerHashes`
+    /// object this is.
     pub hashes: Vec<&'a str>,
+    /// The Ledger Index of the last entry in this object's `Hashes` array.
     pub last_ledger_sequence: u32,
 }
 

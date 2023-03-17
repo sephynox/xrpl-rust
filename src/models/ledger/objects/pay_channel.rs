@@ -5,30 +5,63 @@ use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
 
+/// The `PayChannel` object type represents a payment channel. Payment channels enable small,
+/// rapid off-ledger payments of XRP that can be later reconciled with the consensus ledger.
+///
+/// `<https://xrpl.org/paychannel.html#paychannel>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct PayChannel<'a> {
+    /// The value `0x0078`, mapped to the string `PayChannel`, indicates that this object is a
+    /// payment channel object.
     ledger_entry_type: LedgerEntryType,
+    /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines
+    /// no flags for PayChannel objects. The value is always 0.
     flags: u32,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
+    /// The source address that owns this payment channel.
     pub account: &'a str,
+    /// Total XRP, in drops, that has been allocated to this channel. This includes XRP
+    /// that has been paid to the destination address.
     pub amount: Amount,
+    /// Total XRP, in drops, already paid out by the channel. The difference between
+    /// this value and the `Amount` field is how much XRP can still be paid to the destination
+    /// address with `PaymentChannelClaim` transactions.
     pub balance: Amount,
+    /// The destination address for this payment channel. While the payment channel is open,
+    /// this address is the only one that can receive XRP from the channel.
     pub destination: &'a str,
+    /// A hint indicating which page of the source address's owner directory links to this
+    /// object, in case the directory consists of multiple pages.
     pub owner_node: &'a str,
+    /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
     pub previous_txn_id: &'a str,
+    /// The index of the ledger that contains the transaction that most recently modified
+    /// this object.
     pub previous_txn_lgr_seq: u32,
+    /// Public key, in hexadecimal, of the key pair that can be used to sign claims against
+    /// this channel. This can be any valid secp256k1 or Ed25519 public key.
     pub public_key: &'a str,
+    /// Number of seconds the source address must wait to close the channel if it still has
+    /// any XRP in it.
     pub settle_delay: u32,
+    /// The immutable expiration time for this payment channel, in seconds since the Ripple Epoch.
     pub cancel_after: Option<u32>,
+    /// An arbitrary tag to further specify the destination for this payment channel, such
+    /// as a hosted recipient at the `destination` address.
     pub destination_tag: Option<u32>,
+    /// A hint indicating which page of the destination's owner directory links to this object,
+    /// in case the directory consists of multiple pages.
     pub destination_node: Option<&'a str>,
+    /// The mutable expiration time for this payment channel, in seconds since the Ripple Epoch.
     pub expiration: Option<u32>,
+    /// An arbitrary tag to further specify the source for this payment channel, such as a
+    /// hosted recipient at the owner's address.
     pub source_tag: Option<u32>,
 }
 

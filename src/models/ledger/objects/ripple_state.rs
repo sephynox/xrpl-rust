@@ -13,38 +13,76 @@ use serde_with::skip_serializing_none;
 )]
 #[repr(u32)]
 pub enum RippleStateFlag {
+    /// This RippleState object contributes to the low account's owner reserve.
     LsfLowReserve = 0x00010000,
+    /// This RippleState object contributes to the high account's owner reserve.
     LsfHighReserve = 0x00020000,
+    /// The low account has authorized the high account to hold tokens issued by the low account.
     LsfLowAuth = 0x00040000,
+    /// The high account has authorized the low account to hold tokens issued by the high account.
     LsfHighAuth = 0x00080000,
+    /// The low account has disabled rippling from this trust line.
     LsfLowNoRipple = 0x00100000,
+    /// The high account has disabled rippling from this trust line.
     LsfHighNoRipple = 0x00200000,
+    /// The low account has frozen the trust line, preventing the high account from
+    /// transferring the asset.
     LsfLowFreeze = 0x00400000,
+    /// The high account has frozen the trust line, preventing the low account from
+    /// transferring the asset.
     LsfHighFreeze = 0x00800000,
 }
 
+/// The RippleState object type connects two accounts in a single currency. Conceptually,
+/// a RippleState object represents two trust lines between the accounts, one from each side.
+///
+/// `<https://xrpl.org/ripplestate.html#ripplestate>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct RippleState<'a> {
+    /// The value 0x0072, mapped to the string RippleState, indicates that this object
+    /// is a RippleState object.
     ledger_entry_type: LedgerEntryType,
+    /// A bit-map of boolean options enabled for this object.
     #[serde(with = "lgr_obj_flags")]
     flags: Vec<RippleStateFlag>,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
+    /// The balance of the trust line, from the perspective of the low account. A negative
+    /// balance indicates that the high account holds tokens issued by the low account.
     pub balance: Amount,
+    /// The limit that the high account has set on the trust line. The issuer is the address
+    /// of the high account that set this limit.
     pub high_limit: Amount,
+    /// (Omitted in some historical ledgers) A hint indicating which page of the high account's
+    /// owner directory links to this object, in case the directory consists of multiple pages.
     pub high_node: &'a str,
+    /// The limit that the low account has set on the trust line. The issuer is the address of
+    /// the low account that set this limit.
     pub low_limit: Amount,
+    /// Omitted in some historical ledgers) A hint indicating which page of the low account's
+    /// owner directory links to this object, in case the directory consists of multiple pages.
     pub low_node: &'a str,
+    /// The identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
     pub previous_txn_id: &'a str,
+    /// The index of the ledger that contains the transaction that most recently
+    /// modified this object.
     pub previous_txn_lgr_seq: u32,
+    /// The inbound quality set by the high account, as an integer in the implied ratio
+    /// HighQualityIn: 1,000,000,000.
     pub high_quality_in: Option<u32>,
+    /// The outbound quality set by the high account, as an integer in the implied ratio
+    /// HighQualityOut: 1,000,000,000.
     pub high_quality_out: Option<u32>,
+    /// The inbound quality set by the low account, as an integer in the implied ratio
+    /// LowQualityIn: 1,000,000,000.
     pub low_quality_in: Option<u32>,
+    /// The outbound quality set by the low account, as an integer in the implied ratio
+    /// LowQualityOut: 1,000,000,000.
     pub low_quality_out: Option<u32>,
 }
 

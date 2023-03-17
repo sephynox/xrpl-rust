@@ -4,15 +4,19 @@ use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
 
+/// A `DepositPreauth` object tracks a preauthorization from one account to another.
+/// `DepositPreauth` transactions create these objects.
+///
+/// `<https://xrpl.org/depositpreauth-object.html#depositpreauth>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct DepositPreauth<'a> {
-    /// The value 0x0070, mapped to the string DepositPreauth, indicates that this is a
-    /// DepositPreauth object.
+    /// The value `0x0070`, mapped to the string `DepositPreauth`, indicates that this is a
+    /// `DepositPreauth` object.
     pub ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no flags
-    /// for DepositPreauth objects. The value is always 0.
+    /// for `DepositPreauth` objects. The value is always 0.
     pub flags: u32,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.

@@ -15,31 +15,58 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 )]
 #[repr(u32)]
 pub enum NFTokenOfferFlag {
+    /// If enabled, the `NFTokenOffer` is a sell offer. Otherwise, the `NFTokenOffer` is a buy offer.
     LsfSellNFToken = 0x00000001,
 }
 
+/// The `NFTokenOffer` object represents an offer to buy, sell or transfer an `NFToken` object.
+/// The owner of a `NFToken` can use `NFTokenCreateOffer` to start a transaction.
+///
+/// `<https://xrpl.org/nftokenoffer.html#nftokenoffer>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NFTokenOffer<'a> {
+    /// The value `0x0037`, mapped to the string `NFTokenOffer`, indicates that this is an offer
+    /// to trade a `NFToken`.
     pub ledger_entry_type: LedgerEntryType,
+    /// A set of flags associated with this object, used to specify various options or settings.
     #[serde(with = "lgr_obj_flags")]
     pub flags: Vec<NFTokenOfferFlag>,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
     pub index: &'a str,
+    /// Amount expected or offered for the `NFToken`. If the token has the `lsfOnlyXRP` flag set,
+    /// the amount must be specified in XRP. Sell offers that specify assets other than XRP
+    /// must specify a non-zero amount. Sell offers that specify XRP can be 'free'
+    /// (that is, the Amount field can be equal to "0").
     pub amount: Amount,
+    /// The `NFTokenID` of the `NFToken` object referenced by this offer.
     #[serde(rename = "NFTokenID")]
     pub nftoken_id: &'a str,
+    /// Owner of the account that is creating and owns the offer. Only the current Owner
+    /// of an `NFToken` can create an offer to sell an `NFToken`, but any account can create
+    /// an offer to buy an NFToken.
     pub owner: &'a str,
+    /// Identifying hash of the transaction that most recently modified this object.
     #[serde(rename = "PreviousTxnID")]
     pub previous_txn_id: &'a str,
+    /// Index of the ledger that contains the transaction that most recently modified this object.
     pub previous_txn_lgr_seq: u32,
+    /// The `AccountID` for which this offer is intended. If present, only that account can
+    /// accept the offer.
     pub destination: Option<&'a str>,
+    /// The time after which the offer is no longer active. The value is the number of
+    /// seconds since the Ripple Epoch.
     pub expiration: Option<u32>,
+    /// Internal bookkeeping, indicating the page inside the token buy or sell offer directory,
+    /// as appropriate, where this token is being tracked. This field allows the efficient
+    /// deletion of offers.
     #[serde(rename = "NFTokenOfferNode")]
     pub nftoken_offer_node: Option<&'a str>,
+    /// Internal bookkeeping, indicating the page inside the owner directory where this token
+    /// is being tracked. This field allows the efficient deletion of offers.
     pub owner_node: Option<&'a str>,
 }
 

@@ -4,15 +4,19 @@ use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
 
+/// The `FeeSettings` object type contains the current base transaction cost and reserve amounts
+/// as determined by fee voting. Each ledger version contains at most one `FeeSettings` object.
+///
+/// `<https://xrpl.org/feesettings.html#feesettings>`
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct FeeSettings<'a> {
-    /// The value 0x0073, mapped to the string FeeSettings, indicates that this object contains the
-    /// ledger's fee settings.
+    /// The value `0x0073`, mapped to the string `FeeSettings`, indicates that this object contains
+    /// the ledger's fee settings.
     pub ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no flags
-    /// for FeeSettings objects. The value is always 0.
+    /// for `FeeSettings` objects. The value is always `0`.
     pub flags: u32,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
