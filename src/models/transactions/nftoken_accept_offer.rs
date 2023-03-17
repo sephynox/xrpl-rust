@@ -131,17 +131,18 @@ impl<'a> Transaction for NFTokenAcceptOffer<'a> {
 
 impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
     fn _get_brokered_mode_error(&self) -> Result<(), XRPLNFTokenAcceptOfferException> {
-        if let Some(_nftoken_broker_fee) = &self.nftoken_broker_fee {
-            if self.nftoken_sell_offer.is_none() && self.nftoken_buy_offer.is_none() {
-                return Err(XRPLNFTokenAcceptOfferException::DefineOneOf {
-                    field1: "nftoken_sell_offer",
-                    field2: "nftoken_buy_offer",
-                    resource: "",
-                });
-            }
+        if self.nftoken_broker_fee.is_some()
+            && self.nftoken_sell_offer.is_none()
+            && self.nftoken_buy_offer.is_none()
+        {
+            Err(XRPLNFTokenAcceptOfferException::DefineOneOf {
+                field1: "nftoken_sell_offer",
+                field2: "nftoken_buy_offer",
+                resource: "",
+            })
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
     fn _get_nftoken_broker_fee_error(&self) -> Result<(), XRPLNFTokenAcceptOfferException> {
         if let Some(nftoken_broker_fee) = &self.nftoken_broker_fee {

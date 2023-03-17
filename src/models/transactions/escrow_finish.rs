@@ -128,12 +128,14 @@ impl<'a> EscrowFinishError for EscrowFinish<'a> {
         if (self.condition.is_some() && self.fulfillment.is_none())
             || (self.condition.is_none() && self.condition.is_some())
         {
-             Err(XRPLEscrowFinishException::FieldRequiresField {
+            Err(XRPLEscrowFinishException::FieldRequiresField {
                 field1: "condition",
                 field2: "fulfillment",
                 resource: "",
             })
-        } else { Ok(()) }
+        } else {
+            Ok(())
+        }
     }
 }
 
