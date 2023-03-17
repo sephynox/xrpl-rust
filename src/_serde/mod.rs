@@ -83,7 +83,7 @@ pub mod currency_xrp {
         }
 
         // TODO: utilize anyhow and thiserror
-        Err("Could not deserialize XRP currency.").map_err(D::Error::custom)
+        Err("Could not deserialize XRP currency.").map_err(Error::custom)
     }
 }
 
@@ -91,17 +91,27 @@ pub mod currency_xrp {
 // TODO: Find a way to `#[skip_serializing_none]`
 // TODO: Find a more generic way
 #[macro_export]
-macro_rules! serialize_with_tag {
+macro_rules! serde_with_tag {
     (
         $(#[$attr:meta])*
         pub struct $name:ident<$lt:lifetime> {
             $(
+                $(#[$doc:meta])*
                 $field:ident : $ty:ty,
             )*
         }
     ) => {
         $(#[$attr])*
         pub struct $name<$lt> {
+            $(
+                $(#[$doc])*
+                $field: $ty,
+            )*
+        }
+
+        #[derive(Serialize, Deserialize)]
+        #[serde(rename_all = "PascalCase")]
+        pub struct Helper<$lt> {
             $(
                 $field: $ty,
             )*
@@ -112,15 +122,6 @@ macro_rules! serialize_with_tag {
             where
                 S: ::serde::Serializer
             {
-                #[derive(Serialize)]
-                #[serde(rename_all = "PascalCase")]
-                $(#[$attr])*
-                pub struct Helper<$lt> {
-                    $(
-                        $field: $ty,
-                    )*
-                }
-
                 let helper = Helper {
                     $(
                         $field: self.$field.clone(),
@@ -133,17 +134,44 @@ macro_rules! serialize_with_tag {
                 state.end()
             }
         }
+
+        impl<'de: $lt, $lt> ::serde::Deserialize<'de> for $name<$lt> {
+            #[allow(non_snake_case)]
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                let hash_map: HashMap<&$lt str, Helper<$lt>> = HashMap::deserialize(deserializer)?;
+                let helper = hash_map.get(stringify!($name)).unwrap();
+
+                Ok(Self {
+                    $(
+                        $field: helper.$field.into(),
+                    )*
+                })
+            }
+        }
     };
     (
         $(#[$attr:meta])*
         pub struct $name:ident {
             $(
+                $(#[$doc:meta])*
                 $field:ident : $ty:ty,
             )*
         }
     ) => {
         $(#[$attr])*
         pub struct $name {
+            $(
+                $(#[$doc])*
+                $field: $ty,
+            )*
+        }
+
+        #[derive(Serialize, Deserialize)]
+        #[serde(rename_all = "PascalCase")]
+        pub struct Helper {
             $(
                 $field: $ty,
             )*
@@ -154,15 +182,6 @@ macro_rules! serialize_with_tag {
             where
                 S: ::serde::Serializer
             {
-                #[derive(Serialize)]
-                #[serde(rename_all = "PascalCase")]
-                $(#[$attr])*
-                pub struct Helper {
-                    $(
-                        $field: $ty,
-                    )*
-                }
-
                 let helper = Helper {
                     $(
                         $field: self.$field.clone(),
@@ -173,6 +192,23 @@ macro_rules! serialize_with_tag {
                 state.serialize_key(stringify!($name))?;
                 state.serialize_value(&helper)?;
                 state.end()
+            }
+        }
+
+        impl<'de> ::serde::Deserialize<'de> for $name {
+            #[allow(non_snake_case)]
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                let hash_map: HashMap<&'de str, Helper> = HashMap::deserialize(deserializer)?;
+                let helper = hash_map.get(stringify!($name)).unwrap();
+
+                Ok(Self {
+                    $(
+                        $field: helper.$field.clone().into(),
+                    )*
+                })
             }
         }
     };
