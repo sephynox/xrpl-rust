@@ -1,3 +1,4 @@
+use crate::_serde::HashMap;
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use anyhow::Result;
@@ -9,13 +10,10 @@ use alloc::string::ToString;
 
 use crate::models::transactions::XRPLSignerListSetException;
 use crate::{
-    models::{model::Model, Memo, Signer, SignerListSetError, Transaction, TransactionType},
-    serialize_with_tag, Err,
 };
 
-serialize_with_tag! {
-    // TODO: Impl Deserialize
-    #[derive(Debug, Deserialize, PartialEq, Eq, Default, Clone, new)]
+serde_with_tag! {
+    #[derive(Debug, PartialEq, Eq, Default, Clone, new)]
     #[skip_serializing_none]
     pub struct SignerEntry {
         account: Cow<'static, str>,
@@ -461,32 +459,32 @@ mod test_serde {
 
         assert_eq!(txn_json, default_json);
     }
+
+    #[test]
+    fn test_deserialize() {
+        let default_txn = SignerListSet::new(
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+            3,
+            Some("12"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(vec![
+                SignerEntry::new(Borrowed("rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW"), 2),
+                SignerEntry::new(Borrowed("rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v"), 1),
+                SignerEntry::new(Borrowed("raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n"), 1),
+            ]),
+        );
+        let default_json = r#"{"TransactionType":"SignerListSet","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"12","SignerQuorum":3,"SignerEntries":[{"SignerEntry":{"Account":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","SignerWeight":2}},{"SignerEntry":{"Account":"rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v","SignerWeight":1}},{"SignerEntry":{"Account":"raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n","SignerWeight":1}}]}"#;
+
+        let txn_as_obj: SignerListSet = serde_json::from_str(default_json).unwrap();
+
+        assert_eq!(txn_as_obj, default_txn);
+    }
 }
-//     #[test]
-//     fn test_deserialize() {
-//         let default_txn = SignerListSet::new(
-//             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-//             3,
-//             Some("12"),
-//             None,
-//             None,
-//             None,
-//             None,
-//             None,
-//             None,
-//             None,
-//             None,
-//             None,
-//             Some(vec![
-//                 SignerEntry::new(Borrowed("rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW"), 2),
-//                 SignerEntry::new(Borrowed("rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v"), 1),
-//                 SignerEntry::new(Borrowed("raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n"), 1),
-//             ]),
-//         );
-//         let default_json = r#"{"TransactionType":"SignerListSet","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"12","SignerQuorum":3,"SignerEntries":[{"SignerEntry":{"Account":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","SignerWeight":2}},{"SignerEntry":{"Account":"rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v","SignerWeight":1}},{"SignerEntry":{"Account":"raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n","SignerWeight":1}}]}"#;
-
-//         let txn_as_obj: SignerListSet = serde_json::from_str(&default_json).unwrap();
-
-//         assert_eq!(txn_as_obj, default_txn);
-//     }
-// }
