@@ -201,11 +201,7 @@ mod test_deposit_preauth_exception {
             authorize: None,
             unauthorize: None,
         };
-        let _expected_error = XRPLDepositPreauthException::DefineExactlyOneOf {
-            field1: "authorize",
-            field2: "unauthorize",
-            resource: "",
-        };
+
         assert_eq!(
             deposit_preauth.validate().unwrap_err().to_string().as_str(),
             "The field `authorize` can not be defined with `unauthorize`. Define exactly one of them. For more information see: "

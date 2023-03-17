@@ -228,11 +228,7 @@ mod test_nftoken_accept_offer_error {
             nftoken_buy_offer: None,
             nftoken_broker_fee: Some(Amount::Xrp(Cow::Borrowed("100"))),
         };
-        let _expected_error = XRPLNFTokenAcceptOfferException::DefineOneOf {
-            field1: "nftoken_sell_offer",
-            field2: "nftoken_buy_offer",
-            resource: "",
-        };
+
         assert_eq!(
             nftoken_accept_offer.validate().unwrap_err().to_string().as_str(),
             "Define at least one of the fields `nftoken_sell_offer` and `nftoken_buy_offer`. For more information see: "
@@ -259,10 +255,7 @@ mod test_nftoken_accept_offer_error {
             nftoken_buy_offer: None,
             nftoken_broker_fee: Some(Amount::Xrp(Cow::Borrowed("0"))),
         };
-        let _expected_error = XRPLNFTokenAcceptOfferException::ValueZero {
-            field: "nftoken_broker_fee",
-            resource: "",
-        };
+
         assert_eq!(
             nftoken_accept_offer.validate().unwrap_err().to_string().as_str(),
             "The value of the field `nftoken_broker_fee` is not allowed to be zero. For more information see: "

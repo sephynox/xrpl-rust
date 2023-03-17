@@ -315,10 +315,6 @@ mod test_nftoken_create_offer_error {
             expiration: None,
             destination: None,
         };
-        let _expected_error = XRPLNFTokenCreateOfferException::ValueZero {
-            field: "amount",
-            resource: "",
-        };
 
         assert_eq!(
             nftoken_create_offer
@@ -352,11 +348,6 @@ mod test_nftoken_create_offer_error {
             expiration: None,
             destination: Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb"),
         };
-        let _expected_error = XRPLNFTokenCreateOfferException::ValueEqualsValue {
-            field1: "destination",
-            field2: "account",
-            resource: "",
-        };
 
         assert_eq!(
             nftoken_create_offer.validate().unwrap_err().to_string().as_str(),
@@ -388,11 +379,6 @@ mod test_nftoken_create_offer_error {
         };
         let sell_flag = vec![NFTokenCreateOfferFlag::TfSellOffer];
         nftoken_create_offer.flags = Some(sell_flag);
-        let _expected_error = XRPLNFTokenCreateOfferException::IllegalOption {
-            field: "owner",
-            context: "NFToken sell offers",
-            resource: "",
-        };
 
         assert_eq!(
             nftoken_create_offer.validate().unwrap_err().to_string().as_str(),
@@ -401,11 +387,6 @@ mod test_nftoken_create_offer_error {
 
         nftoken_create_offer.flags = None;
         nftoken_create_offer.owner = None;
-        let _expected_error = XRPLNFTokenCreateOfferException::OptionRequired {
-            field: "owner",
-            context: "NFToken buy offers",
-            resource: "",
-        };
 
         assert_eq!(
             nftoken_create_offer.validate().unwrap_err().to_string().as_str(),
@@ -413,11 +394,6 @@ mod test_nftoken_create_offer_error {
         );
 
         nftoken_create_offer.owner = Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb");
-        let _expected_error = XRPLNFTokenCreateOfferException::ValueEqualsValue {
-            field1: "owner",
-            field2: "account",
-            resource: "",
-        };
 
         assert_eq!(
             nftoken_create_offer.validate().unwrap_err().to_string().as_str(),

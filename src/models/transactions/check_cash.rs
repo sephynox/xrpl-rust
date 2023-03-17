@@ -210,11 +210,7 @@ mod test_check_cash_error {
             amount: None,
             deliver_min: None,
         };
-        let _expected_error = XRPLCheckCashException::DefineExactlyOneOf {
-            field1: "amount",
-            field2: "deliver_min",
-            resource: "",
-        };
+
         assert_eq!(
             check_cash.validate().unwrap_err().to_string().as_str(),
             "The field `amount` can not be defined with `deliver_min`. Define exactly one of them. For more information see: "

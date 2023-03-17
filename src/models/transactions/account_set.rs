@@ -468,12 +468,6 @@ mod test_account_set_errors {
         };
         let tick_size_too_low = Some(2);
         account_set.tick_size = tick_size_too_low;
-        let _expected_error = XRPLAccountSetException::ValueTooLow {
-            field: "tick_size",
-            min: 3,
-            found: account_set.tick_size.unwrap(),
-            resource: "",
-        };
 
         assert_eq!(
             account_set.validate().unwrap_err().to_string().as_str(),
@@ -482,12 +476,6 @@ mod test_account_set_errors {
 
         let tick_size_too_high = Some(16);
         account_set.tick_size = tick_size_too_high;
-        let _expected_error = XRPLAccountSetException::ValueTooHigh {
-            field: "tick_size",
-            max: 15,
-            found: account_set.tick_size.unwrap(),
-            resource: "",
-        };
 
         assert_eq!(
             account_set.validate().unwrap_err().to_string().as_str(),
@@ -522,12 +510,6 @@ mod test_account_set_errors {
         };
         let tick_size_too_low = Some(999999999);
         account_set.transfer_rate = tick_size_too_low;
-        let _expected_error = XRPLAccountSetException::ValueTooLow {
-            field: "transfer_rate",
-            min: MIN_TRANSFER_RATE,
-            found: account_set.transfer_rate.unwrap(),
-            resource: "",
-        };
 
         assert_eq!(
             account_set.validate().unwrap_err().to_string().as_str(),
@@ -536,12 +518,6 @@ mod test_account_set_errors {
 
         let tick_size_too_high = Some(2000000001);
         account_set.transfer_rate = tick_size_too_high;
-        let _expected_error = XRPLAccountSetException::ValueTooHigh {
-            field: "transfer_rate",
-            max: MAX_TRANSFER_RATE,
-            found: account_set.transfer_rate.unwrap(),
-            resource: "",
-        };
 
         assert_eq!(
             account_set.validate().unwrap_err().to_string().as_str(),
@@ -576,12 +552,6 @@ mod test_account_set_errors {
         };
         let domain_not_lowercase = Some("https://Example.com/");
         account_set.domain = domain_not_lowercase;
-        let _expected_error = XRPLAccountSetException::InvalidValueFormat {
-            field: "domain",
-            found: account_set.domain.unwrap(),
-            format: "lowercase",
-            resource: "",
-        };
 
         assert_eq!(
             account_set.validate().unwrap_err().to_string().as_str(),
@@ -590,12 +560,7 @@ mod test_account_set_errors {
 
         let domain_too_long = Some("https://example.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         account_set.domain = domain_too_long;
-        let _expected_error = XRPLAccountSetException::ValueTooLong {
-            field: "domain",
-            max: MAX_DOMAIN_LENGTH,
-            found: account_set.domain.unwrap().len(),
-            resource: "",
-        };
+
         assert_eq!(
             account_set.validate().unwrap_err().to_string().as_str(),
             "The value of the field `domain` exceeds its maximum length of characters (max 256, found 270). For more information see: "
@@ -626,10 +591,6 @@ mod test_account_set_errors {
             transfer_rate: None,
             tick_size: None,
             nftoken_minter: None,
-        };
-        let _expected_error = XRPLAccountSetException::SetAndUnsetSameFlag {
-            found: AccountSetFlag::AsfDisallowXRP,
-            resource: "",
         };
 
         assert_eq!(
@@ -664,11 +625,6 @@ mod test_account_set_errors {
             nftoken_minter: None,
         };
         account_set.nftoken_minter = Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK");
-        let _expected_error = XRPLAccountSetException::FieldRequiresFlag {
-            field: "set_flag",
-            flag: AccountSetFlag::AsfAuthorizedNFTokenMinter,
-            resource: "",
-        };
 
         assert_eq!(
             account_set.validate().unwrap_err().to_string().as_str(),
@@ -677,11 +633,6 @@ mod test_account_set_errors {
 
         account_set.nftoken_minter = None;
         account_set.set_flag = Some(AccountSetFlag::AsfAuthorizedNFTokenMinter);
-        let _expected_error = XRPLAccountSetException::FlagRequiresField {
-            flag: AccountSetFlag::AsfAuthorizedNFTokenMinter,
-            field: "nftoken_minter",
-            resource: "",
-        };
 
         assert_eq!(
             account_set.validate().unwrap_err().to_string().as_str(),
@@ -691,11 +642,7 @@ mod test_account_set_errors {
         account_set.set_flag = None;
         account_set.nftoken_minter = Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK");
         account_set.clear_flag = Some(AccountSetFlag::AsfAuthorizedNFTokenMinter);
-        let _expected_error = XRPLAccountSetException::SetFieldWhenUnsetRequiredFlag {
-            field: "nftoken_minter",
-            flag: AccountSetFlag::AsfAuthorizedNFTokenMinter,
-            resource: "",
-        };
+
         assert_eq!(
             account_set.validate().unwrap_err().to_string().as_str(),
             "The field `nftoken_minter` cannot be defined if its required flag `AsfAuthorizedNFTokenMinter` is being unset. For more information see: "
