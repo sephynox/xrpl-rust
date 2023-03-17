@@ -106,16 +106,16 @@ impl<'a> ChannelAuthorizeError for ChannelAuthorize<'a> {
             }
         }
         if signing_methods.len() != 1 {
-            return Err(XRPLChannelAuthorizeException::DefineExactlyOneOf {
+            Err(XRPLChannelAuthorizeException::DefineExactlyOneOf {
                 field1: "secret",
                 field2: "seed",
                 field3: "seed_hex",
                 field4: "passphrase",
                 resource: "",
-            });
+            })
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
