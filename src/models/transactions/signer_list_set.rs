@@ -1,4 +1,3 @@
-use crate::_serde::HashMap;
 use alloc::borrow::Cow;
 use alloc::borrow::Cow::Borrowed;
 use alloc::vec::Vec;

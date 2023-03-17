@@ -23,7 +23,7 @@ pub use model::Model;
 use serde::ser::SerializeMap;
 
 use crate::_serde::currency_xrp;
-use crate::_serde::HashMap;
+
 use crate::serde_with_tag;
 
 use alloc::borrow::Cow;
