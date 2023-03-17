@@ -14,7 +14,7 @@ use crate::{
 };
 
 use crate::_serde::txn_flags;
-use crate::models::transactions::XrplNFTokenMintException;
+use crate::models::transactions::XRPLNFTokenMintException;
 
 /// Transactions of the NFTokenMint type support additional values
 /// in the Flags field. This enum represents those options.
@@ -181,10 +181,10 @@ impl<'a> Transaction for NFTokenMint<'a> {
 }
 
 impl<'a> NFTokenMintError for NFTokenMint<'a> {
-    fn _get_issuer_error(&self) -> Result<(), XrplNFTokenMintException> {
+    fn _get_issuer_error(&self) -> Result<(), XRPLNFTokenMintException> {
         if let Some(issuer) = self.issuer {
             if issuer == self.account {
-                return Err(XrplNFTokenMintException::ValueEqualsValue {
+                return Err(XRPLNFTokenMintException::ValueEqualsValue {
                     field1: "issuer",
                     field2: "account",
                     resource: "",
@@ -195,10 +195,10 @@ impl<'a> NFTokenMintError for NFTokenMint<'a> {
         Ok(())
     }
 
-    fn _get_transfer_fee_error(&self) -> Result<(), XrplNFTokenMintException> {
+    fn _get_transfer_fee_error(&self) -> Result<(), XRPLNFTokenMintException> {
         if let Some(transfer_fee) = self.transfer_fee {
             if transfer_fee > MAX_TRANSFER_FEE {
-                return Err(XrplNFTokenMintException::ValueTooHigh {
+                return Err(XRPLNFTokenMintException::ValueTooHigh {
                     field: "transfer_fee",
                     max: MAX_TRANSFER_FEE,
                     found: transfer_fee,
@@ -210,10 +210,10 @@ impl<'a> NFTokenMintError for NFTokenMint<'a> {
         Ok(())
     }
 
-    fn _get_uri_error(&self) -> Result<(), XrplNFTokenMintException> {
+    fn _get_uri_error(&self) -> Result<(), XRPLNFTokenMintException> {
         if let Some(uri) = self.uri {
             if uri.len() > MAX_URI_LENGTH {
-                return Err(XrplNFTokenMintException::ValueTooLong {
+                return Err(XRPLNFTokenMintException::ValueTooLong {
                     field: "uri",
                     max: MAX_URI_LENGTH,
                     found: uri.len(),
@@ -270,7 +270,7 @@ impl<'a> NFTokenMint<'a> {
 #[cfg(test)]
 mod test_nftoken_mint_error {
     use crate::constants::{MAX_TRANSFER_FEE, MAX_URI_LENGTH};
-    use crate::models::transactions::XrplNFTokenMintException;
+    use crate::models::transactions::XRPLNFTokenMintException;
     use crate::models::{Model, TransactionType};
     use alloc::string::ToString;
 
@@ -297,7 +297,7 @@ mod test_nftoken_mint_error {
             transfer_fee: None,
             uri: None,
         };
-        let _expected_error = XrplNFTokenMintException::ValueEqualsValue {
+        let _expected_error = XRPLNFTokenMintException::ValueEqualsValue {
             field1: "issuer",
             field2: "account",
             resource: "",
@@ -329,7 +329,7 @@ mod test_nftoken_mint_error {
             transfer_fee: Some(50001),
             uri: None,
         };
-        let _expected_error = XrplNFTokenMintException::ValueTooHigh {
+        let _expected_error = XRPLNFTokenMintException::ValueTooHigh {
             field: "transfer_fee",
             max: MAX_TRANSFER_FEE,
             found: nftoken_mint.transfer_fee.unwrap(),
@@ -362,7 +362,7 @@ mod test_nftoken_mint_error {
             transfer_fee: None,
             uri: Some("wss://xrplcluster.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
         };
-        let _expected_error = XrplNFTokenMintException::ValueTooLong {
+        let _expected_error = XRPLNFTokenMintException::ValueTooLong {
             field: "uri",
             max: MAX_URI_LENGTH,
             found: nftoken_mint.uri.unwrap().len(),

@@ -3,26 +3,26 @@ use strum_macros::Display;
 use thiserror_no_std::Error;
 
 #[derive(Debug, Clone, PartialEq, Eq, Display)]
-pub enum XrplTransactionException<'a> {
-    XrplAccountSetError(XrplAccountSetException<'a>),
-    XrplCheckCashError(XrplCheckCashException<'a>),
-    XrplDepositPreauthError(XrplDepositPreauthException<'a>),
-    XrplEscrowCreateError(XrplEscrowCreateException<'a>),
-    XrplEscrowFinishError(XrplEscrowFinishException<'a>),
-    XrplNFTokenAcceptOfferError(XrplNFTokenAcceptOfferException<'a>),
-    XrplNFTokenCancelOfferError(XrplNFTokenCancelOfferException<'a>),
-    XrplNFTokenCreateOfferError(XrplNFTokenCreateOfferException<'a>),
-    XrplNFTokenMintError(XrplNFTokenMintException<'a>),
-    XrplPaymentError(XrplPaymentException<'a>),
-    XrplSignerListSetError(XrplSignerListSetException<'a>),
-    XrplUNLModifyError(XrplUNLModifyException<'a>),
+pub enum XRPLTransactionException<'a> {
+    XRPLAccountSetError(XRPLAccountSetException<'a>),
+    XRPLCheckCashError(XRPLCheckCashException<'a>),
+    XRPLDepositPreauthError(XRPLDepositPreauthException<'a>),
+    XRPLEscrowCreateError(XRPLEscrowCreateException<'a>),
+    XRPLEscrowFinishError(XRPLEscrowFinishException<'a>),
+    XRPLNFTokenAcceptOfferError(XRPLNFTokenAcceptOfferException<'a>),
+    XRPLNFTokenCancelOfferError(XRPLNFTokenCancelOfferException<'a>),
+    XRPLNFTokenCreateOfferError(XRPLNFTokenCreateOfferException<'a>),
+    XRPLNFTokenMintError(XRPLNFTokenMintException<'a>),
+    XRPLPaymentError(XRPLPaymentException<'a>),
+    XRPLSignerListSetError(XRPLSignerListSetException<'a>),
+    XRPLUNLModifyError(XRPLUNLModifyException<'a>),
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplTransactionException<'a> {}
+impl<'a> alloc::error::Error for XRPLTransactionException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplAccountSetException<'a> {
+pub enum XRPLAccountSetException<'a> {
     /// A fields value exceeds its maximum value.
     #[error("The value of the field `{field:?}` is defined above its maximum (max {max:?}, found {found:?}). For more information see: {resource:?}")]
     ValueTooHigh {
@@ -85,10 +85,10 @@ pub enum XrplAccountSetException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplAccountSetException<'a> {}
+impl<'a> alloc::error::Error for XRPLAccountSetException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplCheckCashException<'a> {
+pub enum XRPLCheckCashException<'a> {
     /// A field cannot be defined with other fields.
     #[error("The field `{field1:?}` can not be defined with `{field2:?}`. Define exactly one of them. For more information see: {resource:?}")]
     DefineExactlyOneOf {
@@ -99,7 +99,7 @@ pub enum XrplCheckCashException<'a> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplDepositPreauthException<'a> {
+pub enum XRPLDepositPreauthException<'a> {
     /// A field cannot be defined with other fields.
     #[error("The field `{field1:?}` can not be defined with `{field2:?}`. Define exactly one of them. For more information see: {resource:?}")]
     DefineExactlyOneOf {
@@ -110,10 +110,10 @@ pub enum XrplDepositPreauthException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplCheckCashException<'a> {}
+impl<'a> alloc::error::Error for XRPLCheckCashException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplEscrowCreateException<'a> {
+pub enum XRPLEscrowCreateException<'a> {
     /// A fields value cannot be below another fields value.
     #[error("The value of the field `{field1:?}` is not allowed to be below the value of the field `{field2:?}` (max {field2_val:?}, found {field1_val:?}). For more information see: {resource:?}")]
     ValueBelowValue {
@@ -126,10 +126,10 @@ pub enum XrplEscrowCreateException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplEscrowCreateException<'a> {}
+impl<'a> alloc::error::Error for XRPLEscrowCreateException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplEscrowFinishException<'a> {
+pub enum XRPLEscrowFinishException<'a> {
     /// For a field to be defined it also needs another field to be defined.
     #[error("For the field `{field1:?}` to be defined it is required to also define the field `{field2:?}`. For more information see: {resource:?}")]
     FieldRequiresField {
@@ -140,10 +140,10 @@ pub enum XrplEscrowFinishException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplEscrowFinishException<'a> {}
+impl<'a> alloc::error::Error for XRPLEscrowFinishException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplNFTokenAcceptOfferException<'a> {
+pub enum XRPLNFTokenAcceptOfferException<'a> {
     /// Define at least one of the fields.
     #[error("Define at least one of the fields `{field1:?}` and `{field2:?}`. For more information see: {resource:?}")]
     DefineOneOf {
@@ -157,10 +157,10 @@ pub enum XrplNFTokenAcceptOfferException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplNFTokenAcceptOfferException<'a> {}
+impl<'a> alloc::error::Error for XRPLNFTokenAcceptOfferException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplNFTokenCancelOfferException<'a> {
+pub enum XRPLNFTokenCancelOfferException<'a> {
     /// A collection was defined to be empty.
     #[error("The value of the field `{field:?}` is not allowed to be empty (type `{r#type:?}`). If the field is optional, define it to be `None`. For more information see: {resource:?}")]
     CollectionEmpty {
@@ -171,10 +171,10 @@ pub enum XrplNFTokenCancelOfferException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplNFTokenCancelOfferException<'a> {}
+impl<'a> alloc::error::Error for XRPLNFTokenCancelOfferException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplNFTokenCreateOfferException<'a> {
+pub enum XRPLNFTokenCreateOfferException<'a> {
     /// The value can not be zero.
     #[error("The value of the field `{field:?}` is not allowed to be zero. For more information see: {resource:?}")]
     ValueZero { field: &'a str, resource: &'a str },
@@ -202,10 +202,10 @@ pub enum XrplNFTokenCreateOfferException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplNFTokenCreateOfferException<'a> {}
+impl<'a> alloc::error::Error for XRPLNFTokenCreateOfferException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplNFTokenMintException<'a> {
+pub enum XRPLNFTokenMintException<'a> {
     /// A fields value is not allowed to be the same as another fields value.
     #[error("The value of the field `{field1:?}` is not allowed to be the same as the value of the field `{field2:?}`. For more information see: {resource:?}")]
     ValueEqualsValue {
@@ -232,10 +232,10 @@ pub enum XrplNFTokenMintException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplNFTokenMintException<'a> {}
+impl<'a> alloc::error::Error for XRPLNFTokenMintException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplPaymentException<'a> {
+pub enum XRPLPaymentException<'a> {
     /// An optional value must be defined in a certain context.
     #[error("The optional field `{field:?}` is required to be defined for {context:?}. For more information see: {resource:?}")]
     OptionRequired {
@@ -268,10 +268,10 @@ pub enum XrplPaymentException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplPaymentException<'a> {}
+impl<'a> alloc::error::Error for XRPLPaymentException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplSignerListSetException<'a> {
+pub enum XRPLSignerListSetException<'a> {
     /// A field was defined that another field definition would delete.
     #[error("The value of the field `{field1:?}` can not be defined with the field `{field2:?}` because it would cause the deletion of `{field1:?}`. For more information see: {resource:?}")]
     ValueCausesValueDeletion {
@@ -326,10 +326,10 @@ pub enum XrplSignerListSetException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplSignerListSetException<'a> {}
+impl<'a> alloc::error::Error for XRPLSignerListSetException<'a> {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XrplUNLModifyException<'a> {
+pub enum XRPLUNLModifyException<'a> {
     /// A field is expected to have a certain value.
     #[error("The field `{field:?}` has an invalid value (expected {expected:?}, found {found:?}). For more information see: {resource:?}")]
     InvalidValue {
@@ -341,4 +341,4 @@ pub enum XrplUNLModifyException<'a> {
 }
 
 #[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XrplUNLModifyException<'a> {}
+impl<'a> alloc::error::Error for XRPLUNLModifyException<'a> {}

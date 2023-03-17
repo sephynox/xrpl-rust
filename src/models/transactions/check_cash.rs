@@ -6,7 +6,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
-use crate::models::transactions::XrplCheckCashException;
+use crate::models::transactions::XRPLCheckCashException;
 use crate::models::{
     model::Model, Amount, CheckCashError, Memo, Signer, Transaction, TransactionType,
 };
@@ -128,11 +128,11 @@ impl<'a> Transaction for CheckCash<'a> {
 }
 
 impl<'a> CheckCashError for CheckCash<'a> {
-    fn _get_amount_and_deliver_min_error(&self) -> Result<(), XrplCheckCashException> {
+    fn _get_amount_and_deliver_min_error(&self) -> Result<(), XRPLCheckCashException> {
         if (self.amount.is_none() && self.deliver_min.is_none())
             || (self.amount.is_some() && self.deliver_min.is_some())
         {
-            return Err(XrplCheckCashException::DefineExactlyOneOf {
+            return Err(XRPLCheckCashException::DefineExactlyOneOf {
                 field1: "amount",
                 field2: "deliver_min",
                 resource: "",
@@ -186,7 +186,7 @@ mod test_check_cash_error {
     use crate::models::{Model, TransactionType};
     use alloc::string::ToString;
 
-    use crate::models::transactions::XrplCheckCashException;
+    use crate::models::transactions::XRPLCheckCashException;
 
     use super::CheckCash;
 
@@ -210,7 +210,7 @@ mod test_check_cash_error {
             amount: None,
             deliver_min: None,
         };
-        let _expected_error = XrplCheckCashException::DefineExactlyOneOf {
+        let _expected_error = XRPLCheckCashException::DefineExactlyOneOf {
             field1: "amount",
             field2: "deliver_min",
             resource: "",

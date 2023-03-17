@@ -6,7 +6,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
-use crate::models::transactions::XrplEscrowCreateException;
+use crate::models::transactions::XRPLEscrowCreateException;
 use crate::models::{
     model::Model, Amount, EscrowCreateError, Memo, Signer, Transaction, TransactionType,
 };
@@ -130,11 +130,11 @@ impl<'a> Transaction for EscrowCreate<'a> {
 }
 
 impl<'a> EscrowCreateError for EscrowCreate<'a> {
-    fn _get_finish_after_error(&self) -> Result<(), XrplEscrowCreateException> {
+    fn _get_finish_after_error(&self) -> Result<(), XRPLEscrowCreateException> {
         if let Some(finish_after) = self.finish_after {
             if let Some(cancel_after) = self.cancel_after {
                 if finish_after >= cancel_after {
-                    return Err(XrplEscrowCreateException::ValueBelowValue {
+                    return Err(XRPLEscrowCreateException::ValueBelowValue {
                         field1: "cancel_after",
                         field2: "finish_after",
                         field1_val: cancel_after,
@@ -197,7 +197,7 @@ impl<'a> EscrowCreate<'a> {
 mod test_escrow_create_errors {
     use crate::models::{Amount, Model, TransactionType};
 
-    use crate::models::transactions::XrplEscrowCreateException;
+    use crate::models::transactions::XRPLEscrowCreateException;
     use alloc::borrow::Cow;
     use alloc::string::ToString;
 
@@ -226,7 +226,7 @@ mod test_escrow_create_errors {
             finish_after: Some(14359039),
             condition: None,
         };
-        let _expected_error = XrplEscrowCreateException::ValueBelowValue {
+        let _expected_error = XRPLEscrowCreateException::ValueBelowValue {
             field1: "cancel_after",
             field2: "finish_after",
             field1_val: 13298498,

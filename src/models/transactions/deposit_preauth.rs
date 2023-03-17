@@ -6,7 +6,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
-use crate::models::transactions::XrplDepositPreauthException;
+use crate::models::transactions::XRPLDepositPreauthException;
 use crate::models::{
     model::Model, DepositPreauthError, Memo, Signer, Transaction, TransactionType,
 };
@@ -123,11 +123,11 @@ impl<'a> Transaction for DepositPreauth<'a> {
 }
 
 impl<'a> DepositPreauthError for DepositPreauth<'a> {
-    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), XrplDepositPreauthException> {
+    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), XRPLDepositPreauthException> {
         if (self.authorize.is_none() && self.unauthorize.is_none())
             || (self.authorize.is_some() && self.unauthorize.is_some())
         {
-            return Err(XrplDepositPreauthException::DefineExactlyOneOf {
+            return Err(XRPLDepositPreauthException::DefineExactlyOneOf {
                 field1: "authorize",
                 field2: "unauthorize",
                 resource: "",
@@ -176,7 +176,7 @@ impl<'a> DepositPreauth<'a> {
 
 #[cfg(test)]
 mod test_deposit_preauth_exception {
-    use crate::models::transactions::XrplDepositPreauthException;
+    use crate::models::transactions::XRPLDepositPreauthException;
     use crate::models::{Model, TransactionType};
     use alloc::string::ToString;
 
@@ -201,7 +201,7 @@ mod test_deposit_preauth_exception {
             authorize: None,
             unauthorize: None,
         };
-        let _expected_error = XrplDepositPreauthException::DefineExactlyOneOf {
+        let _expected_error = XRPLDepositPreauthException::DefineExactlyOneOf {
             field1: "authorize",
             field2: "unauthorize",
             resource: "",

@@ -6,7 +6,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
-use crate::models::transactions::XrplEscrowFinishException;
+use crate::models::transactions::XRPLEscrowFinishException;
 use crate::models::{model::Model, EscrowFinishError, Memo, Signer, Transaction, TransactionType};
 
 /// Finishes an Escrow and delivers XRP from a held payment to the recipient.
@@ -124,11 +124,11 @@ impl<'a> Transaction for EscrowFinish<'a> {
 }
 
 impl<'a> EscrowFinishError for EscrowFinish<'a> {
-    fn _get_condition_and_fulfillment_error(&self) -> Result<(), XrplEscrowFinishException> {
+    fn _get_condition_and_fulfillment_error(&self) -> Result<(), XRPLEscrowFinishException> {
         if (self.condition.is_some() && self.fulfillment.is_none())
             || (self.condition.is_none() && self.condition.is_some())
         {
-            return Err(XrplEscrowFinishException::FieldRequiresField {
+            return Err(XRPLEscrowFinishException::FieldRequiresField {
                 field1: "condition",
                 field2: "fulfillment",
                 resource: "",
@@ -181,7 +181,7 @@ impl<'a> EscrowFinish<'a> {
 
 #[cfg(test)]
 mod test_escrow_finish_errors {
-    use crate::models::transactions::XrplEscrowFinishException;
+    use crate::models::transactions::XRPLEscrowFinishException;
     use crate::models::{Model, TransactionType};
     use alloc::string::ToString;
 
@@ -210,7 +210,7 @@ mod test_escrow_finish_errors {
             ),
             fulfillment: None,
         };
-        let _expected_error = XrplEscrowFinishException::FieldRequiresField {
+        let _expected_error = XRPLEscrowFinishException::FieldRequiresField {
             field1: "condition",
             field2: "fulfillment",
             resource: "",
