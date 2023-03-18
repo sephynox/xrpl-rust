@@ -4,9 +4,12 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
-use crate::models::{model::Model, Amount, Flag, Memo, Signer, Transaction, TransactionType};
+use crate::models::{
+    amount::Amount, model::Model, Flag, Memo, Signer, Transaction, TransactionType,
+};
 
 use crate::_serde::txn_flags;
+use crate::models::amount::XRPAmount;
 
 /// Transactions of the OfferCreate type support additional values
 /// in the Flags field. This enum represents those options.
@@ -63,7 +66,7 @@ pub struct OfferCreate<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -110,8 +113,8 @@ pub struct OfferCreate<'a> {
     ///
     /// See OfferCreate fields:
     /// `<https://xrpl.org/offercreate.html#offercreate-fields>`
-    pub taker_gets: Amount,
-    pub taker_pays: Amount,
+    pub taker_gets: Amount<'a>,
+    pub taker_pays: Amount<'a>,
     pub expiration: Option<u32>,
     pub offer_sequence: Option<u32>,
 }
@@ -171,9 +174,9 @@ impl<'a> Transaction for OfferCreate<'a> {
 impl<'a> OfferCreate<'a> {
     fn new(
         account: &'a str,
-        taker_gets: Amount,
-        taker_pays: Amount,
-        fee: Option<&'a str>,
+        taker_gets: Amount<'a>,
+        taker_pays: Amount<'a>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -211,7 +214,7 @@ impl<'a> OfferCreate<'a> {
 
 #[cfg(test)]
 mod test {
-    use alloc::borrow::Cow::Borrowed;
+    use crate::models::amount::{IssuedCurrencyAmount, XRPAmount};
     use alloc::vec;
 
     use super::*;
@@ -221,7 +224,7 @@ mod test {
         let txn: OfferCreate = OfferCreate {
             transaction_type: TransactionType::OfferCreate,
             account: "rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe",
-            fee: Some("10"),
+            fee: Some("10".into()),
             sequence: Some(1),
             last_ledger_sequence: Some(72779837),
             account_txn_id: None,
@@ -232,12 +235,12 @@ mod test {
             flags: Some(vec![OfferCreateFlag::TfImmediateOrCancel]),
             memos: None,
             signers: None,
-            taker_gets: Amount::Xrp(Borrowed("1000000")),
-            taker_pays: Amount::IssuedCurrency {
-                value: Borrowed("0.3"),
-                currency: Borrowed("USD"),
-                issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
-            },
+            taker_gets: Amount::XRPAmount(XRPAmount::from("1000000")),
+            taker_pays: Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq".into(),
+                "0.3".into(),
+            )),
             expiration: None,
             offer_sequence: None,
         };
@@ -250,7 +253,7 @@ mod test {
         let txn: OfferCreate = OfferCreate {
             transaction_type: TransactionType::OfferCreate,
             account: "rpXhhWmCvDwkzNtRbm7mmD1vZqdfatQNEe",
-            fee: Some("10"),
+            fee: Some("10".into()),
             sequence: Some(1),
             last_ledger_sequence: Some(72779837),
             account_txn_id: None,
@@ -261,12 +264,12 @@ mod test {
             flags: Some(vec![OfferCreateFlag::TfImmediateOrCancel]),
             memos: None,
             signers: None,
-            taker_gets: Amount::Xrp(Borrowed("1000000")),
-            taker_pays: Amount::IssuedCurrency {
-                value: Borrowed("0.3"),
-                currency: Borrowed("USD"),
-                issuer: Borrowed("rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"),
-            },
+            taker_gets: Amount::XRPAmount(XRPAmount::from("1000000")),
+            taker_pays: Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq".into(),
+                "0.3".into(),
+            )),
             expiration: None,
             offer_sequence: None,
         };
@@ -278,7 +281,7 @@ mod test {
 
 #[cfg(test)]
 mod test_serde {
-    use alloc::borrow::Cow::Borrowed;
+    use crate::models::amount::{IssuedCurrencyAmount, XRPAmount};
 
     use super::*;
 
@@ -286,13 +289,13 @@ mod test_serde {
     fn test_serialize() {
         let default_txn = OfferCreate::new(
             "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
-            Amount::Xrp(Borrowed("6000000")),
-            Amount::IssuedCurrency {
-                value: Borrowed("2"),
-                currency: Borrowed("GKO"),
-                issuer: Borrowed("ruazs5h1qEsqpke88pcqnaseXdm6od2xc"),
-            },
-            Some("12"),
+            Amount::XRPAmount(XRPAmount::from("6000000")),
+            Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "GKO".into(),
+                "ruazs5h1qEsqpke88pcqnaseXdm6od2xc".into(),
+                "2".into(),
+            )),
+            Some("12".into()),
             Some(8),
             Some(7108682),
             None,
@@ -318,13 +321,13 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = OfferCreate::new(
             "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
-            Amount::Xrp(Borrowed("6000000")),
-            Amount::IssuedCurrency {
-                value: Borrowed("2"),
-                currency: Borrowed("GKO"),
-                issuer: Borrowed("ruazs5h1qEsqpke88pcqnaseXdm6od2xc"),
-            },
-            Some("12"),
+            Amount::XRPAmount(XRPAmount::from("6000000")),
+            Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "GKO".into(),
+                "ruazs5h1qEsqpke88pcqnaseXdm6od2xc".into(),
+                "2".into(),
+            )),
+            Some("12".into()),
             Some(8),
             Some(7108682),
             None,

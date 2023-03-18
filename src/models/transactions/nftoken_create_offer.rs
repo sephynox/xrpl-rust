@@ -7,10 +7,11 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 use crate::models::{
     exceptions::{NFTokenCreateOfferException, XRPLModelException, XRPLTransactionException},
     model::Model,
-    Amount, Flag, Memo, NFTokenCreateOfferError, Signer, Transaction, TransactionType,
+    Flag, Memo, NFTokenCreateOfferError, Signer, Transaction, TransactionType,
 };
 
 use crate::_serde::txn_flags;
+use crate::models::amount::{Amount, ValueAsDecimal, XRPAmount};
 
 /// Transactions of the NFTokenCreateOffer type support additional values
 /// in the Flags field. This enum represents those options.
@@ -53,7 +54,7 @@ pub struct NFTokenCreateOffer<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -102,7 +103,7 @@ pub struct NFTokenCreateOffer<'a> {
     /// `<https://xrpl.org/nftokencreateoffer.html#nftokencreateoffer-fields>`
     #[serde(rename = "NFTokenID")]
     pub nftoken_id: &'a str,
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     pub owner: Option<&'a str>,
     pub expiration: Option<u32>,
     pub destination: Option<&'a str>,
@@ -183,7 +184,8 @@ impl<'a> NFTokenCreateOfferError for NFTokenCreateOffer<'a> {
     fn _get_amount_error(&self) -> Result<(), NFTokenCreateOfferException> {
         match !self.has_flag(&Flag::NFTokenCreateOffer(
             NFTokenCreateOfferFlag::TfSellOffer,
-        )) && self.amount.get_value_as_u32() == 0
+            // TODO: handle `as_decimal` error
+        )) && self.amount.as_decimal().unwrap().is_zero()
         {
             true => Err(NFTokenCreateOfferException::InvalidAmountMustBeGreaterZero),
             false => Ok(()),
@@ -225,8 +227,8 @@ impl<'a> NFTokenCreateOffer<'a> {
     fn new(
         account: &'a str,
         nftoken_id: &'a str,
-        amount: Amount,
-        fee: Option<&'a str>,
+        amount: Amount<'a>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -266,11 +268,13 @@ impl<'a> NFTokenCreateOffer<'a> {
 
 #[cfg(test)]
 mod test_nftoken_create_offer_error {
-    use alloc::{borrow::Cow, vec};
+    use alloc::vec;
 
+    use crate::models::amount::XRPAmount;
     use crate::models::{
+        amount::Amount,
         exceptions::{NFTokenCreateOfferException, XRPLModelException, XRPLTransactionException},
-        Amount, Model, NFTokenCreateOfferFlag, TransactionType,
+        Model, NFTokenCreateOfferFlag, TransactionType,
     };
 
     use super::NFTokenCreateOffer;
@@ -292,7 +296,7 @@ mod test_nftoken_create_offer_error {
             memos: None,
             signers: None,
             nftoken_id: "",
-            amount: Amount::Xrp(Cow::Borrowed("0")),
+            amount: Amount::XRPAmount(XRPAmount::from("0")),
             owner: None,
             expiration: None,
             destination: None,
@@ -322,7 +326,7 @@ mod test_nftoken_create_offer_error {
             memos: None,
             signers: None,
             nftoken_id: "",
-            amount: Amount::Xrp(Cow::Borrowed("1")),
+            amount: Amount::XRPAmount(XRPAmount::from("1")),
             owner: None,
             expiration: None,
             destination: Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb"),
@@ -352,7 +356,7 @@ mod test_nftoken_create_offer_error {
             memos: None,
             signers: None,
             nftoken_id: "",
-            amount: Amount::Xrp(Cow::Borrowed("1")),
+            amount: Amount::XRPAmount(XRPAmount::from("1")),
             owner: Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK"),
             expiration: None,
             destination: None,
@@ -387,7 +391,7 @@ mod test_nftoken_create_offer_error {
 
 #[cfg(test)]
 mod test_serde {
-    use alloc::borrow::Cow::Borrowed;
+    use crate::models::amount::XRPAmount;
     use alloc::vec;
 
     use super::*;
@@ -397,7 +401,7 @@ mod test_serde {
         let default_txn = NFTokenCreateOffer::new(
             "rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX",
             "000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007",
-            Amount::Xrp(Borrowed("1000000")),
+            Amount::XRPAmount(XRPAmount::from("1000000")),
             None,
             None,
             None,
@@ -426,7 +430,7 @@ mod test_serde {
         let default_txn = NFTokenCreateOffer::new(
             "rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX",
             "000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007",
-            Amount::Xrp(Borrowed("1000000")),
+            Amount::XRPAmount(XRPAmount::from("1000000")),
             None,
             None,
             None,

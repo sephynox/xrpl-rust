@@ -2,10 +2,11 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::models::amount::XRPAmount;
 use crate::models::{
     exceptions::{EscrowCreateException, XRPLModelException, XRPLTransactionException},
     model::Model,
-    Amount, EscrowCreateError, Memo, Signer, Transaction, TransactionType,
+    EscrowCreateError, Memo, Signer, Transaction, TransactionType,
 };
 
 /// Creates an Escrow, which sequests XRP until the escrow process either finishes or is canceled.
@@ -32,7 +33,7 @@ pub struct EscrowCreate<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -77,7 +78,7 @@ pub struct EscrowCreate<'a> {
     ///
     /// See EscrowCreate fields:
     /// `<https://xrpl.org/escrowcreate.html#escrowcreate-flags>`
-    pub amount: Amount,
+    pub amount: XRPAmount<'a>,
     pub destination: &'a str,
     pub destination_tag: Option<u32>,
     pub cancel_after: Option<u32>,
@@ -148,9 +149,9 @@ impl<'a> EscrowCreateError for EscrowCreate<'a> {
 impl<'a> EscrowCreate<'a> {
     fn new(
         account: &'a str,
-        amount: Amount,
+        amount: XRPAmount<'a>,
         destination: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -193,10 +194,10 @@ impl<'a> EscrowCreate<'a> {
 mod test_escrow_create_errors {
     use crate::models::{
         exceptions::{EscrowCreateException, XRPLModelException, XRPLTransactionException},
-        Amount, Model, TransactionType,
+        Model, TransactionType,
     };
 
-    use alloc::borrow::Cow;
+    use crate::models::amount::XRPAmount;
 
     use super::EscrowCreate;
 
@@ -216,7 +217,7 @@ mod test_escrow_create_errors {
             flags: None,
             memos: None,
             signers: None,
-            amount: Amount::Xrp(Cow::Borrowed("100000000")),
+            amount: XRPAmount::from("100000000"),
             destination: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             destination_tag: None,
             cancel_after: Some(13298498),
@@ -234,13 +235,12 @@ mod test_escrow_create_errors {
 #[cfg(test)]
 mod test_serde {
     use super::*;
-    use alloc::borrow::Cow::Borrowed;
 
     #[test]
     fn test_serialize() {
         let default_txn = EscrowCreate::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Amount::Xrp(Borrowed("10000")),
+            XRPAmount::from("10000"),
             "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
             None,
             None,
@@ -269,7 +269,7 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = EscrowCreate::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Amount::Xrp(Borrowed("10000")),
+            XRPAmount::from("10000"),
             "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
             None,
             None,

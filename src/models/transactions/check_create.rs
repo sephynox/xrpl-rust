@@ -2,7 +2,8 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{model::Model, Amount, Memo, Signer, Transaction, TransactionType};
+use crate::models::amount::XRPAmount;
+use crate::models::{amount::Amount, model::Model, Memo, Signer, Transaction, TransactionType};
 
 /// Create a Check object in the ledger, which is a deferred
 /// payment that can be cashed by its intended destination.
@@ -29,7 +30,7 @@ pub struct CheckCreate<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -75,7 +76,7 @@ pub struct CheckCreate<'a> {
     /// See CheckCreate fields:
     /// `<https://xrpl.org/checkcreate.html#checkcreate-fields>`
     pub destination: &'a str,
-    pub send_max: Amount,
+    pub send_max: Amount<'a>,
     pub destination_tag: Option<u32>,
     pub expiration: Option<u32>,
     #[serde(rename = "InvoiceID")]
@@ -119,8 +120,8 @@ impl<'a> CheckCreate<'a> {
     fn new(
         account: &'a str,
         destination: &'a str,
-        send_max: Amount,
-        fee: Option<&'a str>,
+        send_max: Amount<'a>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -159,7 +160,7 @@ impl<'a> CheckCreate<'a> {
 
 #[cfg(test)]
 mod test_serde {
-    use alloc::borrow::Cow::Borrowed;
+    use crate::models::amount::XRPAmount;
 
     use super::*;
 
@@ -168,8 +169,8 @@ mod test_serde {
         let default_txn = CheckCreate::new(
             "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
             "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
-            Amount::Xrp(Borrowed("100000000")),
-            Some("12"),
+            Amount::XRPAmount(XRPAmount::from("100000000")),
+            Some("12".into()),
             None,
             None,
             None,
@@ -196,8 +197,8 @@ mod test_serde {
         let default_txn = CheckCreate::new(
             "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
             "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
-            Amount::Xrp(Borrowed("100000000")),
-            Some("12"),
+            Amount::XRPAmount(XRPAmount::from("100000000")),
+            Some("12".into()),
             None,
             None,
             None,

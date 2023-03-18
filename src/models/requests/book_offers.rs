@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{Currency, Model, RequestMethod};
+use crate::models::{currency::Currency, Model, RequestMethod};
 
 /// The book_offers method retrieves a list of offers, also known
 /// as the order book, between two currencies.
@@ -15,12 +15,12 @@ pub struct BookOffers<'a> {
     /// the offer would receive, as an object with currency
     /// and issuer fields (omit issuer for XRP),
     /// like currency amounts.
-    pub taker_gets: Currency,
+    pub taker_gets: Currency<'a>,
     /// Specification of which currency the account taking
     /// the offer would pay, as an object with currency and
     /// issuer fields (omit issuer for XRP),
     /// like currency amounts.
-    pub taker_pays: Currency,
+    pub taker_pays: Currency<'a>,
     /// The unique request id.
     pub id: Option<&'a str>,
     /// A 20-byte hex string for the ledger version to use.
@@ -46,8 +46,8 @@ pub struct BookOffers<'a> {
 impl<'a> Default for BookOffers<'a> {
     fn default() -> Self {
         BookOffers {
-            taker_gets: Currency::Xrp,
-            taker_pays: Currency::Xrp,
+            taker_gets: Default::default(),
+            taker_pays: Default::default(),
             id: None,
             ledger_hash: None,
             ledger_index: None,
@@ -62,8 +62,8 @@ impl<'a> Model for BookOffers<'a> {}
 
 impl<'a> BookOffers<'a> {
     fn new(
-        taker_gets: Currency,
-        taker_pays: Currency,
+        taker_gets: Currency<'a>,
+        taker_pays: Currency<'a>,
         id: Option<&'a str>,
         ledger_hash: Option<&'a str>,
         ledger_index: Option<&'a str>,
@@ -85,19 +85,18 @@ impl<'a> BookOffers<'a> {
 
 #[cfg(test)]
 mod test {
-    use crate::models::Currency;
-    use alloc::borrow::Cow::Borrowed;
+    use crate::models::currency::{Currency, IssuedCurrency, XRP};
 
     use super::BookOffers;
 
     #[test]
     fn test_serde() {
         let req = BookOffers {
-            taker_gets: Currency::IssuedCurrency {
-                currency: Borrowed("EUR"),
-                issuer: Borrowed("rTestIssuer"),
-            },
-            taker_pays: Currency::Xrp,
+            taker_gets: Currency::IssuedCurrency(IssuedCurrency::new(
+                "EUR".into(),
+                "rTestIssuer".into(),
+            )),
+            taker_pays: Currency::XRP(XRP::new()),
             ..Default::default()
         };
         let req_as_string = serde_json::to_string(&req).unwrap();
@@ -107,6 +106,6 @@ mod test {
 
         assert_eq!(req_json, expected_json);
         assert_eq!(req, deserialized_req);
-        assert_eq!(Currency::Xrp, deserialized_req.taker_pays);
+        assert_eq!(Currency::XRP(XRP::new()), deserialized_req.taker_pays);
     }
 }

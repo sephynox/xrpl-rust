@@ -54,39 +54,6 @@ pub mod txn_flags {
     }
 }
 
-/// Used for tagged variants in an `untagged` enum
-pub mod currency_xrp {
-    use super::HashMap;
-    use serde::de::Error;
-    use serde::{ser::SerializeMap, Deserialize};
-
-    pub fn serialize<S>(serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let xrp_currency = [("currency", "XRP")];
-        let mut map = serializer.serialize_map(Some(xrp_currency.len()))?;
-        for (k, v) in xrp_currency {
-            map.serialize_entry(k, v)?;
-        }
-        map.end()
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<(), D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let xrp_currency: HashMap<&str, &str> = HashMap::deserialize(deserializer)?;
-
-        if xrp_currency.get("currency").unwrap() == &"XRP" {
-            return Ok(());
-        }
-
-        // TODO: utilize anyhow and thiserror
-        Err("Could not deserialize XRP currency.").map_err(Error::custom)
-    }
-}
-
 /// Source: https://github.com/serde-rs/serde/issues/554#issuecomment-249211775
 // TODO: Find a way to `#[skip_serializing_none]`
 // TODO: Find a more generic way
