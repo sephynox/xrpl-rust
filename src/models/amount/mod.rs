@@ -1,6 +1,7 @@
 pub mod issued_currency_amount;
 pub mod xrp_amount;
 
+use core::convert::TryInto;
 pub use issued_currency_amount::*;
 use rust_decimal::{Decimal, Error};
 pub use xrp_amount::*;
@@ -9,10 +10,6 @@ use crate::models::Model;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 
-pub trait ValueAsDecimal {
-    fn as_decimal(&self) -> Result<Decimal, Error>;
-}
-
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Display)]
 #[serde(untagged)]
 pub enum Amount<'a> {
@@ -20,11 +17,13 @@ pub enum Amount<'a> {
     XRPAmount(XRPAmount<'a>),
 }
 
-impl<'a> ValueAsDecimal for Amount<'a> {
-    fn as_decimal(&self) -> Result<Decimal, Error> {
+impl<'a> TryInto<Decimal> for Amount<'a> {
+    type Error = Error;
+
+    fn try_into(self) -> Result<Decimal, Self::Error> {
         match self {
-            Amount::IssuedCurrencyAmount(amount) => amount.as_decimal(),
-            Amount::XRPAmount(amount) => amount.as_decimal(),
+            Amount::IssuedCurrencyAmount(amount) => amount.try_into(),
+            Amount::XRPAmount(amount) => amount.try_into(),
         }
     }
 }

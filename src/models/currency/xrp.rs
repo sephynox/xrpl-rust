@@ -13,7 +13,7 @@ impl<'a> Model for XRP<'a> {}
 
 impl<'a> ToAmount<'a, XRPAmount<'a>> for XRP<'a> {
     fn to_amount(&self, value: Cow<'a, str>) -> XRPAmount<'a> {
-        value as XRPAmount<'a>
+        XRPAmount(value)
     }
 }
 

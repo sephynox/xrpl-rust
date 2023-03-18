@@ -1,8 +1,10 @@
 use alloc::vec::Vec;
+use core::convert::TryInto;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::amount::{ValueAsDecimal, XRPAmount};
+use crate::models::amount::XRPAmount;
 use crate::models::{
     amount::Amount,
     exceptions::{NFTokenAcceptOfferException, XRPLModelException, XRPLTransactionException},
@@ -144,11 +146,16 @@ impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
     }
     fn _get_nftoken_broker_fee_error(&self) -> Result<(), NFTokenAcceptOfferException> {
         match self.nftoken_broker_fee.as_ref() {
-            // TODO: handle `as_decimal` error
-            Some(nftoken_broker_fee) => match nftoken_broker_fee.as_decimal().unwrap().is_zero() {
-                true => Err(NFTokenAcceptOfferException::InvalidBrokerFeeMustBeGreaterZero),
-                false => Ok(()),
-            },
+            Some(nftoken_broker_fee) => {
+                // TODO: handle `rust_decimal` error
+                let nftoken_broker_fee_decimal: Decimal =
+                    (*nftoken_broker_fee).clone().try_into().unwrap();
+                if nftoken_broker_fee_decimal.is_zero() {
+                    Err(NFTokenAcceptOfferException::InvalidBrokerFeeMustBeGreaterZero)
+                } else {
+                    Ok(())
+                }
+            }
             None => Ok(()),
         }
     }
