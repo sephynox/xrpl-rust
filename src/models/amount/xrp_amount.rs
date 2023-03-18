@@ -10,6 +10,6 @@ impl<'a> Model for XRPAmount<'a> {}
 
 impl<'a> ValueAsDecimal for XRPAmount<'a> {
     fn as_decimal(&self) -> Result<Decimal, rust_decimal::Error> {
-        Decimal::from_str(&*self)
+        Decimal::from_str(self)
     }
 }
