@@ -1,4 +1,6 @@
 use alloc::vec::Vec;
+use core::convert::TryInto;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
@@ -11,7 +13,7 @@ use crate::models::{
 };
 
 use crate::_serde::txn_flags;
-use crate::models::amount::{Amount, ValueAsDecimal, XRPAmount};
+use crate::models::amount::{Amount, XRPAmount};
 
 /// Transactions of the NFTokenCreateOffer type support additional values
 /// in the Flags field. This enum represents those options.
@@ -182,10 +184,11 @@ impl<'a> Transaction for NFTokenCreateOffer<'a> {
 
 impl<'a> NFTokenCreateOfferError for NFTokenCreateOffer<'a> {
     fn _get_amount_error(&self) -> Result<(), NFTokenCreateOfferException> {
+        // TODO: handle `rust_decimal` error
+        let amount: Decimal = self.amount.clone().try_into().unwrap();
         match !self.has_flag(&Flag::NFTokenCreateOffer(
             NFTokenCreateOfferFlag::TfSellOffer,
-            // TODO: handle `as_decimal` error
-        )) && self.amount.as_decimal().unwrap().is_zero()
+        )) && amount.is_zero()
         {
             true => Err(NFTokenCreateOfferException::InvalidAmountMustBeGreaterZero),
             false => Ok(()),
