@@ -16,7 +16,7 @@ impl<'a> Model for IssuedCurrencyAmount<'a> {}
 
 impl<'a> ValueAsDecimal for IssuedCurrencyAmount<'a> {
     fn as_decimal(&self) -> Result<Decimal, rust_decimal::Error> {
-        Decimal::from_str(&*self.value)
+        Decimal::from_str(&self.value)
     }
 }
 
