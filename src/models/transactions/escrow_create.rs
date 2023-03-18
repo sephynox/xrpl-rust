@@ -1,14 +1,12 @@
-use crate::Err;
 use alloc::vec::Vec;
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use alloc::string::ToString;
-
-use crate::models::transactions::XRPLEscrowCreateException;
+use crate::models::amount::XRPAmount;
 use crate::models::{
-    model::Model, Amount, EscrowCreateError, Memo, Signer, Transaction, TransactionType,
+    exceptions::{EscrowCreateException, XRPLModelException, XRPLTransactionException},
+    model::Model,
+    EscrowCreateError, Memo, Signer, Transaction, TransactionType,
 };
 
 /// Creates an Escrow, which sequests XRP until the escrow process either finishes or is canceled.
@@ -35,7 +33,7 @@ pub struct EscrowCreate<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -80,7 +78,7 @@ pub struct EscrowCreate<'a> {
     ///
     /// See EscrowCreate fields:
     /// `<https://xrpl.org/escrowcreate.html#escrowcreate-flags>`
-    pub amount: Amount,
+    pub amount: XRPAmount<'a>,
     pub destination: &'a str,
     pub destination_tag: Option<u32>,
     pub cancel_after: Option<u32>,
@@ -114,11 +112,13 @@ impl<'a> Default for EscrowCreate<'a> {
     }
 }
 
-impl<'a: 'static> Model for EscrowCreate<'a> {
-    fn get_errors(&self) -> Result<()> {
+impl<'a> Model for EscrowCreate<'a> {
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_finish_after_error() {
-            Ok(_) => Ok(()),
-            Err(error) => Err!(error),
+            Ok(_no_error) => Ok(()),
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::EscrowCreateError(error),
+            )),
         }
     }
 }
@@ -130,21 +130,18 @@ impl<'a> Transaction for EscrowCreate<'a> {
 }
 
 impl<'a> EscrowCreateError for EscrowCreate<'a> {
-    fn _get_finish_after_error(&self) -> Result<(), XRPLEscrowCreateException> {
-        if let (Some(finish_after), Some(cancel_after)) = (self.finish_after, self.cancel_after) {
-            if finish_after >= cancel_after {
-                Err(XRPLEscrowCreateException::ValueBelowValue {
-                    field1: "cancel_after",
-                    field2: "finish_after",
-                    field1_val: cancel_after,
-                    field2_val: finish_after,
-                    resource: "",
-                })
-            } else {
-                Ok(())
-            }
-        } else {
-            Ok(())
+    fn _get_finish_after_error(&self) -> Result<(), EscrowCreateException> {
+        match self.finish_after {
+            Some(finish_after) => match self.cancel_after {
+                Some(cancel_after) => match finish_after >= cancel_after {
+                    true => {
+                        Err(EscrowCreateException::InvalidCancelAfterMustNotBeBeforeFinishAfter)
+                    }
+                    false => Ok(()),
+                },
+                None => Ok(()),
+            },
+            None => Ok(()),
         }
     }
 }
@@ -152,9 +149,9 @@ impl<'a> EscrowCreateError for EscrowCreate<'a> {
 impl<'a> EscrowCreate<'a> {
     fn new(
         account: &'a str,
-        amount: Amount,
+        amount: XRPAmount<'a>,
         destination: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -195,10 +192,12 @@ impl<'a> EscrowCreate<'a> {
 
 #[cfg(test)]
 mod test_escrow_create_errors {
-    use crate::models::{Amount, Model, TransactionType};
+    use crate::models::{
+        exceptions::{EscrowCreateException, XRPLModelException, XRPLTransactionException},
+        Model, TransactionType,
+    };
 
-    use alloc::borrow::Cow;
-    use alloc::string::ToString;
+    use crate::models::amount::XRPAmount;
 
     use super::EscrowCreate;
 
@@ -218,31 +217,30 @@ mod test_escrow_create_errors {
             flags: None,
             memos: None,
             signers: None,
-            amount: Amount::Xrp(Cow::Borrowed("100000000")),
+            amount: XRPAmount::from("100000000"),
             destination: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             destination_tag: None,
             cancel_after: Some(13298498),
             finish_after: Some(14359039),
             condition: None,
         };
-
-        assert_eq!(
-            escrow_create.validate().unwrap_err().to_string().as_str(),
-            "The value of the field `cancel_after` is not allowed to be below the value of the field `finish_after` (max 14359039, found 13298498). For more information see: "
-        );
+        let expected_error =
+            XRPLModelException::XRPLTransactionError(XRPLTransactionException::EscrowCreateError(
+                EscrowCreateException::InvalidCancelAfterMustNotBeBeforeFinishAfter,
+            ));
+        assert_eq!(escrow_create.validate(), Err(expected_error));
     }
 }
 
 #[cfg(test)]
 mod test_serde {
     use super::*;
-    use alloc::borrow::Cow::Borrowed;
 
     #[test]
     fn test_serialize() {
         let default_txn = EscrowCreate::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Amount::Xrp(Borrowed("10000")),
+            XRPAmount::from("10000"),
             "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
             None,
             None,
@@ -271,7 +269,7 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = EscrowCreate::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Amount::Xrp(Borrowed("10000")),
+            XRPAmount::from("10000"),
             "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
             None,
             None,

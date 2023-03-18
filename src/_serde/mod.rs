@@ -5,7 +5,7 @@ use fnv::FnvHasher;
 
 pub type HashMap<K, V> = hashbrown::HashMap<K, V, BuildHasherDefault<FnvHasher>>;
 
-pub(crate) mod txn_flags {
+pub mod txn_flags {
     use core::fmt::Debug;
 
     use alloc::vec::Vec;
@@ -13,9 +13,9 @@ pub(crate) mod txn_flags {
     use strum::IntoEnumIterator;
 
     pub fn serialize<F, S>(flags: &Option<Vec<F>>, s: S) -> Result<S::Ok, S::Error>
-        where
-            F: Serialize,
-            S: Serializer,
+    where
+        F: Serialize,
+        S: Serializer,
     {
         if let Some(f) = flags {
             let flags_as_value = serde_json::to_value(f).unwrap();
@@ -28,9 +28,9 @@ pub(crate) mod txn_flags {
     }
 
     pub fn deserialize<'de, F, D>(d: D) -> Result<Option<Vec<F>>, D::Error>
-        where
-            F: Serialize + IntoEnumIterator + Debug,
-            D: Deserializer<'de>,
+    where
+        F: Serialize + IntoEnumIterator + Debug,
+        D: Deserializer<'de>,
     {
         let flags_u32 = u32::deserialize(d)?;
 
@@ -54,87 +54,6 @@ pub(crate) mod txn_flags {
     }
 }
 
-pub(crate) mod lgr_obj_flags {
-    use core::fmt::Debug;
-
-    use alloc::vec::Vec;
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    use strum::IntoEnumIterator;
-
-    pub fn serialize<F, S>(flags: &Vec<F>, s: S) -> Result<S::Ok, S::Error>
-        where
-            F: Serialize,
-            S: Serializer,
-    {
-        if !flags.is_empty() {
-            let flags_as_value = serde_json::to_value(flags).unwrap();
-            let flag_num_vec: Vec<u32> = serde_json::from_value(flags_as_value).unwrap();
-
-            s.serialize_u32(flag_num_vec.iter().sum())
-        } else {
-            s.serialize_u32(0)
-        }
-    }
-
-    pub fn deserialize<'de, F, D>(d: D) -> Result<Vec<F>, D::Error>
-        where
-            F: Serialize + IntoEnumIterator + Debug,
-            D: Deserializer<'de>,
-    {
-        let flags_u32 = u32::deserialize(d)?;
-        if flags_u32 != 0 {
-            let mut flags_vec = Vec::new();
-            for flag in F::iter() {
-                let check_flag: u32 = serde_json::to_string(&flag)
-                    .unwrap()
-                    .as_str()
-                    .parse::<u32>()
-                    .unwrap();
-                if check_flag & flags_u32 == check_flag {
-                    flags_vec.push(flag);
-                }
-            }
-
-            Ok(flags_vec)
-        } else {
-            Ok(Vec::new())
-        }
-    }
-}
-
-/// Used for tagged variants in an `untagged` enum
-pub(crate) mod currency_xrp {
-    use super::HashMap;
-    use serde::de::Error;
-    use serde::{ser::SerializeMap, Deserialize};
-
-    pub fn serialize<S>(serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer,
-    {
-        let xrp_currency = [("currency", "XRP")];
-        let mut map = serializer.serialize_map(Some(xrp_currency.len()))?;
-        for (k, v) in xrp_currency {
-            map.serialize_entry(k, v)?;
-        }
-        map.end()
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<(), D::Error>
-        where
-            D: serde::Deserializer<'de>,
-    {
-        let xrp_currency: HashMap<&str, &str> = HashMap::deserialize(deserializer)?;
-
-        if xrp_currency.get("currency").unwrap() == &"XRP" {
-            return Ok(());
-        }
-
-        // TODO: utilize anyhow and thiserror
-        Err("Could not deserialize XRP currency.").map_err(Error::custom)
-    }
-}
-
 /// Source: https://github.com/serde-rs/serde/issues/554#issuecomment-249211775
 // TODO: Find a way to `#[skip_serializing_none]`
 // TODO: Find a more generic way
@@ -145,7 +64,7 @@ macro_rules! serde_with_tag {
         pub struct $name:ident<$lt:lifetime> {
             $(
                 $(#[$doc:meta])*
-                pub $field:ident: $ty:ty,
+                $field:ident : $ty:ty,
             )*
         }
     ) => {
@@ -153,7 +72,15 @@ macro_rules! serde_with_tag {
         pub struct $name<$lt> {
             $(
                 $(#[$doc])*
-                pub $field: $ty,
+                $field: $ty,
+            )*
+        }
+
+        #[derive(Serialize, Deserialize)]
+        #[serde(rename_all = "PascalCase")]
+        pub struct Helper<$lt> {
+            $(
+                $field: $ty,
             )*
         }
 
@@ -162,15 +89,6 @@ macro_rules! serde_with_tag {
             where
                 S: ::serde::Serializer
             {
-                #[derive(Serialize)]
-                #[serde(rename_all = "PascalCase")]
-                #[skip_serializing_none]
-                struct Helper<$lt> {
-                    $(
-                        $field: $ty,
-                    )*
-                }
-
                 let helper = Helper {
                     $(
                         $field: self.$field.clone(),
@@ -190,21 +108,12 @@ macro_rules! serde_with_tag {
             where
                 D: serde::Deserializer<'de>,
             {
-                #[derive(Deserialize)]
-                #[serde(rename_all = "PascalCase")]
-                #[skip_serializing_none]
-                struct Helper<$lt> {
-                    $(
-                        $field: $ty,
-                    )*
-                }
-
-                let hash_map: $crate::_serde::HashMap<&$lt str, Helper<$lt>> = $crate::_serde::HashMap::deserialize(deserializer)?;
+                let hash_map: HashMap<&$lt str, Helper<$lt>> = HashMap::deserialize(deserializer)?;
                 let helper = hash_map.get(stringify!($name)).unwrap();
 
                 Ok(Self {
                     $(
-                        $field: helper.$field.clone().into(),
+                        $field: helper.$field.into(),
                     )*
                 })
             }
@@ -215,7 +124,7 @@ macro_rules! serde_with_tag {
         pub struct $name:ident {
             $(
                 $(#[$doc:meta])*
-                pub $field:ident: $ty:ty,
+                $field:ident : $ty:ty,
             )*
         }
     ) => {
@@ -223,7 +132,15 @@ macro_rules! serde_with_tag {
         pub struct $name {
             $(
                 $(#[$doc])*
-                pub $field: $ty,
+                $field: $ty,
+            )*
+        }
+
+        #[derive(Serialize, Deserialize)]
+        #[serde(rename_all = "PascalCase")]
+        pub struct Helper {
+            $(
+                $field: $ty,
             )*
         }
 
@@ -232,15 +149,6 @@ macro_rules! serde_with_tag {
             where
                 S: ::serde::Serializer
             {
-                #[derive(Serialize)]
-                #[serde(rename_all = "PascalCase")]
-                #[skip_serializing_none]
-                struct Helper {
-                    $(
-                        $field: $ty,
-                    )*
-                }
-
                 let helper = Helper {
                     $(
                         $field: self.$field.clone(),
@@ -260,16 +168,7 @@ macro_rules! serde_with_tag {
             where
                 D: serde::Deserializer<'de>,
             {
-                #[derive(Deserialize)]
-                #[serde(rename_all = "PascalCase")]
-                #[skip_serializing_none]
-                struct Helper {
-                    $(
-                        $field: $ty,
-                    )*
-                }
-
-                let hash_map: $crate::_serde::HashMap<&'de str, Helper> = $crate::_serde::HashMap::deserialize(deserializer)?;
+                let hash_map: HashMap<&'de str, Helper> = HashMap::deserialize(deserializer)?;
                 let helper = hash_map.get(stringify!($name)).unwrap();
 
                 Ok(Self {

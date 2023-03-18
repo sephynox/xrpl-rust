@@ -5,6 +5,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
+use crate::models::amount::XRPAmount;
 use crate::models::{model::Model, Flag, Transaction, TransactionType};
 
 #[derive(
@@ -42,7 +43,7 @@ pub struct EnableAmendment<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -103,7 +104,7 @@ impl<'a> EnableAmendment<'a> {
         account: &'a str,
         amendment: &'a str,
         ledger_sequence: u32,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         signing_pub_key: Option<&'a str>,
         source_tag: Option<u32>,

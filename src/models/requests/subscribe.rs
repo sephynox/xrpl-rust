@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{default_false, Currency, Model, RequestMethod, StreamParameter};
+use crate::models::{currency::Currency, default_false, Model, RequestMethod, StreamParameter};
 
 /// Format for elements in the `books` array for Subscribe only.
 ///
@@ -11,8 +11,8 @@ use crate::models::{default_false, Currency, Model, RequestMethod, StreamParamet
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
 pub struct Book<'a> {
-    pub taker_gets: Currency,
-    pub taker_pays: Currency,
+    pub taker_gets: Currency<'a>,
+    pub taker_pays: Currency<'a>,
     pub taker: &'a str,
     #[serde(default = "default_false")]
     pub snapshot: Option<bool>,

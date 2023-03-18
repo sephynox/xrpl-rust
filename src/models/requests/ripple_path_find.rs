@@ -2,7 +2,8 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{Currency, Model, RequestMethod};
+use crate::models::currency::XRP;
+use crate::models::{currency::Currency, Model, RequestMethod};
 
 /// The ripple_path_find method is a simpl<'a>ified version of
 /// the path_find method that provides a single response with
@@ -35,7 +36,7 @@ pub struct RipplePathFind<'a> {
     /// of the value field (for non-XRP currencies). This requests a
     /// path to deliver as much as possible, while spending no more
     /// than the amount specified in send_max (if provided).
-    pub destination_amount: Currency,
+    pub destination_amount: Currency<'a>,
     /// The unique request id.
     pub id: Option<&'a str>,
     /// A 20-byte hex string for the ledger version to use.
@@ -45,7 +46,7 @@ pub struct RipplePathFind<'a> {
     pub ledger_index: Option<&'a str>,
     /// Currency Amount that would be spent in the transaction.
     /// Cannot be used with source_currencies.
-    pub send_max: Option<Currency>,
+    pub send_max: Option<Currency<'a>>,
     /// Array of currencies that the source account might want
     /// to spend. Each entry in the array should be a JSON object
     /// with a mandatory currency field and optional issuer field,
@@ -53,7 +54,7 @@ pub struct RipplePathFind<'a> {
     /// more than 18 source currencies. By default, uses all source
     /// currencies available up to a maximum of 88 different
     /// currency/issuer pairs.
-    pub source_currencies: Option<Vec<Currency>>,
+    pub source_currencies: Option<Vec<Currency<'a>>>,
     /// The request method.
     #[serde(default = "RequestMethod::ripple_path_find")]
     pub command: RequestMethod,
@@ -64,7 +65,7 @@ impl<'a> Default for RipplePathFind<'a> {
         RipplePathFind {
             source_account: "",
             destination_account: "",
-            destination_amount: Currency::Xrp,
+            destination_amount: Currency::XRP(XRP::new()),
             id: None,
             ledger_hash: None,
             ledger_index: None,
@@ -81,12 +82,12 @@ impl<'a> RipplePathFind<'a> {
     fn new(
         source_account: &'a str,
         destination_account: &'a str,
-        destination_amount: Currency,
+        destination_amount: Currency<'a>,
         id: Option<&'a str>,
         ledger_hash: Option<&'a str>,
         ledger_index: Option<&'a str>,
-        send_max: Option<Currency>,
-        source_currencies: Option<Vec<Currency>>,
+        send_max: Option<Currency<'a>>,
+        source_currencies: Option<Vec<Currency<'a>>>,
     ) -> Self {
         Self {
             source_account,

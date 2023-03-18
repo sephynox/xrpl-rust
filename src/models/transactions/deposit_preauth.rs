@@ -1,14 +1,12 @@
-use crate::Err;
 use alloc::vec::Vec;
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use alloc::string::ToString;
-
-use crate::models::transactions::XRPLDepositPreauthException;
+use crate::models::amount::XRPAmount;
 use crate::models::{
-    model::Model, DepositPreauthError, Memo, Signer, Transaction, TransactionType,
+    exceptions::{DepositPreauthException, XRPLModelException, XRPLTransactionException},
+    model::Model,
+    DepositPreauthError, Memo, Signer, Transaction, TransactionType,
 };
 
 /// A DepositPreauth transaction gives another account pre-approval
@@ -36,7 +34,7 @@ pub struct DepositPreauth<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -107,11 +105,13 @@ impl<'a> Default for DepositPreauth<'a> {
     }
 }
 
-impl<'a: 'static> Model for DepositPreauth<'a> {
-    fn get_errors(&self) -> Result<()> {
+impl<'a> Model for DepositPreauth<'a> {
+    fn get_errors(&self) -> Result<(), XRPLModelException> {
         match self._get_authorize_and_unauthorize_error() {
             Ok(_no_error) => Ok(()),
-            Err(error) => Err!(error),
+            Err(error) => Err(XRPLModelException::XRPLTransactionError(
+                XRPLTransactionException::DepositPreauthError(error),
+            )),
         }
     }
 }
@@ -123,17 +123,13 @@ impl<'a> Transaction for DepositPreauth<'a> {
 }
 
 impl<'a> DepositPreauthError for DepositPreauth<'a> {
-    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), XRPLDepositPreauthException> {
-        if (self.authorize.is_none() && self.unauthorize.is_none())
-            || (self.authorize.is_some() && self.unauthorize.is_some())
-        {
-            Err(XRPLDepositPreauthException::DefineExactlyOneOf {
-                field1: "authorize",
-                field2: "unauthorize",
-                resource: "",
-            })
-        } else {
-            Ok(())
+    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException> {
+        match self.authorize.is_none() && self.unauthorize.is_none() {
+            true => Err(DepositPreauthException::InvalidMustSetAuthorizeOrUnauthorize),
+            false => match self.authorize.is_some() && self.unauthorize.is_some() {
+                true => Err(DepositPreauthException::InvalidMustNotSetAuthorizeAndUnauthorize),
+                false => Ok(()),
+            },
         }
     }
 }
@@ -141,7 +137,7 @@ impl<'a> DepositPreauthError for DepositPreauth<'a> {
 impl<'a> DepositPreauth<'a> {
     fn new(
         account: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -176,15 +172,16 @@ impl<'a> DepositPreauth<'a> {
 
 #[cfg(test)]
 mod test_deposit_preauth_exception {
-
-    use crate::models::{Model, TransactionType};
-    use alloc::string::ToString;
+    use crate::models::{
+        exceptions::{DepositPreauthException, XRPLModelException, XRPLTransactionException},
+        Model, TransactionType,
+    };
 
     use super::DepositPreauth;
 
     #[test]
     fn test_authorize_and_unauthorize_error() {
-        let deposit_preauth = DepositPreauth {
+        let mut deposit_preauth = DepositPreauth {
             transaction_type: TransactionType::DepositPreauth,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
@@ -201,11 +198,21 @@ mod test_deposit_preauth_exception {
             authorize: None,
             unauthorize: None,
         };
-
-        assert_eq!(
-            deposit_preauth.validate().unwrap_err().to_string().as_str(),
-            "The field `authorize` can not be defined with `unauthorize`. Define exactly one of them. For more information see: "
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::DepositPreauthError(
+                DepositPreauthException::InvalidMustSetAuthorizeOrUnauthorize,
+            ),
         );
+        assert_eq!(deposit_preauth.validate(), Err(expected_error));
+
+        deposit_preauth.authorize = Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK");
+        deposit_preauth.unauthorize = Some("raQwCVAJVqjrVm1Nj5SFRcX8i22BhdC9WA");
+        let expected_error = XRPLModelException::XRPLTransactionError(
+            XRPLTransactionException::DepositPreauthError(
+                DepositPreauthException::InvalidMustNotSetAuthorizeAndUnauthorize,
+            ),
+        );
+        assert_eq!(deposit_preauth.validate(), Err(expected_error));
     }
 }
 
@@ -217,7 +224,7 @@ mod test_serde {
     fn test_serialize() {
         let default_txn = DepositPreauth::new(
             "rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8",
-            Some("10"),
+            Some("10".into()),
             Some(2),
             None,
             None,
@@ -242,7 +249,7 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = DepositPreauth::new(
             "rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8",
-            Some("10"),
+            Some("10".into()),
             Some(2),
             None,
             None,
