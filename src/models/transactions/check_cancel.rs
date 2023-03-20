@@ -2,6 +2,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::models::amount::XRPAmount;
 use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
 
 /// Cancels an unredeemed Check, removing it from the ledger without
@@ -31,7 +32,7 @@ pub struct CheckCancel<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -113,7 +114,7 @@ impl<'a> CheckCancel<'a> {
     fn new(
         account: &'a str,
         check_id: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -152,7 +153,7 @@ mod test_serde {
         let default_txn = CheckCancel::new(
             "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
             "49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0",
-            Some("12"),
+            Some("12".into()),
             None,
             None,
             None,
@@ -176,7 +177,7 @@ mod test_serde {
         let default_txn = CheckCancel::new(
             "rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo",
             "49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0",
-            Some("12"),
+            Some("12".into()),
             None,
             None,
             None,

@@ -2,6 +2,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::models::amount::XRPAmount;
 use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
 
 /// An AccountDelete transaction deletes an account and any objects it
@@ -31,7 +32,7 @@ pub struct AccountDelete<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -120,7 +121,7 @@ impl<'a> AccountDelete<'a> {
     fn new(
         account: &'a str,
         destination: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -161,7 +162,7 @@ mod test_serde {
         let default_txn = AccountDelete::new(
             "rWYkbWkCeg8dP6rXALnjgZSjjLyih5NXm",
             "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
-            Some("2000000"),
+            Some("2000000".into()),
             Some(2470665),
             None,
             None,
@@ -186,7 +187,7 @@ mod test_serde {
         let default_txn = AccountDelete::new(
             "rWYkbWkCeg8dP6rXALnjgZSjjLyih5NXm",
             "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
-            Some("2000000"),
+            Some("2000000".into()),
             Some(2470665),
             None,
             None,

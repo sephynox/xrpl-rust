@@ -14,6 +14,7 @@ use crate::{
 };
 
 use crate::_serde::txn_flags;
+use crate::models::amount::XRPAmount;
 
 /// Transactions of the NFTokenMint type support additional values
 /// in the Flags field. This enum represents those options.
@@ -62,7 +63,7 @@ pub struct NFTokenMint<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -227,7 +228,7 @@ impl<'a> NFTokenMint<'a> {
     fn new(
         account: &'a str,
         nftoken_taxon: u32,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -374,7 +375,7 @@ mod test_serde {
         let default_txn = NFTokenMint::new(
             "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
             0,
-            Some("10"),
+            Some("10".into()),
             None,
             None,
             None,
@@ -402,7 +403,7 @@ mod test_serde {
         let default_txn = NFTokenMint::new(
             "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
             0,
-            Some("10"),
+            Some("10".into()),
             None,
             None,
             None,
