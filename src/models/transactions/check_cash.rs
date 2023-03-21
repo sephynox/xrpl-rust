@@ -185,8 +185,6 @@ mod test_check_cash_error {
         Model, TransactionType,
     };
 
-    use crate::models::amount::{Amount, XRPAmount};
-
     use super::CheckCash;
 
     #[test]
