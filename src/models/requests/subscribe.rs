@@ -10,7 +10,7 @@ use crate::models::{currency::Currency, default_false, Model, RequestMethod, Str
 /// `<https://xrpl.org/subscribe.html#subscribe>`
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
-pub struct Book<'a> {
+pub struct SubscribeBook<'a> {
     pub taker_gets: Currency<'a>,
     pub taker_pays: Currency<'a>,
     pub taker: &'a str,
@@ -34,7 +34,7 @@ pub struct Subscribe<'a> {
     pub id: Option<&'a str>,
     /// Array of objects defining order books  to monitor for
     /// updates, as detailed below.
-    pub books: Option<Vec<Book<'a>>>,
+    pub books: Option<Vec<SubscribeBook<'a>>>,
     /// Array of string names of generic streams to subscribe to.
     pub streams: Option<Vec<StreamParameter>>,
     /// Array with the unique addresses of accounts to monitor
@@ -79,7 +79,7 @@ impl<'a> Model for Subscribe<'a> {}
 impl<'a> Subscribe<'a> {
     fn new(
         id: Option<&'a str>,
-        books: Option<Vec<Book<'a>>>,
+        books: Option<Vec<SubscribeBook<'a>>>,
         streams: Option<Vec<StreamParameter>>,
         accounts: Option<Vec<&'a str>>,
         accounts_proposed: Option<Vec<&'a str>>,

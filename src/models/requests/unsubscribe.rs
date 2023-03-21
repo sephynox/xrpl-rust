@@ -10,7 +10,7 @@ use crate::models::{currency::Currency, default_false, Model, RequestMethod, Str
 /// `<https://xrpl.org/unsubscribe.html>`
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all(serialize = "PascalCase", deserialize = "snake_case"))]
-pub struct Book<'a> {
+pub struct UnsubscribeBook<'a> {
     pub taker_gets: Currency<'a>,
     pub taker_pays: Currency<'a>,
     #[serde(default = "default_false")]
@@ -32,8 +32,7 @@ pub struct Unsubscribe<'a> {
     pub id: Option<&'a str>,
     /// Array of objects defining order books to unsubscribe
     /// from, as explained below.
-    // TODO: USE `UnsubscribeBookFields` AS SOON AS LIFETIME ISSUES ARE FIXED
-    pub books: Option<Vec<Book<'a>>>,
+    pub books: Option<Vec<UnsubscribeBook<'a>>>,
     /// Array of string names of generic streams to unsubscribe
     /// from, including ledger, server, transactions,
     /// and transactions_proposed.
@@ -47,7 +46,6 @@ pub struct Unsubscribe<'a> {
     /// Like accounts, but for accounts_proposed subscriptions that
     /// included not-yet-validated transactions.
     pub accounts_proposed: Option<Vec<&'a str>>,
-    // TODO Lifetime issue
     #[serde(skip_serializing)]
     pub broken: Option<&'a str>,
     /// The request method.
@@ -74,7 +72,7 @@ impl<'a> Model for Unsubscribe<'a> {}
 impl<'a> Unsubscribe<'a> {
     fn new(
         id: Option<&'a str>,
-        books: Option<Vec<Book<'a>>>,
+        books: Option<Vec<UnsubscribeBook<'a>>>,
         streams: Option<Vec<StreamParameter>>,
         accounts: Option<Vec<&'a str>>,
         accounts_proposed: Option<Vec<&'a str>>,
