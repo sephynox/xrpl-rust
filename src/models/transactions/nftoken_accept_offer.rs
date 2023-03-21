@@ -8,6 +8,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
+use crate::models::amount::exceptions::XRPLAmountException;
 use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLNFTokenAcceptOfferException;
 use crate::models::{
@@ -148,17 +149,22 @@ impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
             Ok(())
         }
     }
-    fn _get_nftoken_broker_fee_error(&self) -> Result<(), XRPLNFTokenAcceptOfferException> {
+    fn _get_nftoken_broker_fee_error(&self) -> Result<()> {
         if let Some(nftoken_broker_fee) = &self.nftoken_broker_fee {
-            let nftoken_broker_fee_decimal: Decimal =
-                (*nftoken_broker_fee).clone().try_into().unwrap();
-            if nftoken_broker_fee_decimal.is_zero() {
-                Err(XRPLNFTokenAcceptOfferException::ValueZero {
-                    field: "nftoken_broker_fee",
-                    resource: "",
-                })
-            } else {
-                Ok(())
+            let nftoken_broker_fee_decimal: Result<Decimal, XRPLAmountException> =
+                nftoken_broker_fee.clone().try_into();
+            match nftoken_broker_fee_decimal {
+                Ok(nftoken_broker_fee_dec) => {
+                    if nftoken_broker_fee_dec.is_zero() {
+                        Err!(XRPLNFTokenAcceptOfferException::ValueZero {
+                            field: "nftoken_broker_fee",
+                            resource: "",
+                        })
+                    } else {
+                        Ok(())
+                    }
+                }
+                Err(decimal_error) => Err!(decimal_error),
             }
         } else {
             Ok(())

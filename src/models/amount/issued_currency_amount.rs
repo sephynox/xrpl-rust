@@ -1,3 +1,4 @@
+use crate::models::amount::exceptions::XRPLAmountException;
 use crate::models::Model;
 use alloc::borrow::Cow;
 use core::convert::TryInto;
@@ -25,9 +26,12 @@ impl<'a> IssuedCurrencyAmount<'a> {
 }
 
 impl<'a> TryInto<Decimal> for IssuedCurrencyAmount<'a> {
-    type Error = rust_decimal::Error;
+    type Error = XRPLAmountException;
 
     fn try_into(self) -> Result<Decimal, Self::Error> {
-        Decimal::from_str(&self.value)
+        match Decimal::from_str(&self.value) {
+            Ok(decimal) => Ok(decimal),
+            Err(decimal_error) => Err(XRPLAmountException::ToDecimalError(decimal_error)),
+        }
     }
 }
