@@ -446,10 +446,6 @@ pub trait SignerListSetError {
     fn _get_signer_quorum_error(&self) -> Result<(), XRPLSignerListSetException>;
 }
 
-pub trait UNLModifyError {
-    fn _get_unl_modify_error(&self) -> Result<(), XRPLUNLModifyException>;
-}
-
 pub trait ChannelAuthorizeError {
     fn _get_field_error(&self) -> Result<(), XRPLChannelAuthorizeException>;
 }
