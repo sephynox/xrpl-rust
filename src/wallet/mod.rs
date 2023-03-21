@@ -21,24 +21,24 @@ use zeroize::Zeroize;
 struct Wallet {
     /// The seed from which the public and private keys
     /// are derived.
-    seed: String,
+    pub seed: String,
     /// The public key that is used to identify this wallet's
     /// signatures, as a hexadecimal string.
-    public_key: String,
+    pub public_key: String,
     /// The private key that is used to create signatures, as
     /// a hexadecimal string. MUST be kept secret!
     ///
     /// TODO Use seckey
-    private_key: String,
+    pub private_key: String,
     /// The address that publicly identifies this wallet, as
     /// a base58 string.
-    classic_address: String,
+    pub classic_address: String,
     /// The next available sequence number to use for
     /// transactions from this wallet. Must be updated by the
     /// user. Increments on the ledger with every successful
     /// transaction submission, and stays the same with every
     /// failed transaction submission.
-    sequence: u64,
+    pub sequence: u64,
 }
 
 // Zeroize the memory where sensitive data is stored.
