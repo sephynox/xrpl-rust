@@ -4,9 +4,10 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
-use crate::models::{model::Model, Amount, Flag, Memo, Signer, Transaction, TransactionType};
+use crate::models::{model::Model, Flag, Memo, Signer, Transaction, TransactionType};
 
 use crate::_serde::txn_flags;
+use crate::models::amount::{IssuedCurrencyAmount, XRPAmount};
 
 /// Transactions of the TrustSet type support additional values
 /// in the Flags field. This enum represents those options.
@@ -55,7 +56,7 @@ pub struct TrustSet<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -102,7 +103,7 @@ pub struct TrustSet<'a> {
     ///
     /// See TrustSet fields:
     /// `<https://xrpl.org/trustset.html#trustset-fields>`
-    pub limit_amount: Amount,
+    pub limit_amount: IssuedCurrencyAmount<'a>,
     pub quality_in: Option<u32>,
     pub quality_out: Option<u32>,
 }
@@ -160,8 +161,8 @@ impl<'a> Transaction for TrustSet<'a> {
 impl<'a> TrustSet<'a> {
     fn new(
         account: &'a str,
-        limit_amount: Amount,
-        fee: Option<&'a str>,
+        limit_amount: IssuedCurrencyAmount<'a>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -199,18 +200,18 @@ impl<'a> TrustSet<'a> {
 #[cfg(test)]
 mod test_serde {
     use super::*;
-    use alloc::{borrow::Cow::Borrowed, vec};
+    use alloc::vec;
 
     #[test]
     fn test_serialize() {
         let default_txn = TrustSet::new(
             "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
-            Amount::IssuedCurrency {
-                currency: Borrowed("USD"),
-                issuer: Borrowed("rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc"),
-                value: Borrowed("100"),
-            },
-            Some("12"),
+            IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc".into(),
+                "100".into(),
+            ),
+            Some("12".into()),
             Some(12),
             Some(8007750),
             None,
@@ -236,12 +237,12 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = TrustSet::new(
             "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
-            Amount::IssuedCurrency {
-                currency: Borrowed("USD"),
-                issuer: Borrowed("rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc"),
-                value: Borrowed("100"),
-            },
-            Some("12"),
+            IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc".into(),
+                "100".into(),
+            ),
+            Some("12".into()),
             Some(12),
             Some(8007750),
             None,

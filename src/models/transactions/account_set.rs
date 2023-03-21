@@ -7,6 +7,7 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 
 use alloc::string::ToString;
 
+use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLAccountSetException;
 use crate::{
     _serde::txn_flags,
@@ -87,7 +88,7 @@ pub struct AccountSet<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -385,7 +386,7 @@ impl<'a> AccountSetError for AccountSet<'a> {
 impl<'a> AccountSet<'a> {
     fn new(
         account: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -430,6 +431,7 @@ impl<'a> AccountSet<'a> {
         }
     }
 }
+
 #[cfg(test)]
 mod test_account_set_errors {
 
@@ -655,7 +657,7 @@ mod test_serde {
     fn test_serialize() {
         let default_txn = AccountSet::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Some("12"),
+            Some("12".into()),
             Some(5),
             None,
             None,
@@ -687,7 +689,7 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = AccountSet::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Some("12"),
+            Some("12".into()),
             Some(5),
             None,
             None,

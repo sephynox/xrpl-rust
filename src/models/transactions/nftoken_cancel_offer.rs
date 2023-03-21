@@ -6,6 +6,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
+use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLNFTokenCancelOfferException;
 use crate::models::{
     model::Model, Memo, NFTokenCancelOfferError, Signer, Transaction, TransactionType,
@@ -35,7 +36,7 @@ pub struct NFTokenCancelOffer<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -140,7 +141,7 @@ impl<'a> NFTokenCancelOffer<'a> {
     fn new(
         account: &'a str,
         nftoken_offers: Vec<&'a str>,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,

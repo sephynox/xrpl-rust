@@ -9,8 +9,10 @@ use serde_with::skip_serializing_none;
 use alloc::string::ToString;
 
 use crate::models::transactions::XRPLSignerListSetException;
-use crate::{
+use crate::models::{
+    amount::XRPAmount, model::Model, Memo, Signer, SignerListSetError, Transaction, TransactionType,
 };
+use crate::{serde_with_tag, Err};
 
 serde_with_tag! {
     #[derive(Debug, PartialEq, Eq, Default, Clone, new)]
@@ -48,7 +50,7 @@ pub struct SignerListSet<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -226,7 +228,7 @@ impl<'a> SignerListSet<'a> {
     fn new(
         account: &'a str,
         signer_quorum: u32,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -436,7 +438,7 @@ mod test_serde {
         let default_txn = SignerListSet::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
             3,
-            Some("12"),
+            Some("12".into()),
             None,
             None,
             None,
@@ -465,7 +467,7 @@ mod test_serde {
         let default_txn = SignerListSet::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
             3,
-            Some("12"),
+            Some("12".into()),
             None,
             None,
             None,

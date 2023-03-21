@@ -6,9 +6,10 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
+use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLCheckCashException;
 use crate::models::{
-    model::Model, Amount, CheckCashError, Memo, Signer, Transaction, TransactionType,
+    amount::Amount, model::Model, CheckCashError, Memo, Signer, Transaction, TransactionType,
 };
 
 /// Cancels an unredeemed Check, removing it from the ledger without
@@ -38,7 +39,7 @@ pub struct CheckCash<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -85,8 +86,8 @@ pub struct CheckCash<'a> {
     /// `<https://xrpl.org/checkcash.html#checkcash-fields>`
     #[serde(rename = "CheckID")]
     pub check_id: &'a str,
-    pub amount: Option<Amount>,
-    pub deliver_min: Option<Amount>,
+    pub amount: Option<Amount<'a>>,
+    pub deliver_min: Option<Amount<'a>>,
 }
 
 impl<'a> Default for CheckCash<'a> {
@@ -147,7 +148,7 @@ impl<'a> CheckCash<'a> {
     fn new(
         account: &'a str,
         check_id: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -157,8 +158,8 @@ impl<'a> CheckCash<'a> {
         txn_signature: Option<&'a str>,
         memos: Option<Vec<Memo<'a>>>,
         signers: Option<Vec<Signer<'a>>>,
-        amount: Option<Amount>,
-        deliver_min: Option<Amount>,
+        amount: Option<Amount<'a>>,
+        deliver_min: Option<Amount<'a>>,
     ) -> Self {
         Self {
             transaction_type: TransactionType::CheckCash,
@@ -185,6 +186,8 @@ impl<'a> CheckCash<'a> {
 mod test_check_cash_error {
     use crate::models::{Model, TransactionType};
     use alloc::string::ToString;
+
+    use crate::models::amount::{Amount, XRPAmount};
 
     use super::CheckCash;
 
@@ -218,7 +221,7 @@ mod test_check_cash_error {
 
 #[cfg(test)]
 mod test_serde {
-    use alloc::borrow::Cow::Borrowed;
+    use crate::models::amount::XRPAmount;
 
     use super::*;
 
@@ -227,7 +230,7 @@ mod test_serde {
         let default_txn = CheckCash::new(
             "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
             "838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334",
-            Some("12"),
+            Some("12".into()),
             None,
             None,
             None,
@@ -237,7 +240,7 @@ mod test_serde {
             None,
             None,
             None,
-            Some(Amount::Xrp(Borrowed("100000000"))),
+            Some(Amount::XRPAmount(XRPAmount::from("100000000"))),
             None,
         );
         let default_json = r#"{"TransactionType":"CheckCash","Account":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","Fee":"12","CheckID":"838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334","Amount":"100000000"}"#;
@@ -253,7 +256,7 @@ mod test_serde {
         let default_txn = CheckCash::new(
             "rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy",
             "838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334",
-            Some("12"),
+            Some("12".into()),
             None,
             None,
             None,
@@ -263,7 +266,7 @@ mod test_serde {
             None,
             None,
             None,
-            Some(Amount::Xrp(Borrowed("100000000"))),
+            Some(Amount::XRPAmount(XRPAmount::from("100000000"))),
             None,
         );
         let default_json = r#"{"Account":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","TransactionType":"CheckCash","Amount":"100000000","CheckID":"838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334","Fee":"12"}"#;

@@ -6,12 +6,14 @@ use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
 use crate::models::{
-    model::Model, Amount, Flag, Memo, PathStep, PaymentError, Signer, Transaction, TransactionType,
+    amount::Amount, model::Model, Flag, Memo, PathStep, PaymentError, Signer, Transaction,
+    TransactionType,
 };
 use alloc::string::ToString;
 
 use crate::Err;
 use crate::_serde::txn_flags;
+use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLPaymentException;
 
 /// Transactions of the Payment type support additional values
@@ -62,7 +64,7 @@ pub struct Payment<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -109,13 +111,13 @@ pub struct Payment<'a> {
     ///
     /// See Payment fields:
     /// `<https://xrpl.org/payment.html#payment-fields>`
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     pub destination: &'a str,
     pub destination_tag: Option<u32>,
     pub invoice_id: Option<u32>,
     pub paths: Option<Vec<Vec<PathStep<'a>>>>,
-    pub send_max: Option<Amount>,
-    pub deliver_min: Option<Amount>,
+    pub send_max: Option<Amount<'a>>,
+    pub deliver_min: Option<Amount<'a>>,
 }
 
 impl<'a> Default for Payment<'a> {
@@ -258,9 +260,9 @@ impl<'a> PaymentError for Payment<'a> {
 impl<'a> Payment<'a> {
     fn new(
         account: &'a str,
-        amount: Amount,
+        amount: Amount<'a>,
         destination: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -274,8 +276,8 @@ impl<'a> Payment<'a> {
         destination_tag: Option<u32>,
         invoice_id: Option<u32>,
         paths: Option<Vec<Vec<PathStep<'a>>>>,
-        send_max: Option<Amount>,
-        deliver_min: Option<Amount>,
+        send_max: Option<Amount<'a>>,
+        deliver_min: Option<Amount<'a>>,
     ) -> Self {
         Self {
             transaction_type: TransactionType::Payment,
@@ -307,7 +309,10 @@ mod test_payment_error {
     use alloc::string::ToString;
     use alloc::{borrow::Cow, vec};
 
-    use crate::models::{Amount, Model, PathStep, PaymentFlag, TransactionType};
+    use crate::models::{
+        amount::{Amount, IssuedCurrencyAmount, XRPAmount},
+        Model, PathStep, PaymentFlag, TransactionType,
+    };
 
     use super::Payment;
 
@@ -327,7 +332,7 @@ mod test_payment_error {
             flags: None,
             memos: None,
             signers: None,
-            amount: Amount::Xrp(Cow::Borrowed("1000000")),
+            amount: Amount::XRPAmount(XRPAmount::from("1000000")),
             destination: "rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK",
             destination_tag: None,
             invoice_id: None,
@@ -348,7 +353,7 @@ mod test_payment_error {
         );
 
         payment.paths = None;
-        payment.send_max = Some(Amount::Xrp(Cow::Borrowed("99999")));
+        payment.send_max = Some(Amount::XRPAmount(XRPAmount::from("99999")));
 
         assert_eq!(
             payment.validate().unwrap_err().to_string().as_str(),
@@ -380,7 +385,7 @@ mod test_payment_error {
             flags: None,
             memos: None,
             signers: None,
-            amount: Amount::Xrp(Cow::Borrowed("1000000")),
+            amount: Amount::XRPAmount("1000000".into()),
             destination: "rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK",
             destination_tag: None,
             invoice_id: None,
@@ -396,7 +401,7 @@ mod test_payment_error {
         );
 
         payment.flags = None;
-        payment.deliver_min = Some(Amount::Xrp(Cow::Borrowed("99999")));
+        payment.deliver_min = Some(Amount::XRPAmount("99999".into()));
 
         assert_eq!(
             payment.validate().unwrap_err().to_string().as_str(),
@@ -420,11 +425,11 @@ mod test_payment_error {
             flags: None,
             memos: None,
             signers: None,
-            amount: Amount::IssuedCurrency {
-                value: Cow::Borrowed("10"),
-                currency: Cow::Borrowed("USD"),
-                issuer: Cow::Borrowed("rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"),
-            },
+            amount: Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B".into(),
+                "10".into(),
+            )),
             destination: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             destination_tag: None,
             invoice_id: None,
@@ -444,7 +449,7 @@ mod test_payment_error {
 mod test_serde {
     use alloc::vec;
 
-    use crate::models::Amount;
+    use crate::models::amount::{Amount, IssuedCurrencyAmount};
 
     use super::*;
 
@@ -452,13 +457,13 @@ mod test_serde {
     fn test_serialize() {
         let default_txn = Payment::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Amount::IssuedCurrency {
-                currency: "USD".into(),
-                issuer: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
-                value: "1".into(),
-            },
+            Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
+                "1".into(),
+            )),
             "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
-            Some("12"),
+            Some("12".into()),
             Some(2),
             None,
             None,
@@ -487,13 +492,13 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = Payment::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Amount::IssuedCurrency {
-                currency: "USD".into(),
-                issuer: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
-                value: "1".into(),
-            },
+            Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
+                "1".into(),
+            )),
             "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX",
-            Some("12"),
+            Some("12".into()),
             Some(2),
             None,
             None,

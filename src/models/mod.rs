@@ -7,6 +7,8 @@ pub mod requests;
 #[allow(clippy::too_many_arguments)]
 pub mod transactions;
 
+pub mod amount;
+pub mod currency;
 pub mod response;
 pub mod utils;
 
@@ -14,10 +16,10 @@ use derive_new::new;
 pub use model::Model;
 use serde::ser::SerializeMap;
 
-use crate::_serde::currency_xrp;
 use crate::_serde::HashMap;
 use crate::serde_with_tag;
 
+use crate::models::currency::{Currency, XRP};
 use crate::models::requests::{XRPLChannelAuthorizeException, XRPLLedgerEntryException};
 use crate::models::transactions::{
     XRPLAccountSetException, XRPLCheckCashException, XRPLDepositPreauthException,
@@ -25,7 +27,6 @@ use crate::models::transactions::{
     XRPLNFTokenCancelOfferException, XRPLNFTokenCreateOfferException, XRPLNFTokenMintException,
     XRPLPaymentException, XRPLSignerListSetException, XRPLUNLModifyException,
 };
-use alloc::borrow::Cow;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use strum_macros::AsRefStr;
@@ -129,94 +130,6 @@ pub enum AccountObjectType {
     Ticket,
 }
 
-/// Specifies a currency.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(untagged)]
-pub enum Currency {
-    /// Specifies an issued currency.
-    IssuedCurrency {
-        currency: Cow<'static, str>,
-        issuer: Cow<'static, str>,
-    },
-    /// Specifies XRP.
-    #[serde(with = "currency_xrp")]
-    Xrp,
-}
-
-impl Currency {
-    /// Check wether the defined currency is XRP.
-    fn is_xrp(&self) -> bool {
-        match self {
-            Currency::IssuedCurrency {
-                currency: _,
-                issuer: _,
-            } => false,
-            Currency::Xrp => true,
-        }
-    }
-}
-
-/// Specifies a currency amount.
-///
-/// See Specifying Currency Amounts:
-/// `<https://xrpl.org/currency-formats.html#specifying-currency-amounts>`
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(untagged)]
-pub enum Amount {
-    /// Specifies an amount in an issued currency.
-    IssuedCurrency {
-        currency: Cow<'static, str>,
-        issuer: Cow<'static, str>,
-        value: Cow<'static, str>,
-    },
-    /// Specifies an amount in XRP.
-    Xrp(Cow<'static, str>),
-}
-
-impl Default for Amount {
-    fn default() -> Self {
-        Self::Xrp(Cow::Borrowed("()"))
-    }
-}
-
-impl Amount {
-    /// Returns the specified currency value as `u32`.
-    fn get_value_as_u32(&self) -> u32 {
-        match self {
-            Amount::IssuedCurrency {
-                currency: _,
-                issuer: _,
-                value,
-            } => {
-                let value_as_u32: u32 = value
-                    .as_ref()
-                    .parse()
-                    .expect("Could not parse u32 from `value`");
-                value_as_u32
-            }
-            Amount::Xrp(value) => {
-                let value_as_u32: u32 = value
-                    .as_ref()
-                    .parse()
-                    .expect("Could not parse u32 from `value`");
-                value_as_u32
-            }
-        }
-    }
-
-    /// Check wether the defined currency amount is a XRP amount.
-    fn is_xrp(&self) -> bool {
-        match self {
-            Amount::IssuedCurrency {
-                currency: _,
-                issuer: _,
-                value: _,
-            } => false,
-            Amount::Xrp(_) => true,
-        }
-    }
-}
-
 /// Enum containing the different Transaction types.
 #[derive(Debug, Clone, Serialize, Deserialize, Display, PartialEq, Eq)]
 pub enum TransactionType {
@@ -312,8 +225,8 @@ pub struct Signer<'a> {
 }
 
 /// Returns a Currency as XRP for the currency, without a value.
-fn default_xrp_currency() -> Currency {
-    Currency::Xrp
+fn default_xrp_currency<'a>() -> Currency<'a> {
+    Currency::XRP(XRP::new())
 }
 
 /// For use with serde defaults.
@@ -468,6 +381,7 @@ impl RequestMethod {
 
 /// Standard functions for transactions.
 pub trait Transaction {
+    // TODO: use generic type
     fn has_flag(&self, flag: &Flag) -> bool {
         let _txn_flag = flag;
         false

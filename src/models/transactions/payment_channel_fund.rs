@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{model::Model, Amount, Memo, Signer, Transaction, TransactionType};
+use crate::models::{amount::XRPAmount, model::Model, Memo, Signer, Transaction, TransactionType};
 
 /// Add additional XRP to an open payment channel,
 /// and optionally update the expiration time of the channel.
@@ -29,7 +29,7 @@ pub struct PaymentChannelFund<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -74,7 +74,7 @@ pub struct PaymentChannelFund<'a> {
     ///
     /// See PaymentChannelFund fields:
     /// `<https://xrpl.org/paymentchannelfund.html#paymentchannelfund-fields>`
-    pub amount: Amount,
+    pub amount: XRPAmount<'a>,
     pub channel: &'a str,
     pub expiration: Option<u32>,
 }
@@ -114,8 +114,8 @@ impl<'a> PaymentChannelFund<'a> {
     fn new(
         account: &'a str,
         channel: &'a str,
-        amount: Amount,
-        fee: Option<&'a str>,
+        amount: XRPAmount<'a>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -150,7 +150,7 @@ impl<'a> PaymentChannelFund<'a> {
 
 #[cfg(test)]
 mod test_serde {
-    use crate::models::Amount;
+    use crate::models::amount::XRPAmount;
 
     use super::*;
 
@@ -159,7 +159,7 @@ mod test_serde {
         let default_txn = PaymentChannelFund::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
             "C1AE6DDDEEC05CF2978C0BAD6FE302948E9533691DC749DCDD3B9E5992CA6198",
-            Amount::Xrp(alloc::borrow::Cow::Borrowed("200000")),
+            XRPAmount::from("200000"),
             None,
             None,
             None,
@@ -185,7 +185,7 @@ mod test_serde {
         let default_txn = PaymentChannelFund::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
             "C1AE6DDDEEC05CF2978C0BAD6FE302948E9533691DC749DCDD3B9E5992CA6198",
-            Amount::Xrp(alloc::borrow::Cow::Borrowed("200000")),
+            XRPAmount::from("200000"),
             None,
             None,
             None,

@@ -1,14 +1,18 @@
 use crate::Err;
 use alloc::vec::Vec;
 use anyhow::Result;
+use core::convert::TryInto;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
+use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLNFTokenAcceptOfferException;
 use crate::models::{
-    model::Model, Amount, Memo, NFTokenAcceptOfferError, Signer, Transaction, TransactionType,
+    amount::Amount, model::Model, Memo, NFTokenAcceptOfferError, Signer, Transaction,
+    TransactionType,
 };
 
 /// Accept offers to buy or sell an NFToken.
@@ -35,7 +39,7 @@ pub struct NFTokenAcceptOffer<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -85,7 +89,7 @@ pub struct NFTokenAcceptOffer<'a> {
     #[serde(rename = "NFTokenBuyOffer")]
     pub nftoken_buy_offer: Option<&'a str>,
     #[serde(rename = "NFTokenBrokerFee")]
-    pub nftoken_broker_fee: Option<Amount>,
+    pub nftoken_broker_fee: Option<Amount<'a>>,
 }
 
 impl<'a> Default for NFTokenAcceptOffer<'a> {
@@ -146,7 +150,9 @@ impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
     }
     fn _get_nftoken_broker_fee_error(&self) -> Result<(), XRPLNFTokenAcceptOfferException> {
         if let Some(nftoken_broker_fee) = &self.nftoken_broker_fee {
-            if nftoken_broker_fee.get_value_as_u32() == 0 {
+            let nftoken_broker_fee_decimal: Decimal =
+                (*nftoken_broker_fee).clone().try_into().unwrap();
+            if nftoken_broker_fee_decimal.is_zero() {
                 Err(XRPLNFTokenAcceptOfferException::ValueZero {
                     field: "nftoken_broker_fee",
                     resource: "",
@@ -163,7 +169,7 @@ impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
 impl<'a> NFTokenAcceptOffer<'a> {
     fn new(
         account: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -175,7 +181,7 @@ impl<'a> NFTokenAcceptOffer<'a> {
         signers: Option<Vec<Signer<'a>>>,
         nftoken_sell_offer: Option<&'a str>,
         nftoken_buy_offer: Option<&'a str>,
-        nftoken_broker_fee: Option<Amount>,
+        nftoken_broker_fee: Option<Amount<'a>>,
     ) -> Self {
         Self {
             transaction_type: TransactionType::NFTokenAcceptOffer,
@@ -203,7 +209,10 @@ mod test_nftoken_accept_offer_error {
     use alloc::borrow::Cow;
     use alloc::string::ToString;
 
-    use crate::models::{Amount, Model, TransactionType};
+    use crate::models::{
+        amount::{Amount, XRPAmount},
+        Model, TransactionType,
+    };
 
     use super::NFTokenAcceptOffer;
 
@@ -225,7 +234,7 @@ mod test_nftoken_accept_offer_error {
             signers: None,
             nftoken_sell_offer: None,
             nftoken_buy_offer: None,
-            nftoken_broker_fee: Some(Amount::Xrp(Cow::Borrowed("100"))),
+            nftoken_broker_fee: Some(Amount::XRPAmount(XRPAmount::from("100"))),
         };
 
         assert_eq!(
@@ -252,7 +261,7 @@ mod test_nftoken_accept_offer_error {
             signers: None,
             nftoken_sell_offer: Some(""),
             nftoken_buy_offer: None,
-            nftoken_broker_fee: Some(Amount::Xrp(Cow::Borrowed("0"))),
+            nftoken_broker_fee: Some(Amount::XRPAmount(XRPAmount::from("0"))),
         };
 
         assert_eq!(
@@ -272,7 +281,7 @@ mod test_serde {
     fn test_serialize() {
         let default_txn = NFTokenAcceptOffer::new(
             "r9spUPhPBfB6kQeF6vPhwmtFwRhBh2JUCG",
-            Some("12"),
+            Some("12".into()),
             Some(68549302),
             Some(75447550),
             None,
@@ -302,7 +311,7 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = NFTokenAcceptOffer::new(
             "r9spUPhPBfB6kQeF6vPhwmtFwRhBh2JUCG",
-            Some("12"),
+            Some("12".into()),
             Some(68549302),
             Some(75447550),
             None,

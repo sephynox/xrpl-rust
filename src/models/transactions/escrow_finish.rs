@@ -7,7 +7,9 @@ use serde_with::skip_serializing_none;
 use alloc::string::ToString;
 
 use crate::models::transactions::XRPLEscrowFinishException;
-use crate::models::{model::Model, EscrowFinishError, Memo, Signer, Transaction, TransactionType};
+use crate::models::{
+    amount::XRPAmount, model::Model, EscrowFinishError, Memo, Signer, Transaction, TransactionType,
+};
 
 /// Finishes an Escrow and delivers XRP from a held payment to the recipient.
 ///
@@ -33,7 +35,7 @@ pub struct EscrowFinish<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -144,7 +146,7 @@ impl<'a> EscrowFinish<'a> {
         account: &'a str,
         owner: &'a str,
         offer_sequence: u32,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,

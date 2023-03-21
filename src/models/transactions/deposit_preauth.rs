@@ -6,6 +6,7 @@ use serde_with::skip_serializing_none;
 
 use alloc::string::ToString;
 
+use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLDepositPreauthException;
 use crate::models::{
     model::Model, DepositPreauthError, Memo, Signer, Transaction, TransactionType,
@@ -36,7 +37,7 @@ pub struct DepositPreauth<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -141,7 +142,7 @@ impl<'a> DepositPreauthError for DepositPreauth<'a> {
 impl<'a> DepositPreauth<'a> {
     fn new(
         account: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -217,7 +218,7 @@ mod test_serde {
     fn test_serialize() {
         let default_txn = DepositPreauth::new(
             "rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8",
-            Some("10"),
+            Some("10".into()),
             Some(2),
             None,
             None,
@@ -242,7 +243,7 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = DepositPreauth::new(
             "rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8",
-            Some("10"),
+            Some("10".into()),
             Some(2),
             None,
             None,
