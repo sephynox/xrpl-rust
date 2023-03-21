@@ -25,8 +25,9 @@ use crate::models::transactions::{
     XRPLAccountSetException, XRPLCheckCashException, XRPLDepositPreauthException,
     XRPLEscrowCreateException, XRPLEscrowFinishException, XRPLNFTokenAcceptOfferException,
     XRPLNFTokenCancelOfferException, XRPLNFTokenCreateOfferException, XRPLNFTokenMintException,
-    XRPLPaymentException, XRPLSignerListSetException, XRPLUNLModifyException,
+    XRPLPaymentException, XRPLSignerListSetException,
 };
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use strum_macros::AsRefStr;
@@ -416,7 +417,7 @@ pub trait EscrowFinishError {
 
 pub trait NFTokenAcceptOfferError {
     fn _get_brokered_mode_error(&self) -> Result<(), XRPLNFTokenAcceptOfferException>;
-    fn _get_nftoken_broker_fee_error(&self) -> Result<(), XRPLNFTokenAcceptOfferException>;
+    fn _get_nftoken_broker_fee_error(&self) -> Result<()>;
 }
 
 pub trait NFTokenCancelOfferError {
@@ -424,7 +425,7 @@ pub trait NFTokenCancelOfferError {
 }
 
 pub trait NFTokenCreateOfferError {
-    fn _get_amount_error(&self) -> Result<(), XRPLNFTokenCreateOfferException>;
+    fn _get_amount_error(&self) -> Result<()>;
     fn _get_destination_error(&self) -> Result<(), XRPLNFTokenCreateOfferException>;
     fn _get_owner_error(&self) -> Result<(), XRPLNFTokenCreateOfferException>;
 }

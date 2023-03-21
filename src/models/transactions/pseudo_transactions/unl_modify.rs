@@ -1,17 +1,9 @@
-use crate::Err;
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
-use alloc::string::ToString;
-
-use crate::models::transactions::XRPLUNLModifyException;
-use crate::models::{
-    amount::XRPAmount, model::Model, Transaction, TransactionType, UNLModifyError,
-};
-
+use crate::models::{amount::XRPAmount, model::Model, Transaction, TransactionType};
 
 #[derive(
     Debug, Eq, PartialEq, Clone, Serialize_repr, Deserialize_repr, Display, AsRefStr, EnumIter,
@@ -73,14 +65,7 @@ pub struct UNLModify<'a> {
     pub unlmodify_validator: &'a str,
 }
 
-impl<'a: 'static> Model for UNLModify<'a> {
-    fn get_errors(&self) -> Result<()> {
-        match self._get_unl_modify_error() {
-            Err(error) => Err!(error),
-            Ok(_no_error) => Ok(()),
-        }
-    }
-}
+impl<'a> Model for UNLModify<'a> {}
 
 impl<'a> Transaction for UNLModify<'a> {
     fn get_transaction_type(&self) -> TransactionType {

@@ -56,7 +56,6 @@ pub mod txn_flags {
     }
 }
 
-
 /// A macro to tag a struct externally. With `serde` attributes, unfortunately it is not possible to
 /// serialize a struct to json with its name as `key` and its fields as `value`. Example:
 /// `{"Example":{"Field1":"hello","Field2":"world"}}`
