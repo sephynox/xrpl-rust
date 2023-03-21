@@ -1,8 +1,11 @@
-use alloc::string::ToString;
+use crate::Err;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::exceptions::{LedgerEntryException, XRPLModelException, XRPLRequestException};
+use alloc::string::ToString;
+
+use crate::models::requests::XRPLLedgerEntryException;
 use crate::models::{LedgerEntryError, Model, RequestMethod};
 
 /// Required fields for requesting a DepositPreauth if not
@@ -116,19 +119,17 @@ impl<'a> Default for LedgerEntry<'a> {
     }
 }
 
-impl<'a> Model for LedgerEntry<'a> {
-    fn get_errors(&self) -> Result<(), XRPLModelException> {
+impl<'a: 'static> Model for LedgerEntry<'a> {
+    fn get_errors(&self) -> Result<()> {
         match self._get_field_error() {
-            Err(error) => Err(XRPLModelException::XRPLRequestError(
-                XRPLRequestException::LedgerEntryError(error),
-            )),
+            Err(error) => Err!(error),
             Ok(_no_error) => Ok(()),
         }
     }
 }
 
 impl<'a> LedgerEntryError for LedgerEntry<'a> {
-    fn _get_field_error(&self) -> Result<(), LedgerEntryException> {
+    fn _get_field_error(&self) -> Result<(), XRPLLedgerEntryException> {
         let mut signing_methods: u32 = 0;
         for method in [self.index, self.account_root, self.check] {
             if method.is_some() {
@@ -156,9 +157,22 @@ impl<'a> LedgerEntryError for LedgerEntry<'a> {
         if self.ticket.is_some() {
             signing_methods += 1
         }
-        match signing_methods != 1 {
-            true => Err(LedgerEntryException::InvalidMustSetExactlyOneOf { fields: "`index`, `account_root`, `check`, `directory`, `offer`, `ripple_state`, `escrow`, `payment_channel`, `deposit_preauth`, `ticket`".to_string() }),
-            false => Ok(()),
+        if signing_methods != 1 {
+            Err(XRPLLedgerEntryException::DefineExactlyOneOf {
+                field1: "index",
+                field2: "account_root",
+                field3: "check",
+                field4: "directory",
+                field5: "offer",
+                field6: "ripple_state",
+                field7: "escrow",
+                field8: "payment_channel",
+                field9: "deposit_preauth",
+                field10: "ticket",
+                resource: "",
+            })
+        } else {
+            Ok(())
         }
     }
 }
@@ -202,13 +216,10 @@ impl<'a> LedgerEntry<'a> {
 
 #[cfg(test)]
 mod test_ledger_entry_errors {
-    use alloc::string::ToString;
-
     use super::Offer;
-    use crate::models::{
-        exceptions::{LedgerEntryException, XRPLModelException, XRPLRequestException},
-        Model, RequestMethod,
-    };
+    use crate::models::requests::XRPLLedgerEntryException;
+    use crate::models::{Model, RequestMethod};
+    use alloc::string::ToString;
 
     use super::LedgerEntry;
 
@@ -234,7 +245,22 @@ mod test_ledger_entry_errors {
             ledger_hash: None,
             ledger_index: None,
         };
-        let expected_error = XRPLModelException::XRPLRequestError(XRPLRequestException::LedgerEntryError(LedgerEntryException::InvalidMustSetExactlyOneOf { fields: "`index`, `account_root`, `check`, `directory`, `offer`, `ripple_state`, `escrow`, `payment_channel`, `deposit_preauth`, `ticket`".to_string() }));
-        assert_eq!(ledger_entry.validate(), Err(expected_error))
+        let _expected = XRPLLedgerEntryException::DefineExactlyOneOf {
+            field1: "index",
+            field2: "account_root",
+            field3: "check",
+            field4: "directory",
+            field5: "offer",
+            field6: "ripple_state",
+            field7: "escrow",
+            field8: "payment_channel",
+            field9: "deposit_preauth",
+            field10: "ticket",
+            resource: "",
+        };
+        assert_eq!(
+            ledger_entry.validate().unwrap_err().to_string().as_str(),
+            "Define one of: `index`, `account_root`, `check`, `directory`, `offer`, `ripple_state`, `escrow`, `payment_channel`, `deposit_preauth`, `ticket`. Define exactly one of them. For more information see: "
+        );
     }
 }

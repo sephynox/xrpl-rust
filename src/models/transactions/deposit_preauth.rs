@@ -1,12 +1,15 @@
+use crate::Err;
 use alloc::vec::Vec;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use alloc::string::ToString;
+
 use crate::models::amount::XRPAmount;
+use crate::models::transactions::XRPLDepositPreauthException;
 use crate::models::{
-    exceptions::{DepositPreauthException, XRPLModelException, XRPLTransactionException},
-    model::Model,
-    DepositPreauthError, Memo, Signer, Transaction, TransactionType,
+    model::Model, DepositPreauthError, Memo, Signer, Transaction, TransactionType,
 };
 
 /// A DepositPreauth transaction gives another account pre-approval
@@ -105,13 +108,11 @@ impl<'a> Default for DepositPreauth<'a> {
     }
 }
 
-impl<'a> Model for DepositPreauth<'a> {
-    fn get_errors(&self) -> Result<(), XRPLModelException> {
+impl<'a: 'static> Model for DepositPreauth<'a> {
+    fn get_errors(&self) -> Result<()> {
         match self._get_authorize_and_unauthorize_error() {
             Ok(_no_error) => Ok(()),
-            Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                XRPLTransactionException::DepositPreauthError(error),
-            )),
+            Err(error) => Err!(error),
         }
     }
 }
@@ -123,13 +124,17 @@ impl<'a> Transaction for DepositPreauth<'a> {
 }
 
 impl<'a> DepositPreauthError for DepositPreauth<'a> {
-    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), DepositPreauthException> {
-        match self.authorize.is_none() && self.unauthorize.is_none() {
-            true => Err(DepositPreauthException::InvalidMustSetAuthorizeOrUnauthorize),
-            false => match self.authorize.is_some() && self.unauthorize.is_some() {
-                true => Err(DepositPreauthException::InvalidMustNotSetAuthorizeAndUnauthorize),
-                false => Ok(()),
-            },
+    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), XRPLDepositPreauthException> {
+        if (self.authorize.is_none() && self.unauthorize.is_none())
+            || (self.authorize.is_some() && self.unauthorize.is_some())
+        {
+            Err(XRPLDepositPreauthException::DefineExactlyOneOf {
+                field1: "authorize",
+                field2: "unauthorize",
+                resource: "",
+            })
+        } else {
+            Ok(())
         }
     }
 }
@@ -172,16 +177,15 @@ impl<'a> DepositPreauth<'a> {
 
 #[cfg(test)]
 mod test_deposit_preauth_exception {
-    use crate::models::{
-        exceptions::{DepositPreauthException, XRPLModelException, XRPLTransactionException},
-        Model, TransactionType,
-    };
+
+    use crate::models::{Model, TransactionType};
+    use alloc::string::ToString;
 
     use super::DepositPreauth;
 
     #[test]
     fn test_authorize_and_unauthorize_error() {
-        let mut deposit_preauth = DepositPreauth {
+        let deposit_preauth = DepositPreauth {
             transaction_type: TransactionType::DepositPreauth,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
@@ -198,21 +202,11 @@ mod test_deposit_preauth_exception {
             authorize: None,
             unauthorize: None,
         };
-        let expected_error = XRPLModelException::XRPLTransactionError(
-            XRPLTransactionException::DepositPreauthError(
-                DepositPreauthException::InvalidMustSetAuthorizeOrUnauthorize,
-            ),
-        );
-        assert_eq!(deposit_preauth.validate(), Err(expected_error));
 
-        deposit_preauth.authorize = Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK");
-        deposit_preauth.unauthorize = Some("raQwCVAJVqjrVm1Nj5SFRcX8i22BhdC9WA");
-        let expected_error = XRPLModelException::XRPLTransactionError(
-            XRPLTransactionException::DepositPreauthError(
-                DepositPreauthException::InvalidMustNotSetAuthorizeAndUnauthorize,
-            ),
+        assert_eq!(
+            deposit_preauth.validate().unwrap_err().to_string().as_str(),
+            "The field `authorize` can not be defined with `unauthorize`. Define exactly one of them. For more information see: "
         );
-        assert_eq!(deposit_preauth.validate(), Err(expected_error));
     }
 }
 
