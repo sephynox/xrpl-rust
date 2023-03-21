@@ -206,7 +206,7 @@ impl<'a> NFTokenAcceptOffer<'a> {
 
 #[cfg(test)]
 mod test_nftoken_accept_offer_error {
-    use alloc::borrow::Cow;
+
     use alloc::string::ToString;
 
     use crate::models::{

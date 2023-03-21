@@ -291,7 +291,7 @@ impl<'a> NFTokenCreateOffer<'a> {
 #[cfg(test)]
 mod test_nftoken_create_offer_error {
     use alloc::string::ToString;
-    use alloc::{borrow::Cow, vec};
+    use alloc::vec;
 
     use crate::models::{
         amount::{Amount, XRPAmount},

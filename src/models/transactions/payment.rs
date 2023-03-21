@@ -307,7 +307,7 @@ impl<'a> Payment<'a> {
 #[cfg(test)]
 mod test_payment_error {
     use alloc::string::ToString;
-    use alloc::{borrow::Cow, vec};
+    use alloc::vec;
 
     use crate::models::{
         amount::{Amount, IssuedCurrencyAmount, XRPAmount},

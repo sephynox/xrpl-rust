@@ -194,10 +194,10 @@ impl<'a> EscrowCreate<'a> {
 
 #[cfg(test)]
 mod test_escrow_create_errors {
-    use crate::models::{amount::Amount, Model, TransactionType};
+    use crate::models::{Model, TransactionType};
 
     use crate::models::amount::XRPAmount;
-    use alloc::borrow::Cow;
+
     use alloc::string::ToString;
 
     use super::EscrowCreate;
@@ -236,7 +236,6 @@ mod test_escrow_create_errors {
 #[cfg(test)]
 mod test_serde {
     use super::*;
-    use alloc::borrow::Cow::Borrowed;
 
     #[test]
     fn test_serialize() {
