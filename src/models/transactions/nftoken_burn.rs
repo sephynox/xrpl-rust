@@ -2,6 +2,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::models::amount::XRPAmount;
 use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
 
 /// Removes a NFToken object from the NFTokenPage in which it is being held,
@@ -29,7 +30,7 @@ pub struct NFTokenBurn<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -113,7 +114,7 @@ impl<'a> NFTokenBurn<'a> {
     fn new(
         account: &'a str,
         nftoken_id: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -154,7 +155,7 @@ mod test_serde {
         let default_txn = NFTokenBurn::new(
             "rNCFjv8Ek5oDrNiMJ3pw6eLLFtMjZLJnf2",
             "000B013A95F14B0044F78A264E41713C64B5F89242540EE208C3098E00000D65",
-            Some("10"),
+            Some("10".into()),
             None,
             None,
             None,
@@ -179,7 +180,7 @@ mod test_serde {
         let default_txn = NFTokenBurn::new(
             "rNCFjv8Ek5oDrNiMJ3pw6eLLFtMjZLJnf2",
             "000B013A95F14B0044F78A264E41713C64B5F89242540EE208C3098E00000D65",
-            Some("10"),
+            Some("10".into()),
             None,
             None,
             None,

@@ -1,16 +1,22 @@
 use alloc::vec::Vec;
+use anyhow::Result;
+use core::convert::TryInto;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
+use alloc::string::ToString;
+
 use crate::models::{
-    exceptions::{NFTokenCreateOfferException, XRPLModelException, XRPLTransactionException},
-    model::Model,
-    Amount, Flag, Memo, NFTokenCreateOfferError, Signer, Transaction, TransactionType,
+    model::Model, Flag, Memo, NFTokenCreateOfferError, Signer, Transaction, TransactionType,
 };
 
+use crate::Err;
 use crate::_serde::txn_flags;
+use crate::models::amount::{Amount, XRPAmount};
+use crate::models::transactions::XRPLNFTokenCreateOfferException;
 
 /// Transactions of the NFTokenCreateOffer type support additional values
 /// in the Flags field. This enum represents those options.
@@ -53,7 +59,7 @@ pub struct NFTokenCreateOffer<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -102,7 +108,7 @@ pub struct NFTokenCreateOffer<'a> {
     /// `<https://xrpl.org/nftokencreateoffer.html#nftokencreateoffer-fields>`
     #[serde(rename = "NFTokenID")]
     pub nftoken_id: &'a str,
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     pub owner: Option<&'a str>,
     pub expiration: Option<u32>,
     pub destination: Option<&'a str>,
@@ -133,20 +139,14 @@ impl<'a> Default for NFTokenCreateOffer<'a> {
     }
 }
 
-impl<'a> Model for NFTokenCreateOffer<'a> {
-    fn get_errors(&self) -> Result<(), XRPLModelException> {
+impl<'a: 'static> Model for NFTokenCreateOffer<'a> {
+    fn get_errors(&self) -> Result<()> {
         match self._get_amount_error() {
-            Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                XRPLTransactionException::NFTokenCreateOfferError(error),
-            )),
+            Err(error) => Err!(error),
             Ok(_no_error) => match self._get_destination_error() {
-                Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                    XRPLTransactionException::NFTokenCreateOfferError(error),
-                )),
+                Err(error) => Err!(error),
                 Ok(_no_error) => match self._get_owner_error() {
-                    Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                        XRPLTransactionException::NFTokenCreateOfferError(error),
-                    )),
+                    Err(error) => Err!(error),
                     Ok(_no_error) => Ok(()),
                 },
             },
@@ -180,43 +180,67 @@ impl<'a> Transaction for NFTokenCreateOffer<'a> {
 }
 
 impl<'a> NFTokenCreateOfferError for NFTokenCreateOffer<'a> {
-    fn _get_amount_error(&self) -> Result<(), NFTokenCreateOfferException> {
-        match !self.has_flag(&Flag::NFTokenCreateOffer(
+    fn _get_amount_error(&self) -> Result<(), XRPLNFTokenCreateOfferException> {
+        // TODO: handle `rust_decimal` error
+        let amount: Decimal = self.amount.clone().try_into().unwrap();
+        if !self.has_flag(&Flag::NFTokenCreateOffer(
             NFTokenCreateOfferFlag::TfSellOffer,
-        )) && self.amount.get_value_as_u32() == 0
+        )) && amount.is_zero()
         {
-            true => Err(NFTokenCreateOfferException::InvalidAmountMustBeGreaterZero),
-            false => Ok(()),
+            Err(XRPLNFTokenCreateOfferException::ValueZero {
+                field: "amount",
+                resource: "",
+            })
+        } else {
+            Ok(())
         }
     }
 
-    fn _get_destination_error(&self) -> Result<(), NFTokenCreateOfferException> {
-        match self.destination {
-            Some(destination) => match destination == self.account {
-                true => Err(NFTokenCreateOfferException::InvalidDestinationMustNotEqualAccount),
-                false => Ok(()),
-            },
-            None => Ok(()),
+    fn _get_destination_error(&self) -> Result<(), XRPLNFTokenCreateOfferException> {
+        if let Some(destination) = self.destination {
+            if destination == self.account {
+                Err(XRPLNFTokenCreateOfferException::ValueEqualsValue {
+                    field1: "destination",
+                    field2: "account",
+                    resource: "",
+                })
+            } else {
+                Ok(())
+            }
+        } else {
+            Ok(())
         }
     }
 
-    fn _get_owner_error(&self) -> Result<(), NFTokenCreateOfferException> {
-        match self.owner {
-            Some(owner) => match self.has_flag(&Flag::NFTokenCreateOffer(
+    fn _get_owner_error(&self) -> Result<(), XRPLNFTokenCreateOfferException> {
+        if let Some(owner) = self.owner {
+            if self.has_flag(&Flag::NFTokenCreateOffer(
                 NFTokenCreateOfferFlag::TfSellOffer,
             )) {
-                true => Err(NFTokenCreateOfferException::InvalidOwnerMustNotBeSetForSellOffer),
-                false => match owner == self.account {
-                    true => Err(NFTokenCreateOfferException::InvalidOwnerMustNotEqualAccount),
-                    false => Ok(()),
-                },
-            },
-            None => match !self.has_flag(&Flag::NFTokenCreateOffer(
-                NFTokenCreateOfferFlag::TfSellOffer,
-            )) {
-                true => Err(NFTokenCreateOfferException::InvalidOwnerMustBeSetForBuyOffer),
-                false => Ok(()),
-            },
+                Err(XRPLNFTokenCreateOfferException::IllegalOption {
+                    field: "owner",
+                    context: "NFToken sell offers",
+                    resource: "",
+                })
+            } else if owner == self.account {
+                Err(XRPLNFTokenCreateOfferException::ValueEqualsValue {
+                    field1: "owner",
+                    field2: "account",
+                    resource: "",
+                })
+            } else {
+                Ok(())
+            }
+        } else if !self.has_flag(&Flag::NFTokenCreateOffer(
+            NFTokenCreateOfferFlag::TfSellOffer,
+        )) {
+            Err(XRPLNFTokenCreateOfferException::OptionRequired {
+                field: "owner",
+                context: "NFToken buy offers",
+                resource: "",
+            })
+        } else {
+            Ok(())
         }
     }
 }
@@ -225,8 +249,8 @@ impl<'a> NFTokenCreateOffer<'a> {
     fn new(
         account: &'a str,
         nftoken_id: &'a str,
-        amount: Amount,
-        fee: Option<&'a str>,
+        amount: Amount<'a>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -266,11 +290,12 @@ impl<'a> NFTokenCreateOffer<'a> {
 
 #[cfg(test)]
 mod test_nftoken_create_offer_error {
-    use alloc::{borrow::Cow, vec};
+    use alloc::string::ToString;
+    use alloc::vec;
 
     use crate::models::{
-        exceptions::{NFTokenCreateOfferException, XRPLModelException, XRPLTransactionException},
-        Amount, Model, NFTokenCreateOfferFlag, TransactionType,
+        amount::{Amount, XRPAmount},
+        Model, NFTokenCreateOfferFlag, TransactionType,
     };
 
     use super::NFTokenCreateOffer;
@@ -292,17 +317,20 @@ mod test_nftoken_create_offer_error {
             memos: None,
             signers: None,
             nftoken_id: "",
-            amount: Amount::Xrp(Cow::Borrowed("0")),
+            amount: Amount::XRPAmount(XRPAmount::from("0")),
             owner: None,
             expiration: None,
             destination: None,
         };
-        let expected_error = XRPLModelException::XRPLTransactionError(
-            XRPLTransactionException::NFTokenCreateOfferError(
-                NFTokenCreateOfferException::InvalidAmountMustBeGreaterZero,
-            ),
+
+        assert_eq!(
+            nftoken_create_offer
+                .validate()
+                .unwrap_err()
+                .to_string()
+                .as_str(),
+            "The value of the field `amount` is not allowed to be zero. For more information see: "
         );
-        assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
     }
 
     #[test]
@@ -322,17 +350,16 @@ mod test_nftoken_create_offer_error {
             memos: None,
             signers: None,
             nftoken_id: "",
-            amount: Amount::Xrp(Cow::Borrowed("1")),
+            amount: Amount::XRPAmount(XRPAmount::from("1")),
             owner: None,
             expiration: None,
             destination: Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb"),
         };
-        let expected_error = XRPLModelException::XRPLTransactionError(
-            XRPLTransactionException::NFTokenCreateOfferError(
-                NFTokenCreateOfferException::InvalidDestinationMustNotEqualAccount,
-            ),
+
+        assert_eq!(
+            nftoken_create_offer.validate().unwrap_err().to_string().as_str(),
+            "The value of the field `destination` is not allowed to be the same as the value of the field `account`. For more information see: "
         );
-        assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
     }
 
     #[test]
@@ -352,42 +379,39 @@ mod test_nftoken_create_offer_error {
             memos: None,
             signers: None,
             nftoken_id: "",
-            amount: Amount::Xrp(Cow::Borrowed("1")),
+            amount: Amount::XRPAmount(XRPAmount::from("1")),
             owner: Some("rLSn6Z3T8uCxbcd1oxwfGQN1Fdn5CyGujK"),
             expiration: None,
             destination: None,
         };
         let sell_flag = vec![NFTokenCreateOfferFlag::TfSellOffer];
         nftoken_create_offer.flags = Some(sell_flag);
-        let expected_error = XRPLModelException::XRPLTransactionError(
-            XRPLTransactionException::NFTokenCreateOfferError(
-                NFTokenCreateOfferException::InvalidOwnerMustNotBeSetForSellOffer,
-            ),
+
+        assert_eq!(
+            nftoken_create_offer.validate().unwrap_err().to_string().as_str(),
+            "The optional field `owner` is not allowed to be defined for NFToken sell offers. For more information see: "
         );
-        assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
 
         nftoken_create_offer.flags = None;
         nftoken_create_offer.owner = None;
-        let expected_error = XRPLModelException::XRPLTransactionError(
-            XRPLTransactionException::NFTokenCreateOfferError(
-                NFTokenCreateOfferException::InvalidOwnerMustBeSetForBuyOffer,
-            ),
+
+        assert_eq!(
+            nftoken_create_offer.validate().unwrap_err().to_string().as_str(),
+            "The optional field `owner` is required to be defined for NFToken buy offers. For more information see: "
         );
-        assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
 
         nftoken_create_offer.owner = Some("rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb");
-        let expected_error = XRPLModelException::XRPLTransactionError(
-            XRPLTransactionException::NFTokenCreateOfferError(
-                NFTokenCreateOfferException::InvalidOwnerMustNotEqualAccount,
-            ),
+
+        assert_eq!(
+            nftoken_create_offer.validate().unwrap_err().to_string().as_str(),
+            "The value of the field `owner` is not allowed to be the same as the value of the field `account`. For more information see: "
         );
-        assert_eq!(nftoken_create_offer.validate(), Err(expected_error));
     }
 }
 
 #[cfg(test)]
 mod test_serde {
-    use alloc::borrow::Cow::Borrowed;
+    use crate::models::amount::XRPAmount;
     use alloc::vec;
 
     use super::*;
@@ -397,7 +421,7 @@ mod test_serde {
         let default_txn = NFTokenCreateOffer::new(
             "rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX",
             "000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007",
-            Amount::Xrp(Borrowed("1000000")),
+            Amount::XRPAmount(XRPAmount::from("1000000")),
             None,
             None,
             None,
@@ -426,7 +450,7 @@ mod test_serde {
         let default_txn = NFTokenCreateOffer::new(
             "rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX",
             "000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007",
-            Amount::Xrp(Borrowed("1000000")),
+            Amount::XRPAmount(XRPAmount::from("1000000")),
             None,
             None,
             None,

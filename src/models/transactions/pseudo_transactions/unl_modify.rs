@@ -1,10 +1,13 @@
+use crate::Err;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use alloc::string::ToString;
+
+use crate::models::transactions::XRPLUNLModifyException;
 use crate::models::{
-    exceptions::{UNLModifyException, XRPLModelException, XRPLTransactionException},
-    model::Model,
-    Transaction, TransactionType, UNLModifyError,
+    amount::XRPAmount, model::Model, Transaction, TransactionType, UNLModifyError,
 };
 
 /// See UNLModify:
@@ -29,7 +32,7 @@ pub struct UNLModify<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -58,12 +61,10 @@ pub struct UNLModify<'a> {
     pub unlmodify_validator: &'a str,
 }
 
-impl<'a> Model for UNLModify<'a> {
-    fn get_errors(&self) -> Result<(), XRPLModelException> {
+impl<'a: 'static> Model for UNLModify<'a> {
+    fn get_errors(&self) -> Result<()> {
         match self._get_unl_modify_error() {
-            Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                XRPLTransactionException::UNLModifyError(error),
-            )),
+            Err(error) => Err!(error),
             Ok(_no_error) => Ok(()),
         }
     }
@@ -75,12 +76,19 @@ impl<'a> Transaction for UNLModify<'a> {
     }
 }
 
+// TODO: Enum for unlmodify_disabling to make looking for error obsolete
 impl<'a> UNLModifyError for UNLModify<'a> {
-    fn _get_unl_modify_error(&self) -> Result<(), UNLModifyException> {
+    fn _get_unl_modify_error(&self) -> Result<(), XRPLUNLModifyException> {
         let possible_unlmodify_disabling: [u8; 2] = [0, 1];
-        match !possible_unlmodify_disabling.contains(&self.unlmodify_disabling) {
-            true => Err(UNLModifyException::InvalidUNLModifyDisablingMustBeOneOrTwo),
-            false => Ok(()),
+        if !possible_unlmodify_disabling.contains(&self.unlmodify_disabling) {
+            Err(XRPLUNLModifyException::InvalidValue {
+                field: "unlmodify_disabling",
+                expected: "0 or 1",
+                found: self.unlmodify_disabling as u32,
+                resource: "",
+            })
+        } else {
+            Ok(())
         }
     }
 }
@@ -91,7 +99,7 @@ impl<'a> UNLModify<'a> {
         ledger_sequence: u32,
         unlmodify_disabling: u8,
         unlmodify_validator: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         signing_pub_key: Option<&'a str>,
         source_tag: Option<u32>,
@@ -115,10 +123,9 @@ impl<'a> UNLModify<'a> {
 
 #[cfg(test)]
 mod test_unl_modify_error {
-    use crate::models::{
-        exceptions::{UNLModifyException, XRPLModelException, XRPLTransactionException},
-        Model, TransactionType,
-    };
+
+    use crate::models::{Model, TransactionType};
+    use alloc::string::ToString;
 
     use super::UNLModify;
 
@@ -138,10 +145,10 @@ mod test_unl_modify_error {
             unlmodify_validator:
                 "ED6629D456285AE3613B285F65BBFF168D695BA3921F309949AFCD2CA7AFEC16FE",
         };
-        let expected_error =
-            XRPLModelException::XRPLTransactionError(XRPLTransactionException::UNLModifyError(
-                UNLModifyException::InvalidUNLModifyDisablingMustBeOneOrTwo,
-            ));
-        assert_eq!(unl_modify.validate(), Err(expected_error));
+
+        assert_eq!(
+            unl_modify.validate().unwrap_err().to_string().as_str(),
+            "The field `unlmodify_disabling` has an invalid value (expected 0 or 1, found 3). For more information see: "
+        );
     }
 }

@@ -2,6 +2,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::models::amount::XRPAmount;
 use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
 
 /// You can protect your account by assigning a regular key pair to
@@ -32,7 +33,7 @@ pub struct SetRegularKey<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -112,7 +113,7 @@ impl<'a> Transaction for SetRegularKey<'a> {
 impl<'a> SetRegularKey<'a> {
     fn new(
         account: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -151,7 +152,7 @@ mod test_serde {
     fn test_serialize() {
         let default_txn = SetRegularKey::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Some("12"),
+            Some("12".into()),
             None,
             None,
             None,
@@ -175,7 +176,7 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = SetRegularKey::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Some("12"),
+            Some("12".into()),
             None,
             None,
             None,

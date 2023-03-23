@@ -2,6 +2,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::models::amount::XRPAmount;
 use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
 
 /// Cancels an Escrow and returns escrowed XRP to the sender.
@@ -28,7 +29,7 @@ pub struct EscrowCancel<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -112,7 +113,7 @@ impl<'a> EscrowCancel<'a> {
         account: &'a str,
         owner: &'a str,
         offer_sequence: u32,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,

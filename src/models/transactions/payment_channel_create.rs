@@ -2,7 +2,8 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{model::Model, Amount, Memo, Signer, Transaction, TransactionType};
+use crate::models::amount::XRPAmount;
+use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
 
 /// Create a unidirectional channel and fund it with XRP.
 ///
@@ -28,7 +29,7 @@ pub struct PaymentChannelCreate<'a> {
     /// for distributing this transaction to the network. Some
     /// transaction types have different minimum requirements.
     /// See Transaction Cost for details.
-    pub fee: Option<&'a str>,
+    pub fee: Option<XRPAmount<'a>>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -73,7 +74,7 @@ pub struct PaymentChannelCreate<'a> {
     ///
     /// See PaymentChannelCreate fields:
     /// `<https://xrpl.org/paymentchannelcreate.html#paymentchannelcreate-fields>`
-    pub amount: Amount,
+    pub amount: XRPAmount<'a>,
     pub destination: &'a str,
     pub settle_delay: u32,
     pub public_key: &'a str,
@@ -118,11 +119,11 @@ impl<'a> Transaction for PaymentChannelCreate<'a> {
 impl<'a> PaymentChannelCreate<'a> {
     fn new(
         account: &'a str,
-        amount: Amount,
+        amount: XRPAmount<'a>,
         destination: &'a str,
         settle_delay: u32,
         public_key: &'a str,
-        fee: Option<&'a str>,
+        fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,
         last_ledger_sequence: Option<u32>,
         account_txn_id: Option<&'a str>,
@@ -167,7 +168,7 @@ mod test_serde {
     fn test_serialize() {
         let default_txn = PaymentChannelCreate::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Amount::Xrp(alloc::borrow::Cow::Borrowed("10000")),
+            XRPAmount::from("10000"),
             "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
             86400,
             "32D2471DB72B27E3310F355BB33E339BF26F8392D5A93D3BC0FC3B566612DA0F0A",
@@ -196,7 +197,7 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = PaymentChannelCreate::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
-            Amount::Xrp(alloc::borrow::Cow::Borrowed("10000")),
+            XRPAmount::from("10000"),
             "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW",
             86400,
             "32D2471DB72B27E3310F355BB33E339BF26F8392D5A93D3BC0FC3B566612DA0F0A",
