@@ -1,6 +1,6 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
-use crate::models::{Amount, Model};
+use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 
 use alloc::vec::Vec;
@@ -62,9 +62,9 @@ pub struct Offer<'a> {
     /// Used in combination with the `Account` to identify this `Offer`.
     pub sequence: u32,
     /// The remaining amount and type of currency being provided by the `Offer` creator.
-    pub taker_gets: Amount,
+    pub taker_gets: Amount<'a>,
     /// The remaining amount and type of currency requested by the `Offer` creator.
-    pub taker_pays: Amount,
+    pub taker_pays: Amount<'a>,
     /// Indicates the time after which this Offer is considered unfunded.
     pub expiration: Option<u32>,
 }
@@ -102,8 +102,8 @@ impl<'a> Offer<'a> {
         previous_txn_id: Cow<'a, str>,
         previous_txn_lgr_seq: u32,
         sequence: u32,
-        taker_gets: Amount,
-        taker_pays: Amount,
+        taker_gets: Amount<'a>,
+        taker_pays: Amount<'a>,
         expiration: Option<u32>,
     ) -> Self {
         Self {
@@ -127,6 +127,7 @@ impl<'a> Offer<'a> {
 #[cfg(test)]
 mod test_serde {
     use super::*;
+    use crate::models::amount::IssuedCurrencyAmount;
     use alloc::borrow::Cow;
     use alloc::vec;
 
@@ -142,12 +143,12 @@ mod test_serde {
             Cow::from("F0AB71E777B2DA54B86231E19B82554EF1F8211F92ECA473121C655BFC5329BF"),
             14524914,
             866,
-            Amount::IssuedCurrency {
-                currency: Cow::from("XAG"),
-                issuer: Cow::from("r9Dr5xwkeLegBeXq6ujinjSBLQzQ1zQGjH"),
-                value: Cow::from("37"),
-            },
-            Amount::Xrp(Cow::from("79550000000")),
+            Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "XAG".into(),
+                "r9Dr5xwkeLegBeXq6ujinjSBLQzQ1zQGjH".into(),
+                "37".into(),
+            )),
+            Amount::XRPAmount("79550000000".into()),
             None,
         );
         let offer_json = serde_json::to_string(&offer).unwrap();

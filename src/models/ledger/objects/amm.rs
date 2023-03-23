@@ -1,5 +1,5 @@
 use crate::models::ledger::LedgerEntryType;
-use crate::models::{Amount, Currency, Model};
+use crate::models::{amount::Amount, Currency, Model};
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use derive_new::new;
@@ -28,7 +28,7 @@ pub struct AuctionSlot<'a> {
     /// The time when this slot expires, in seconds since the Ripple Epoch.
     pub expiration: u32,
     /// The amount the auction owner paid to win this slot, in LP Tokens.
-    pub price: Amount,
+    pub price: Amount<'a>,
     /// A list of at most 4 additional accounts that are authorized to trade at the discounted fee
     /// for this AMM instance.
     #[serde(borrow = "'a")]
@@ -64,16 +64,16 @@ pub struct AMM<'a> {
     pub amm_account: Cow<'a, str>,
     /// The definition for one of the two assets this `AMM` holds. In JSON, this is an object with
     /// `currency` and `issuer` fields.
-    pub asset: Currency,
+    pub asset: Currency<'a>,
     /// The definition for the other asset this `AMM` holds. In JSON, this is an object with
     /// `currency` and `issuer` fields.
-    pub asset2: Currency,
+    pub asset2: Currency<'a>,
     /// The total outstanding balance of liquidity provider tokens from this `AMM` instance.
     /// The holders of these tokens can vote on the `AMM's` trading fee in proportion to their
     /// holdings, or redeem the tokens for a share of the `AMM's` assets which grows with the
     /// trading fees collected.
     #[serde(rename = "LPTokenBalance")]
-    pub lptoken_balance: Amount,
+    pub lptoken_balance: Amount<'a>,
     /// The percentage fee to be charged for trades against this `AMM` instance,
     /// in units of 1/100,000. The maximum value is 1000, for a 1% fee.
     pub trading_fee: u16,
@@ -107,9 +107,9 @@ impl<'a> AMM<'a> {
     pub fn new(
         index: Cow<'a, str>,
         amm_account: Cow<'a, str>,
-        asset: Currency,
-        asset2: Currency,
-        lptoken_balance: Amount,
+        asset: Currency<'a>,
+        asset2: Currency<'a>,
+        lptoken_balance: Amount<'a>,
         trading_fee: u16,
         auction_slot: Option<AuctionSlot<'a>>,
         vote_slots: Option<Vec<VoteEntry<'a>>>,
@@ -131,8 +131,9 @@ impl<'a> AMM<'a> {
 
 #[cfg(test)]
 mod test_serde {
+    use crate::models::amount::{Amount, IssuedCurrencyAmount};
+    use crate::models::currency::{Currency, IssuedCurrency, XRP};
     use crate::models::ledger::amm::{AuctionSlot, AuthAccount, VoteEntry, AMM};
-    use crate::models::{Amount, Currency};
     use alloc::borrow::Cow;
     use alloc::vec;
 
@@ -141,26 +142,26 @@ mod test_serde {
         let amm = AMM::new(
             Cow::from("ForTest"),
             Cow::from("rE54zDvgnghAoPopCgvtiqWNq3dU5y836S"),
-            Currency::Xrp,
-            Currency::IssuedCurrency {
-                currency: Cow::from("TST"),
-                issuer: Cow::from("rP9jPyP5kyvFRb6ZiRghAGw5u8SGAmU4bd"),
-            },
-            Amount::IssuedCurrency {
-                currency: Cow::from("039C99CD9AB0B70B32ECDA51EAAE471625608EA2"),
-                issuer: Cow::from("rE54zDvgnghAoPopCgvtiqWNq3dU5y836S"),
-                value: Cow::from("71150.53584131501"),
-            },
+            Currency::XRP(XRP::new()),
+            Currency::IssuedCurrency(IssuedCurrency::new(
+                "TST".into(),
+                "rP9jPyP5kyvFRb6ZiRghAGw5u8SGAmU4bd".into(),
+            )),
+            Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "039C99CD9AB0B70B32ECDA51EAAE471625608EA2".into(),
+                "rE54zDvgnghAoPopCgvtiqWNq3dU5y836S".into(),
+                "71150.53584131501".into(),
+            )),
             600,
             Some(AuctionSlot::new(
                 Cow::from("rJVUeRqDFNs2xqA7ncVE6ZoAhPUoaJJSQm"),
                 0,
                 721870180,
-                Amount::IssuedCurrency {
-                    currency: Cow::from("039C99CD9AB0B70B32ECDA51EAAE471625608EA2"),
-                    issuer: Cow::from("rE54zDvgnghAoPopCgvtiqWNq3dU5y836S"),
-                    value: Cow::from("0.8696263565463045"),
-                },
+                Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                    "039C99CD9AB0B70B32ECDA51EAAE471625608EA2".into(),
+                    "rE54zDvgnghAoPopCgvtiqWNq3dU5y836S".into(),
+                    "0.8696263565463045".into(),
+                )),
                 Some(vec![
                     AuthAccount::new(Cow::from("rMKXGCbJ5d8LbrqthdG46q3f969MVK2Qeg")),
                     AuthAccount::new(Cow::from("rBepJuTLFJt3WmtLXYAxSjtBWAeQxVbncv")),

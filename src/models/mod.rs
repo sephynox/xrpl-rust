@@ -16,7 +16,6 @@ use derive_new::new;
 pub use model::Model;
 use serde::ser::SerializeMap;
 
-use crate::_serde::HashMap;
 use crate::serde_with_tag;
 
 use crate::models::currency::{Currency, XRP};

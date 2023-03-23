@@ -1,6 +1,6 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
-use crate::models::{Amount, Model};
+use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 
 use alloc::vec::Vec;
@@ -42,7 +42,7 @@ pub struct NFTokenOffer<'a> {
     /// the amount must be specified in XRP. Sell offers that specify assets other than XRP
     /// must specify a non-zero amount. Sell offers that specify XRP can be 'free'
     /// (that is, the Amount field can be equal to "0").
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     /// The `NFTokenID` of the `NFToken` object referenced by this offer.
     #[serde(rename = "NFTokenID")]
     pub nftoken_id: Cow<'a, str>,
@@ -96,7 +96,7 @@ impl<'a> NFTokenOffer<'a> {
     pub fn new(
         flags: Vec<NFTokenOfferFlag>,
         index: Cow<'a, str>,
-        amount: Amount,
+        amount: Amount<'a>,
         nftoken_id: Cow<'a, str>,
         owner: Cow<'a, str>,
         previous_txn_id: Cow<'a, str>,
@@ -134,7 +134,7 @@ mod test_serde {
         let nftoken_offer = NFTokenOffer::new(
             vec![NFTokenOfferFlag::LsfSellNFToken],
             Cow::from("AEBABA4FAC212BF28E0F9A9C3788A47B085557EC5D1429E7A8266FB859C863B3"),
-            Amount::Xrp(Cow::from("1000000")),
+            Amount::XRPAmount("1000000".into()),
             Cow::from("00081B5825A08C22787716FA031B432EBBC1B101BB54875F0002D2A400000000"),
             Cow::from("rhRxL3MNvuKEjWjL7TBbZSDacb8PmzAd7m"),
             Cow::from("BFA9BE27383FA315651E26FDE1FA30815C5A5D0544EE10EC33D3E92532993769"),
