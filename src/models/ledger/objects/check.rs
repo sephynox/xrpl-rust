@@ -1,5 +1,5 @@
 use crate::models::ledger::LedgerEntryType;
-use crate::models::{Amount, Model};
+use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
@@ -38,7 +38,7 @@ pub struct Check<'a> {
     pub previous_txn_lgr_seq: u32,
     /// The maximum amount of currency this Check can debit the sender. If the Check is successfully
     /// cashed, the destination is credited in the same currency for up to this amount.
-    pub send_max: Amount,
+    pub send_max: Amount<'a>,
     /// The sequence number of the `CheckCreate` transaction that created this check.
     pub sequence: u32,
     /// A hint indicating which page of the destination's owner directory links to this object, in
@@ -89,7 +89,7 @@ impl<'a> Check<'a> {
         owner_node: Cow<'a, str>,
         previous_txn_id: Cow<'a, str>,
         previous_txn_lgr_seq: u32,
-        send_max: Amount,
+        send_max: Amount<'a>,
         sequence: u32,
         destination_node: Option<Cow<'a, str>>,
         destination_tag: Option<u32>,
@@ -131,7 +131,7 @@ mod test_serde {
             Cow::from("0000000000000000"),
             Cow::from("5463C6E08862A1FAE5EDAC12D70ADB16546A1F674930521295BC082494B62924"),
             6,
-            Amount::Xrp(Cow::from("100000000")),
+            Amount::XRPAmount("100000000".into()),
             2,
             Some(Cow::from("0000000000000000")),
             Some(1),

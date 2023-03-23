@@ -1,6 +1,6 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
-use crate::models::{Amount, Model};
+use crate::models::{amount::XRPAmount, Model};
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
@@ -78,7 +78,7 @@ pub struct AccountRoot<'a> {
     #[serde(rename = "AccountTxnID")]
     pub account_txn_id: Option<Cow<'a, str>>,
     /// The account's current XRP balance in drops, represented as a string.
-    pub balance: Option<Amount>,
+    pub balance: Option<XRPAmount<'a>>,
     /// How many total of this account's issued non-fungible tokens have been burned. This number
     /// is always equal or less than `MintedNFTokens`.
     #[serde(rename = "BurnedNFTokens")]
@@ -158,7 +158,7 @@ impl<'a> AccountRoot<'a> {
         previous_txn_lgr_seq: u32,
         sequence: u32,
         account_txn_id: Option<Cow<'a, str>>,
-        balance: Option<Amount>,
+        balance: Option<XRPAmount<'a>>,
         burned_nftokens: Option<u32>,
         domain: Option<Cow<'a, str>>,
         email_hash: Option<Cow<'a, str>>,
@@ -218,7 +218,7 @@ mod test_serde {
             Some(Cow::from(
                 "0D5FB50FA65C9FE1538FD7E398FFFE9D1908DFA4576D8D7A020040686F93C77D",
             )),
-            Some(Amount::Xrp(Cow::from("148446663"))),
+            Some("148446663".into()),
             None,
             Some(Cow::from("6D64756F31332E636F6D")),
             Some(Cow::from("98B4375E1D753E5B91627516F6D70977")),

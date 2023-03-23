@@ -1,5 +1,5 @@
 use crate::models::ledger::LedgerEntryType;
-use crate::models::{Amount, Model};
+use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
@@ -28,11 +28,11 @@ pub struct PayChannel<'a> {
     pub account: Cow<'a, str>,
     /// Total XRP, in drops, that has been allocated to this channel. This includes XRP
     /// that has been paid to the destination address.
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     /// Total XRP, in drops, already paid out by the channel. The difference between
     /// this value and the `Amount` field is how much XRP can still be paid to the destination
     /// address with `PaymentChannelClaim` transactions.
-    pub balance: Amount,
+    pub balance: Amount<'a>,
     /// The destination address for this payment channel. While the payment channel is open,
     /// this address is the only one that can receive XRP from the channel.
     pub destination: Cow<'a, str>,
@@ -96,8 +96,8 @@ impl<'a> PayChannel<'a> {
     pub fn new(
         index: Cow<'a, str>,
         account: Cow<'a, str>,
-        amount: Amount,
-        balance: Amount,
+        amount: Amount<'a>,
+        balance: Amount<'a>,
         destination: Cow<'a, str>,
         owner_node: Cow<'a, str>,
         previous_txn_id: Cow<'a, str>,
@@ -142,8 +142,8 @@ mod test_serde {
         let pay_channel = PayChannel::new(
             Cow::from("96F76F27D8A327FC48753167EC04A46AA0E382E6F57F32FD12274144D00F1797"),
             Cow::from("rBqb89MRQJnMPq8wTwEbtz4kvxrEDfcYvt"),
-            Amount::Xrp(Cow::from("4325800")),
-            Amount::Xrp(Cow::from("2323423")),
+            Amount::XRPAmount("4325800".into()),
+            Amount::XRPAmount("2323423".into()),
             Cow::from("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
             Cow::from("0000000000000000"),
             Cow::from("F0AB71E777B2DA54B86231E19B82554EF1F8211F92ECA473121C655BFC5329BF"),

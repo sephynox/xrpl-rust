@@ -1,5 +1,5 @@
 use crate::models::ledger::LedgerEntryType;
-use crate::models::{Amount, Model};
+use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 use serde::{Deserialize, Serialize};
 
@@ -38,7 +38,7 @@ pub struct Escrow<'a> {
     /// the XRP, and gets it back if the held payment is canceled.
     pub account: Cow<'a, str>,
     /// The amount of XRP, in drops, to be delivered by the held payment.
-    pub amount: Amount,
+    pub amount: Amount<'a>,
     /// The destination address where the XRP is paid if the held payment is successful.
     pub destination: Cow<'a, str>,
     /// A hint indicating which page of the owner directory links to this object, in case the
@@ -100,7 +100,7 @@ impl<'a> Escrow<'a> {
     pub fn new(
         index: Cow<'a, str>,
         account: Cow<'a, str>,
-        amount: Amount,
+        amount: Amount<'a>,
         destination: Cow<'a, str>,
         owner_node: Cow<'a, str>,
         previous_txn_id: Cow<'a, str>,
@@ -142,7 +142,7 @@ mod test_serde {
         let escrow = Escrow::new(
             Cow::from("DC5F3851D8A1AB622F957761E5963BC5BD439D5C24AC6AD7AC4523F0640244AC"),
             Cow::from("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
-            Amount::Xrp(Cow::from("10000")),
+            Amount::XRPAmount("10000".into()),
             Cow::from("ra5nK24KXen9AHvsdFTKHSANinZseWnPcX"),
             Cow::from("0000000000000000"),
             Cow::from("C44F2EB84196B9AD820313DBEBA6316A15C9A2D35787579ED172B87A30131DA7"),

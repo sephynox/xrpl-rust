@@ -1,6 +1,6 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
-use crate::models::{Amount, Model};
+use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
@@ -54,16 +54,16 @@ pub struct RippleState<'a> {
     pub index: Cow<'a, str>,
     /// The balance of the trust line, from the perspective of the low account. A negative
     /// balance indicates that the high account holds tokens issued by the low account.
-    pub balance: Amount,
+    pub balance: Amount<'a>,
     /// The limit that the high account has set on the trust line. The issuer is the address
     /// of the high account that set this limit.
-    pub high_limit: Amount,
+    pub high_limit: Amount<'a>,
     /// (Omitted in some historical ledgers) A hint indicating which page of the high account's
     /// owner directory links to this object, in case the directory consists of multiple pages.
     pub high_node: Cow<'a, str>,
     /// The limit that the low account has set on the trust line. The issuer is the address of
     /// the low account that set this limit.
-    pub low_limit: Amount,
+    pub low_limit: Amount<'a>,
     /// Omitted in some historical ledgers) A hint indicating which page of the low account's
     /// owner directory links to this object, in case the directory consists of multiple pages.
     pub low_node: Cow<'a, str>,
@@ -114,10 +114,10 @@ impl<'a> RippleState<'a> {
     pub fn new(
         flags: Vec<RippleStateFlag>,
         index: Cow<'a, str>,
-        balance: Amount,
-        high_limit: Amount,
+        balance: Amount<'a>,
+        high_limit: Amount<'a>,
         high_node: Cow<'a, str>,
-        low_limit: Amount,
+        low_limit: Amount<'a>,
         low_node: Cow<'a, str>,
         previous_txn_id: Cow<'a, str>,
         previous_txn_lgr_seq: u32,
@@ -148,6 +148,7 @@ impl<'a> RippleState<'a> {
 #[cfg(test)]
 mod test_serde {
     use super::*;
+    use crate::models::amount::IssuedCurrencyAmount;
     use alloc::{borrow::Cow, vec};
 
     #[test]
@@ -155,22 +156,22 @@ mod test_serde {
         let ripple_state = RippleState::new(
             vec![RippleStateFlag::LsfHighReserve, RippleStateFlag::LsfLowAuth],
             Cow::from("9CA88CDEDFF9252B3DE183CE35B038F57282BC9503CDFA1923EF9A95DF0D6F7B"),
-            Amount::IssuedCurrency {
-                currency: Cow::from("USD"),
-                issuer: Cow::from("rrrrrrrrrrrrrrrrrrrrBZbvji"),
-                value: Cow::from("-10"),
-            },
-            Amount::IssuedCurrency {
-                currency: Cow::from("USD"),
-                issuer: Cow::from("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
-                value: Cow::from("110"),
-            },
+            Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rrrrrrrrrrrrrrrrrrrrBZbvji".into(),
+                "-10".into(),
+            )),
+            Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
+                "110".into(),
+            )),
             Cow::from("0000000000000000"),
-            Amount::IssuedCurrency {
-                currency: Cow::from("USD"),
-                issuer: Cow::from("rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW"),
-                value: Cow::from("0"),
-            },
+            Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW".into(),
+                "0".into(),
+            )),
             Cow::from("0000000000000000"),
             Cow::from("E3FE6EA3D48F0C2B639448020EA4F03D4F4F8FFDB243A852A0F59177921B4879"),
             14090896,

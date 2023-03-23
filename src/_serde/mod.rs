@@ -13,9 +13,9 @@ pub(crate) mod txn_flags {
     use strum::IntoEnumIterator;
 
     pub fn serialize<F, S>(flags: &Option<Vec<F>>, s: S) -> Result<S::Ok, S::Error>
-        where
-            F: Serialize,
-            S: Serializer,
+    where
+        F: Serialize,
+        S: Serializer,
     {
         if let Some(f) = flags {
             let flags_as_value = serde_json::to_value(f).unwrap();
@@ -28,9 +28,9 @@ pub(crate) mod txn_flags {
     }
 
     pub fn deserialize<'de, F, D>(d: D) -> Result<Option<Vec<F>>, D::Error>
-        where
-            F: Serialize + IntoEnumIterator + Debug,
-            D: Deserializer<'de>,
+    where
+        F: Serialize + IntoEnumIterator + Debug,
+        D: Deserializer<'de>,
     {
         let flags_u32 = u32::deserialize(d)?;
 
@@ -62,9 +62,9 @@ pub(crate) mod lgr_obj_flags {
     use strum::IntoEnumIterator;
 
     pub fn serialize<F, S>(flags: &Vec<F>, s: S) -> Result<S::Ok, S::Error>
-        where
-            F: Serialize,
-            S: Serializer,
+    where
+        F: Serialize,
+        S: Serializer,
     {
         if !flags.is_empty() {
             let flags_as_value = serde_json::to_value(flags).unwrap();
@@ -77,9 +77,9 @@ pub(crate) mod lgr_obj_flags {
     }
 
     pub fn deserialize<'de, F, D>(d: D) -> Result<Vec<F>, D::Error>
-        where
-            F: Serialize + IntoEnumIterator + Debug,
-            D: Deserializer<'de>,
+    where
+        F: Serialize + IntoEnumIterator + Debug,
+        D: Deserializer<'de>,
     {
         let flags_u32 = u32::deserialize(d)?;
         if flags_u32 != 0 {
