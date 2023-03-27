@@ -72,15 +72,14 @@ where
 }
 
 pub(crate) mod txn_flags {
-    use alloc::borrow::ToOwned;
-    use alloc::string::String;
+
     use core::fmt::Debug;
 
     use crate::_serde::{deserialize_flags, serialize_flag};
     use alloc::vec::Vec;
-    use serde::{de, ser};
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    use serde_json::Value;
+
+    use serde::{Deserializer, Serialize, Serializer};
+
     use strum::IntoEnumIterator;
 
     pub fn serialize<F, S>(flags: &Option<Vec<F>>, s: S) -> Result<S::Ok, S::Error>
@@ -119,7 +118,7 @@ pub(crate) mod lgr_obj_flags {
 
     use crate::_serde::{deserialize_flags, serialize_flag};
     use alloc::vec::Vec;
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use serde::{Deserializer, Serialize, Serializer};
     use strum::IntoEnumIterator;
 
     pub fn serialize<F, S>(flags: &Vec<F>, s: S) -> Result<S::Ok, S::Error>
