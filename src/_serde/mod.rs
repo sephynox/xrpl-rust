@@ -1,15 +1,86 @@
 //! Serde functionalities
 
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::fmt::Debug;
 use core::hash::BuildHasherDefault;
 use fnv::FnvHasher;
+use serde::{de, ser, Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::Value;
+use strum::IntoEnumIterator;
 
 pub type HashMap<K, V> = hashbrown::HashMap<K, V, BuildHasherDefault<FnvHasher>>;
 
+fn serialize_flag<F, S>(flags: &Vec<F>, s: S) -> Result<S::Ok, S::Error>
+where
+    F: Serialize,
+    S: Serializer,
+{
+    let flags_value_result: Result<Value, serde_json::Error> = serde_json::to_value(flags);
+    match flags_value_result {
+        Ok(flags_as_value) => {
+            let flag_vec_result: Result<Vec<u32>, serde_json::Error> =
+                serde_json::from_value(flags_as_value);
+            match flag_vec_result {
+                Ok(flags_vec) => s.serialize_u32(flags_vec.iter().sum()),
+                Err(_) => {
+                    // TODO: Find a way to use custom errors
+                    Err(ser::Error::custom("SerdeIntermediateStepError: Failed to turn flags into `Vec<u32>` during serialization"))
+                }
+            }
+        }
+        Err(_) => Err(ser::Error::custom(
+            "SerdeIntermediateStepError: Failed to turn flags into `Value` during serialization",
+        )),
+    }
+}
+
+fn deserialize_flags<'de, D, F>(d: D) -> Result<Vec<F>, D::Error>
+where
+    F: Serialize + IntoEnumIterator + Debug,
+    D: Deserializer<'de>,
+{
+    let flags_u32 = u32::deserialize(d)?;
+
+    let mut flags_vec = Vec::new();
+    for flag in F::iter() {
+        let check_flag_string_result: Result<String, serde_json::Error> =
+            serde_json::to_string(&flag);
+        match check_flag_string_result {
+            Ok(check_flag_string) => {
+                let check_flag_u32_result = check_flag_string.parse::<u32>();
+                match check_flag_u32_result {
+                    Ok(check_flag) => {
+                        if check_flag & flags_u32 == check_flag {
+                            flags_vec.push(flag);
+                        } else {
+                            continue;
+                        }
+                    }
+                    Err(_) => {
+                        return Err(de::Error::custom("SerdeIntermediateStepError: Failed to turn flag into `u32` during deserialization"));
+                    }
+                };
+            }
+            Err(_) => {
+                return Err(de::Error::custom("SerdeIntermediateStepError: Failed to turn flag into `String` during deserialization"));
+            }
+        };
+    }
+
+    Ok(flags_vec)
+}
+
 pub(crate) mod txn_flags {
+    use alloc::borrow::ToOwned;
+    use alloc::string::String;
     use core::fmt::Debug;
 
+    use crate::_serde::{deserialize_flags, serialize_flag};
     use alloc::vec::Vec;
+    use serde::{de, ser};
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use serde_json::Value;
     use strum::IntoEnumIterator;
 
     pub fn serialize<F, S>(flags: &Option<Vec<F>>, s: S) -> Result<S::Ok, S::Error>
@@ -18,10 +89,7 @@ pub(crate) mod txn_flags {
         S: Serializer,
     {
         if let Some(f) = flags {
-            let flags_as_value = serde_json::to_value(f).unwrap();
-            let flag_num_vec: Vec<u32> = serde_json::from_value(flags_as_value).unwrap();
-
-            s.serialize_u32(flag_num_vec.iter().sum())
+            serialize_flag(f, s)
         } else {
             s.serialize_u32(0)
         }
@@ -32,24 +100,16 @@ pub(crate) mod txn_flags {
         F: Serialize + IntoEnumIterator + Debug,
         D: Deserializer<'de>,
     {
-        let flags_u32 = u32::deserialize(d)?;
-
-        let mut flags_vec = Vec::new();
-        for flag in F::iter() {
-            let check_flag: u32 = serde_json::to_string(&flag)
-                .unwrap()
-                .as_str()
-                .parse::<u32>()
-                .unwrap();
-            if check_flag & flags_u32 == check_flag {
-                flags_vec.push(flag);
+        let flags_vec_result: Result<Vec<F>, D::Error> = deserialize_flags(d);
+        match flags_vec_result {
+            Ok(flags_vec) => {
+                if flags_vec.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some(flags_vec))
+                }
             }
-        }
-
-        if flags_vec.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(flags_vec))
+            Err(error) => Err(error),
         }
     }
 }
@@ -57,6 +117,7 @@ pub(crate) mod txn_flags {
 pub(crate) mod lgr_obj_flags {
     use core::fmt::Debug;
 
+    use crate::_serde::{deserialize_flags, serialize_flag};
     use alloc::vec::Vec;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use strum::IntoEnumIterator;
@@ -67,10 +128,7 @@ pub(crate) mod lgr_obj_flags {
         S: Serializer,
     {
         if !flags.is_empty() {
-            let flags_as_value = serde_json::to_value(flags).unwrap();
-            let flag_num_vec: Vec<u32> = serde_json::from_value(flags_as_value).unwrap();
-
-            s.serialize_u32(flag_num_vec.iter().sum())
+            serialize_flag(flags, s)
         } else {
             s.serialize_u32(0)
         }
@@ -81,24 +139,7 @@ pub(crate) mod lgr_obj_flags {
         F: Serialize + IntoEnumIterator + Debug,
         D: Deserializer<'de>,
     {
-        let flags_u32 = u32::deserialize(d)?;
-        if flags_u32 != 0 {
-            let mut flags_vec = Vec::new();
-            for flag in F::iter() {
-                let check_flag: u32 = serde_json::to_string(&flag)
-                    .unwrap()
-                    .as_str()
-                    .parse::<u32>()
-                    .unwrap();
-                if check_flag & flags_u32 == check_flag {
-                    flags_vec.push(flag);
-                }
-            }
-
-            Ok(flags_vec)
-        } else {
-            Ok(Vec::new())
-        }
+        deserialize_flags(d)
     }
 }
 
@@ -167,13 +208,20 @@ macro_rules! serde_with_tag {
                 }
 
                 let hash_map: $crate::_serde::HashMap<&$lt str, Helper<$lt>> = $crate::_serde::HashMap::deserialize(deserializer)?;
-                let helper = hash_map.get(stringify!($name)).unwrap();
+                let helper_result = hash_map.get(stringify!($name));
 
-                Ok(Self {
-                    $(
-                        $field: helper.$field.clone().into(),
-                    )*
-                })
+                match helper_result {
+                    Some(helper) => {
+                        Ok(Self {
+                            $(
+                                $field: helper.$field.clone().into(),
+                            )*
+                        })
+                    }
+                    None => {
+                        Err(::serde::de::Error::custom("SerdeIntermediateStepError: Unable to find model name as json key."))
+                    }
+                }
             }
         }
     };
@@ -237,13 +285,20 @@ macro_rules! serde_with_tag {
                 }
 
                 let hash_map: $crate::_serde::HashMap<&'de str, Helper> = $crate::_serde::HashMap::deserialize(deserializer)?;
-                let helper = hash_map.get(stringify!($name)).unwrap();
+                let helper_result = hash_map.get(stringify!($name));
 
-                Ok(Self {
-                    $(
-                        $field: helper.$field.clone().into(),
-                    )*
-                })
+                match helper_result {
+                    Some(helper) => {
+                        Ok(Self {
+                            $(
+                                $field: helper.$field.clone().into(),
+                            )*
+                        })
+                    }
+                    None => {
+                        Err(::serde::de::Error::custom("SerdeIntermediateStepError: Unable to find model name as json key."))
+                    }
+                }
             }
         }
     };
