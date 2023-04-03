@@ -15,7 +15,6 @@ pub enum XRPLTransactionException<'a> {
     XRPLNFTokenMintError(XRPLNFTokenMintException<'a>),
     XRPLPaymentError(XRPLPaymentException<'a>),
     XRPLSignerListSetError(XRPLSignerListSetException<'a>),
-    XRPLUNLModifyError(XRPLUNLModifyException<'a>),
 }
 
 #[cfg(feature = "std")]
@@ -327,18 +326,3 @@ pub enum XRPLSignerListSetException<'a> {
 
 #[cfg(feature = "std")]
 impl<'a> alloc::error::Error for XRPLSignerListSetException<'a> {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XRPLUNLModifyException<'a> {
-    /// A field is expected to have a certain value.
-    #[error("The field `{field:?}` has an invalid value (expected {expected:?}, found {found:?}). For more information see: {resource:?}")]
-    InvalidValue {
-        field: &'a str,
-        expected: &'a str,
-        found: u32,
-        resource: &'a str,
-    },
-}
-
-#[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XRPLUNLModifyException<'a> {}
