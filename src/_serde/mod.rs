@@ -71,8 +71,9 @@ where
     Ok(flags_vec)
 }
 
+/// A `mod` to be used on transaction `flags` fields. It serializes the `Vec<Flag>` into a `u32`,
+/// representing the bit-flags, and deserializes the `u32` back into `Vec<Flag>` for internal uses.
 pub(crate) mod txn_flags {
-
     use core::fmt::Debug;
 
     use crate::_serde::{deserialize_flags, serialize_flag};
@@ -142,9 +143,15 @@ pub(crate) mod lgr_obj_flags {
     }
 }
 
-/// Source: https://github.com/serde-rs/serde/issues/554#issuecomment-249211775
+/// A macro to tag a struct externally. With `serde` attributes, unfortunately it is not possible to
+/// serialize a struct to json with its name as `key` and its fields as `value`. Example:
+/// `{"Example":{"Field1":"hello","Field2":"world"}}`
+///
+/// Several models need to be serialized in that format. This macro uses a helper to serialize and
+/// deserialize to/from that format.
+///
+/// Resource: https://github.com/serde-rs/serde/issues/554#issuecomment-249211775
 // TODO: Find a way to `#[skip_serializing_none]`
-// TODO: Find a more generic way
 #[macro_export]
 macro_rules! serde_with_tag {
     (

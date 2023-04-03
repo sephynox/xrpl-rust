@@ -1,11 +1,13 @@
+pub mod exceptions;
 pub mod issued_currency_amount;
 pub mod xrp_amount;
 
 use core::convert::TryInto;
 pub use issued_currency_amount::*;
-use rust_decimal::{Decimal, Error};
+use rust_decimal::Decimal;
 pub use xrp_amount::*;
 
+use crate::models::amount::exceptions::XRPLAmountException;
 use crate::models::Model;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
@@ -18,7 +20,7 @@ pub enum Amount<'a> {
 }
 
 impl<'a> TryInto<Decimal> for Amount<'a> {
-    type Error = Error;
+    type Error = XRPLAmountException;
 
     fn try_into(self) -> Result<Decimal, Self::Error> {
         match self {

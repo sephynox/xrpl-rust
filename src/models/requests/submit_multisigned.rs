@@ -17,9 +17,6 @@ use crate::models::{Model, RequestMethod};
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct SubmitMultisigned<'a> {
-    // TODO
-    // #[serde(rename(serialize = "tx_json", deserialize = "transaction"))]
-    // transaction,
     /// The unique request id.
     pub id: Option<&'a str>,
     /// If true, and the transaction fails locally, do not
