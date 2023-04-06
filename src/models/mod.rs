@@ -1,6 +1,14 @@
 //! Top-level modules for the models package.
+//!
+//! Order of models:
+//! 1. Type of model
+//! 2. Required common fields in alphabetical order
+//! 3. Optional common fields in alphabetical order
+//! 4. Required specific fields in alphabetical order
+//! 5. Optional specific fields in alphabetical order
 
 pub mod exceptions;
+pub mod ledger;
 pub mod model;
 #[allow(clippy::too_many_arguments)]
 pub mod requests;
@@ -16,7 +24,6 @@ use derive_new::new;
 pub use model::Model;
 use serde::ser::SerializeMap;
 
-use crate::_serde::HashMap;
 use crate::serde_with_tag;
 
 use crate::models::currency::{Currency, XRP};
@@ -194,9 +201,9 @@ serde_with_tag! {
 #[derive(Debug, PartialEq, Eq, Default, Clone, new)]
 #[skip_serializing_none]
 pub struct Memo<'a> {
-    memo_data: Option<&'a str>,
-    memo_format: Option<&'a str>,
-    memo_type: Option<&'a str>,
+    pub memo_data: Option<&'a str>,
+    pub memo_format: Option<&'a str>,
+    pub memo_type: Option<&'a str>,
 }
 }
 
