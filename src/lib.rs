@@ -31,7 +31,6 @@ pub mod core;
 pub mod macros;
 #[cfg(feature = "models")]
 pub mod models;
-pub mod tokio;
 #[cfg(feature = "utils")]
 pub mod utils;
 pub mod wallet;
