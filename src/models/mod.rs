@@ -192,7 +192,6 @@ serde_with_tag! {
 /// `<https://xrpl.org/transaction-common-fields.html#memos-field>`
 // `#[derive(Serialize)]` is defined in the macro
 #[derive(Debug, PartialEq, Eq, Default, Clone, new)]
-#[skip_serializing_none]
 pub struct Memo<'a> {
     memo_data: Option<&'a str>,
     memo_format: Option<&'a str>,
