@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `serde_with` to reduce repetitive serialization skip attribute tags
 - Use `strum_macros::Display` instead of manual `core::fmt::Display`
 - Use `strum_macros::Display` for `CryptoAlgorithm` enum
-- Separated `Currency` to `Currency` and `Amount`
+- Separated `Currency` to `Currency` (`IssuedCurrency`, `XRP`) and `Amount` (`IssuedCurrencyAmount`, `XRPAmount`)
 - Make `Wallet` fields public
 - Updated crates:
   - secp256k1
