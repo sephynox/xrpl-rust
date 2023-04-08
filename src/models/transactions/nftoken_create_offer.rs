@@ -310,10 +310,10 @@ mod test_nftoken_create_offer_error {
 
     use crate::models::{
         amount::{Amount, XRPAmount},
-        Model, NFTokenCreateOfferFlag, TransactionType,
+        Model
     };
 
-    use super::NFTokenCreateOffer;
+    use super::*;
 
     #[test]
     fn test_amount_error() {

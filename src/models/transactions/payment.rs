@@ -319,10 +319,10 @@ mod test_payment_error {
 
     use crate::models::{
         amount::{Amount, IssuedCurrencyAmount, XRPAmount},
-        Model, PathStep, PaymentFlag, TransactionType,
+        Model, PathStep
     };
 
-    use super::Payment;
+    use super::*;
 
     #[test]
     fn test_xrp_to_xrp_error() {

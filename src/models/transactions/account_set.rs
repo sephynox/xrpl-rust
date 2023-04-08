@@ -446,15 +446,15 @@ pub trait AccountSetError {
 #[cfg(test)]
 mod test_account_set_errors {
 
-    use crate::models::{AccountSetFlag, Model};
+    use crate::models::Model;
     use alloc::string::ToString;
 
-    use super::AccountSet;
+    use super::*;
 
     #[test]
     fn test_tick_size_error() {
         let mut account_set = AccountSet {
-            transaction_type: crate::models::TransactionType::AccountSet,
+            transaction_type: TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
             sequence: None,
@@ -496,7 +496,7 @@ mod test_account_set_errors {
     #[test]
     fn test_transfer_rate_error() {
         let mut account_set = AccountSet {
-            transaction_type: crate::models::TransactionType::AccountSet,
+            transaction_type: TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
             sequence: None,
@@ -538,7 +538,7 @@ mod test_account_set_errors {
     #[test]
     fn test_domain_error() {
         let mut account_set = AccountSet {
-            transaction_type: crate::models::TransactionType::AccountSet,
+            transaction_type: TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
             sequence: None,
@@ -580,7 +580,7 @@ mod test_account_set_errors {
     #[test]
     fn test_flag_error() {
         let account_set = AccountSet {
-            transaction_type: crate::models::TransactionType::AccountSet,
+            transaction_type: TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
             sequence: None,
@@ -612,7 +612,7 @@ mod test_account_set_errors {
     #[test]
     fn test_asf_authorized_nftoken_minter_error() {
         let mut account_set = AccountSet {
-            transaction_type: crate::models::TransactionType::AccountSet,
+            transaction_type: TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
             sequence: None,

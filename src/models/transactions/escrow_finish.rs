@@ -190,10 +190,10 @@ pub trait EscrowFinishError {
 #[cfg(test)]
 mod test_escrow_finish_errors {
 
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
     use alloc::string::ToString;
 
-    use super::EscrowFinish;
+    use super::*;
 
     #[test]
     fn test_condition_and_fulfillment_error() {

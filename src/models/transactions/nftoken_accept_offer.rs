@@ -223,10 +223,10 @@ mod test_nftoken_accept_offer_error {
 
     use crate::models::{
         amount::{Amount, XRPAmount},
-        Model, TransactionType,
+        Model
     };
 
-    use super::NFTokenAcceptOffer;
+    use super::*;
 
     #[test]
     fn test_brokered_mode_error() {

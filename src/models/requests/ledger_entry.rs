@@ -222,10 +222,10 @@ pub trait LedgerEntryError {
 mod test_ledger_entry_errors {
     use super::Offer;
     use crate::models::requests::XRPLLedgerEntryException;
-    use crate::models::{Model, RequestMethod};
+    use crate::models::Model;
     use alloc::string::ToString;
 
-    use super::LedgerEntry;
+    use super::*;
 
     #[test]
     fn test_fields_error() {
