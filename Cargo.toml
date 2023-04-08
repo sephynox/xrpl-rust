@@ -72,7 +72,12 @@ harness = false
 
 [features]
 default = ["std", "core", "models", "utils"]
-models = ["core"]
+models = ["core", "transactions", "requests", "ledger"]
+transactions = ["core", "amounts", "currencies"]
+requests = ["core", "amounts", "currencies"]
+ledger = ["core", "amounts", "currencies"]
+amounts = ["core"]
+currencies = ["core"]
 core = ["utils"]
 utils = []
 std = ["rand/std", "regex/std", "chrono/std", "rand/std_rng", "hex/std", "rust_decimal/std", "bs58/std", "serde/std", "indexmap/std", "secp256k1/std"]

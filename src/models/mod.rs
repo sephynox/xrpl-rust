@@ -8,14 +8,19 @@
 //! 5. Optional specific fields in alphabetical order
 
 pub mod exceptions;
+#[cfg(feature = "ledger")]
 pub mod ledger;
 pub mod model;
+#[cfg(feature = "requests")]
 #[allow(clippy::too_many_arguments)]
 pub mod requests;
+#[cfg(feature = "transactions")]
 #[allow(clippy::too_many_arguments)]
 pub mod transactions;
 
+#[cfg(feature = "amounts")]
 pub mod amount;
+#[cfg(feature = "currencies")]
 pub mod currency;
 pub mod response;
 pub mod utils;
