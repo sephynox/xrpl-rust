@@ -7,6 +7,7 @@ use strum_macros::Display;
 pub enum XRPLTimeRangeException {
     InvalidTimeBeforeEpoch { min: i64, found: i64 },
     UnexpectedTimeOverflow { max: i64, found: i64 },
+    InvalidLocalTime,
 }
 
 #[derive(Debug, Clone, PartialEq, Display)]
