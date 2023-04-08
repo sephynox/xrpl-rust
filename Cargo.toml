@@ -26,7 +26,7 @@ sha2 = "0.10.2"
 rand_hc = "0.3.1"
 ripemd = "0.1.1"
 ed25519-dalek = "1.0.1"
-secp256k1 = { version = "0.24.0", default-features = false, features = [
+secp256k1 = { version = "0.27.0", default-features = false, features = [
     "alloc",
 ] }
 bs58 = { version = "0.4.0", default-features = false, features = [
@@ -37,7 +37,7 @@ indexmap = { version = "1.7.0", features = ["serde"] }
 regex = { version = "1.5.4", default-features = false }
 strum = { version = "0.24.1", default-features = false }
 strum_macros = { version = "0.24.2", default-features = false }
-crypto-bigint = { version = "0.4.7" }
+crypto-bigint = { version = "0.5.1" }
 rust_decimal = { version = "1.17.0", default-features = false, features = [
     "serde",
 ] }
@@ -51,11 +51,11 @@ serde = { version = "1.0.130", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false, features = [
     "alloc",
 ] }
-serde_with = "1.11.0"
+serde_with = "2.3.1"
 serde_repr = "0.1"
 zeroize = "1.5.7"
 tokio = { version = "1.20.1", features = ["full"] }
-tokio-tungstenite = { version = "0.17.2", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.18.0", features = ["native-tls"] }
 futures = "0.3.21"
 futures-channel = "0.3.21"
 futures-util = "0.3.21"
@@ -66,7 +66,7 @@ thiserror-no-std = "2.0.2"
 anyhow = { version ="1.0.69", default-features = false }
 
 [dev-dependencies]
-criterion = "0.3.5"
+criterion = "0.4.0"
 cargo-husky = { version = "1.5.0", default-features = false, features = [
     "user-hooks",
 ] }
