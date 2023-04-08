@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `strum_macros::Display` for `CryptoAlgorithm` enum
 - Separated `Currency` to `Currency` and `Amount`
 - Make `Wallet` fields public
+- Updated crates:
+  - secp256k1
+  - crypto-bigint
+  - serde_with
+  - criterion
 ### Fixed
 - Broken documentation link
 - Flatten hex exceptions missed from previous pass
