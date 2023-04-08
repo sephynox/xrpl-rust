@@ -151,10 +151,7 @@ pub trait ChannelAuthorizeError {
 #[cfg(test)]
 mod test_channel_authorize_errors {
 
-    use crate::{
-        constants::CryptoAlgorithm,
-        models::Model,
-    };
+    use crate::{constants::CryptoAlgorithm, models::Model};
     use alloc::string::ToString;
 
     use super::*;

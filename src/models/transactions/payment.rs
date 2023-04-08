@@ -319,7 +319,7 @@ mod test_payment_error {
 
     use crate::models::{
         amount::{Amount, IssuedCurrencyAmount, XRPAmount},
-        Model, PathStep
+        Model, PathStep,
     };
 
     use super::*;

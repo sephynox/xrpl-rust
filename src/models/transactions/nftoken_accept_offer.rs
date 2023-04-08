@@ -223,7 +223,7 @@ mod test_nftoken_accept_offer_error {
 
     use crate::models::{
         amount::{Amount, XRPAmount},
-        Model
+        Model,
     };
 
     use super::*;

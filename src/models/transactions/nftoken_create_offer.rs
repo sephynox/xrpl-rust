@@ -310,7 +310,7 @@ mod test_nftoken_create_offer_error {
 
     use crate::models::{
         amount::{Amount, XRPAmount},
-        Model
+        Model,
     };
 
     use super::*;
