@@ -183,10 +183,10 @@ pub trait DepositPreauthError {
 #[cfg(test)]
 mod test_deposit_preauth_exception {
 
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
     use alloc::string::ToString;
 
-    use super::DepositPreauth;
+    use super::*;
 
     #[test]
     fn test_authorize_and_unauthorize_error() {

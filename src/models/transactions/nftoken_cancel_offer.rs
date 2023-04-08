@@ -181,9 +181,9 @@ mod test_nftoken_cancel_offer_error {
     use alloc::string::ToString;
     use alloc::vec::Vec;
 
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
 
-    use super::NFTokenCancelOffer;
+    use super::*;
 
     #[test]
     fn test_nftoken_offer_error() {

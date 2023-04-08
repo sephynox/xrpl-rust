@@ -190,10 +190,10 @@ pub trait CheckCashError {
 
 #[cfg(test)]
 mod test_check_cash_error {
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
     use alloc::string::ToString;
 
-    use super::CheckCash;
+    use super::*;
 
     #[test]
     fn test_amount_and_deliver_min_error() {

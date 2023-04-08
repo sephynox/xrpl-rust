@@ -286,10 +286,10 @@ pub trait NFTokenMintError {
 #[cfg(test)]
 mod test_nftoken_mint_error {
 
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
     use alloc::string::ToString;
 
-    use super::NFTokenMint;
+    use super::*;
 
     #[test]
     fn test_issuer_error() {

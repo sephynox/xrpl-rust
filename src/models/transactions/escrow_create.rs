@@ -201,13 +201,13 @@ pub trait EscrowCreateError {
 
 #[cfg(test)]
 mod test_escrow_create_errors {
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
 
     use crate::models::amount::XRPAmount;
 
     use alloc::string::ToString;
 
-    use super::EscrowCreate;
+    use super::*;
 
     #[test]
     fn test_cancel_after_error() {

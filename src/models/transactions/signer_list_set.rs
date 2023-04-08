@@ -272,7 +272,7 @@ mod test_signer_list_set_error {
     use alloc::string::ToString;
     use alloc::vec;
 
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
 
     use super::*;
 

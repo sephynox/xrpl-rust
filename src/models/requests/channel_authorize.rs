@@ -153,11 +153,11 @@ mod test_channel_authorize_errors {
 
     use crate::{
         constants::CryptoAlgorithm,
-        models::{Model, RequestMethod},
+        models::Model,
     };
     use alloc::string::ToString;
 
-    use super::ChannelAuthorize;
+    use super::*;
 
     #[test]
     fn test_fields_error() {
