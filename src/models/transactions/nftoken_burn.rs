@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::amount::XRPAmount;
-use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
+use crate::models::{
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
+};
 
 /// Removes a NFToken object from the NFTokenPage in which it is being held,
 /// effectively removing the token from the ledger (burning it).

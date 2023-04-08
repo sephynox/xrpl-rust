@@ -5,7 +5,9 @@ use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
 use crate::models::{
-    amount::Amount, model::Model, Flag, Memo, Signer, Transaction, TransactionType,
+    amount::Amount,
+    model::Model,
+    transactions::{Flag, Memo, Signer, Transaction, TransactionType},
 };
 
 use crate::_serde::txn_flags;

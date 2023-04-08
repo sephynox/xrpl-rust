@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{Model, RequestMethod};
+use crate::models::{requests::RequestMethod, Model};
 
 /// The ledger_closed method returns the unique identifiers of
 /// the most recently closed ledger. (This ledger is not

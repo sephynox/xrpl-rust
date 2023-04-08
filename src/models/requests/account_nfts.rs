@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{Model, RequestMethod};
+use crate::models::{requests::RequestMethod, Model};
 
 /// This method retrieves all of the NFTs currently owned
 /// by the specified account.

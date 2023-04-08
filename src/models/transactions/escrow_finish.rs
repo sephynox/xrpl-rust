@@ -1,12 +1,16 @@
+use crate::Err;
 use alloc::vec::Vec;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::amount::XRPAmount;
+use alloc::string::ToString;
+
+use crate::models::transactions::XRPLEscrowFinishException;
 use crate::models::{
-    exceptions::{EscrowFinishException, XRPLModelException, XRPLTransactionException},
+    amount::XRPAmount,
     model::Model,
-    EscrowFinishError, Memo, Signer, Transaction, TransactionType,
+    transactions::{Memo, Signer, Transaction, TransactionType},
 };
 
 /// Finishes an Escrow and delivers XRP from a held payment to the recipient.
@@ -108,13 +112,11 @@ impl<'a> Default for EscrowFinish<'a> {
     }
 }
 
-impl<'a> Model for EscrowFinish<'a> {
-    fn get_errors(&self) -> Result<(), XRPLModelException> {
+impl<'a: 'static> Model for EscrowFinish<'a> {
+    fn get_errors(&self) -> Result<()> {
         match self._get_condition_and_fulfillment_error() {
-            Ok(_no_error) => Ok(()),
-            Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                XRPLTransactionException::EscrowFinishError(error),
-            )),
+            Ok(_) => Ok(()),
+            Err(error) => Err!(error),
         }
     }
 }
@@ -126,12 +128,17 @@ impl<'a> Transaction for EscrowFinish<'a> {
 }
 
 impl<'a> EscrowFinishError for EscrowFinish<'a> {
-    fn _get_condition_and_fulfillment_error(&self) -> Result<(), EscrowFinishException> {
-        match (self.condition.is_some() && self.fulfillment.is_none())
+    fn _get_condition_and_fulfillment_error(&self) -> Result<(), XRPLEscrowFinishException> {
+        if (self.condition.is_some() && self.fulfillment.is_none())
             || (self.condition.is_none() && self.condition.is_some())
         {
-            true => Err(EscrowFinishException::InvalidIfOneSetBothConditionAndFulfillmentMustBeSet),
-            false => Ok(()),
+            Err(XRPLEscrowFinishException::FieldRequiresField {
+                field1: "condition",
+                field2: "fulfillment",
+                resource: "",
+            })
+        } else {
+            Ok(())
         }
     }
 }
@@ -176,12 +183,15 @@ impl<'a> EscrowFinish<'a> {
     }
 }
 
+pub trait EscrowFinishError {
+    fn _get_condition_and_fulfillment_error(&self) -> Result<(), XRPLEscrowFinishException>;
+}
+
 #[cfg(test)]
 mod test_escrow_finish_errors {
-    use crate::models::{
-        exceptions::{EscrowFinishException, XRPLModelException, XRPLTransactionException},
-        Model, TransactionType,
-    };
+
+    use crate::models::{Model, TransactionType};
+    use alloc::string::ToString;
 
     use super::EscrowFinish;
 
@@ -208,11 +218,11 @@ mod test_escrow_finish_errors {
             ),
             fulfillment: None,
         };
-        let expected_error =
-            XRPLModelException::XRPLTransactionError(XRPLTransactionException::EscrowFinishError(
-                EscrowFinishException::InvalidIfOneSetBothConditionAndFulfillmentMustBeSet,
-            ));
-        assert_eq!(escrow_finish.validate(), Err(expected_error));
+
+        assert_eq!(
+            escrow_finish.validate().unwrap_err().to_string().as_str(),
+            "For the field `condition` to be defined it is required to also define the field `fulfillment`. For more information see: "
+        );
     }
 }
 

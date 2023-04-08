@@ -1,13 +1,17 @@
+use crate::Err;
 use alloc::vec::Vec;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use alloc::string::ToString;
+
 use crate::models::amount::XRPAmount;
+use crate::models::transactions::XRPLCheckCashException;
 use crate::models::{
     amount::Amount,
-    exceptions::{CheckCashException, XRPLModelException, XRPLTransactionException},
     model::Model,
-    CheckCashError, Memo, Signer, Transaction, TransactionType,
+    transactions::{Memo, Signer, Transaction, TransactionType},
 };
 
 /// Cancels an unredeemed Check, removing it from the ledger without
@@ -111,13 +115,11 @@ impl<'a> Default for CheckCash<'a> {
     }
 }
 
-impl<'a> Model for CheckCash<'a> {
-    fn get_errors(&self) -> Result<(), XRPLModelException> {
+impl<'a: 'static> Model for CheckCash<'a> {
+    fn get_errors(&self) -> Result<()> {
         match self._get_amount_and_deliver_min_error() {
+            Err(error) => Err!(error),
             Ok(_no_error) => Ok(()),
-            Err(error) => Err(XRPLModelException::XRPLTransactionError(
-                XRPLTransactionException::CheckCashError(error),
-            )),
         }
     }
 }
@@ -129,13 +131,17 @@ impl<'a> Transaction for CheckCash<'a> {
 }
 
 impl<'a> CheckCashError for CheckCash<'a> {
-    fn _get_amount_and_deliver_min_error(&self) -> Result<(), CheckCashException> {
-        match self.amount.is_none() && self.deliver_min.is_none() {
-            true => Err(CheckCashException::InvalidMustSetAmountOrDeliverMin),
-            false => match self.amount.is_some() && self.deliver_min.is_some() {
-                true => Err(CheckCashException::InvalidMustNotSetAmountAndDeliverMin),
-                false => Ok(()),
-            },
+    fn _get_amount_and_deliver_min_error(&self) -> Result<(), XRPLCheckCashException> {
+        if (self.amount.is_none() && self.deliver_min.is_none())
+            || (self.amount.is_some() && self.deliver_min.is_some())
+        {
+            Err(XRPLCheckCashException::DefineExactlyOneOf {
+                field1: "amount",
+                field2: "deliver_min",
+                resource: "",
+            })
+        } else {
+            Ok(())
         }
     }
 }
@@ -178,18 +184,20 @@ impl<'a> CheckCash<'a> {
     }
 }
 
+pub trait CheckCashError {
+    fn _get_amount_and_deliver_min_error(&self) -> Result<(), XRPLCheckCashException>;
+}
+
 #[cfg(test)]
 mod test_check_cash_error {
-    use crate::models::{
-        exceptions::{CheckCashException, XRPLModelException, XRPLTransactionException},
-        Model, TransactionType,
-    };
+    use crate::models::{Model, TransactionType};
+    use alloc::string::ToString;
 
     use super::CheckCash;
 
     #[test]
     fn test_amount_and_deliver_min_error() {
-        let mut check_cash = CheckCash {
+        let check_cash = CheckCash {
             transaction_type: TransactionType::CheckCash,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
@@ -207,19 +215,11 @@ mod test_check_cash_error {
             amount: None,
             deliver_min: None,
         };
-        let expected_error =
-            XRPLModelException::XRPLTransactionError(XRPLTransactionException::CheckCashError(
-                CheckCashException::InvalidMustSetAmountOrDeliverMin,
-            ));
-        assert_eq!(check_cash.validate(), Err(expected_error));
 
-        check_cash.amount = Some(Amount::XRPAmount(XRPAmount::from("1000000")));
-        check_cash.deliver_min = Some(Amount::XRPAmount(XRPAmount::from("100000")));
-        let expected_error =
-            XRPLModelException::XRPLTransactionError(XRPLTransactionException::CheckCashError(
-                CheckCashException::InvalidMustNotSetAmountAndDeliverMin,
-            ));
-        assert_eq!(check_cash.validate(), Err(expected_error));
+        assert_eq!(
+            check_cash.validate().unwrap_err().to_string().as_str(),
+            "The field `amount` can not be defined with `deliver_min`. Define exactly one of them. For more information see: "
+        );
     }
 }
 

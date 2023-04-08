@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{Model, RequestMethod};
+use crate::models::{requests::RequestMethod, Model};
 
 /// This request retrieves from the ledger a list of
 /// transactions that involved the specified account.

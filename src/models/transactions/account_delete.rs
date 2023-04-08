@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::amount::XRPAmount;
-use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
+use crate::models::{
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
+};
 
 /// An AccountDelete transaction deletes an account and any objects it
 /// owns in the XRP Ledger, if possible, sending the account's remaining

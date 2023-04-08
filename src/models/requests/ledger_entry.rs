@@ -6,7 +6,7 @@ use serde_with::skip_serializing_none;
 use alloc::string::ToString;
 
 use crate::models::requests::XRPLLedgerEntryException;
-use crate::models::{LedgerEntryError, Model, RequestMethod};
+use crate::models::{requests::RequestMethod, Model};
 
 /// Required fields for requesting a DepositPreauth if not
 /// querying by object ID.
@@ -212,6 +212,10 @@ impl<'a> LedgerEntry<'a> {
             command: RequestMethod::LedgerData,
         }
     }
+}
+
+pub trait LedgerEntryError {
+    fn _get_field_error(&self) -> Result<(), XRPLLedgerEntryException>;
 }
 
 #[cfg(test)]

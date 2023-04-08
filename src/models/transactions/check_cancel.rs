@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::amount::XRPAmount;
-use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
+use crate::models::{
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
+};
 
 /// Cancels an unredeemed Check, removing it from the ledger without
 /// sending any money. The source or the destination of the check can

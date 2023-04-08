@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{Model, RequestMethod};
+use crate::models::{requests::RequestMethod, Model};
 
 /// The transaction_entry method retrieves information on a
 /// single transaction from a specific ledger version.

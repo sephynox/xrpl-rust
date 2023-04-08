@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{Model, RequestMethod};
+use crate::models::{requests::RequestMethod, Model};
 
 /// The deposit_authorized command indicates whether one account
 /// is authorized to send payments directly to another.

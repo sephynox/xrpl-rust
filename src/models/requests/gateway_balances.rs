@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{Model, RequestMethod};
+use crate::models::{requests::RequestMethod, Model};
 
 /// This request calculates the total balances issued by a
 /// given account, optionally excluding amounts held by

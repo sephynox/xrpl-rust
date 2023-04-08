@@ -10,7 +10,8 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 use alloc::string::ToString;
 
 use crate::models::{
-    model::Model, Flag, Memo, NFTokenCreateOfferError, Signer, Transaction, TransactionType,
+    model::Model,
+    transactions::{Flag, Memo, Signer, Transaction, TransactionType},
 };
 
 use crate::Err;
@@ -294,6 +295,12 @@ impl<'a> NFTokenCreateOffer<'a> {
             destination,
         }
     }
+}
+
+pub trait NFTokenCreateOfferError {
+    fn _get_amount_error(&self) -> Result<()>;
+    fn _get_destination_error(&self) -> Result<(), XRPLNFTokenCreateOfferException>;
+    fn _get_owner_error(&self) -> Result<(), XRPLNFTokenCreateOfferException>;
 }
 
 #[cfg(test)]
