@@ -2,7 +2,11 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{amount::XRPAmount, model::Model, Memo, Signer, Transaction, TransactionType};
+use crate::models::{
+    amount::XRPAmount,
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
+};
 
 /// Add additional XRP to an open payment channel,
 /// and optionally update the expiration time of the channel.

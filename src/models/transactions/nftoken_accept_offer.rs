@@ -12,8 +12,9 @@ use crate::models::amount::exceptions::XRPLAmountException;
 use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLNFTokenAcceptOfferException;
 use crate::models::{
-    amount::Amount, model::Model, Memo, NFTokenAcceptOfferError, Signer, Transaction,
-    TransactionType,
+    amount::Amount,
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
 };
 
 /// Accept offers to buy or sell an NFToken.
@@ -208,6 +209,11 @@ impl<'a> NFTokenAcceptOffer<'a> {
             nftoken_broker_fee,
         }
     }
+}
+
+pub trait NFTokenAcceptOfferError {
+    fn _get_brokered_mode_error(&self) -> Result<(), XRPLNFTokenAcceptOfferException>;
+    fn _get_nftoken_broker_fee_error(&self) -> Result<()>;
 }
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{default_false, Model, RequestMethod};
+use crate::models::{default_false, requests::RequestMethod, Model};
 
 /// This request retrieves a list of currencies that an account
 /// can send or receive, based on its trust lines. This is not

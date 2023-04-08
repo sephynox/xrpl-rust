@@ -176,9 +176,9 @@ macro_rules! serde_with_tag {
             where
                 S: ::serde::Serializer
             {
-                #[derive(Serialize)]
+                #[derive(::serde::Serialize)]
                 #[serde(rename_all = "PascalCase")]
-                #[skip_serializing_none]
+                #[::serde_with::skip_serializing_none]
                 struct Helper<$lt> {
                     $(
                         $field: $ty,
@@ -204,9 +204,9 @@ macro_rules! serde_with_tag {
             where
                 D: serde::Deserializer<'de>,
             {
-                #[derive(Deserialize)]
+                #[derive(::serde::Deserialize)]
                 #[serde(rename_all = "PascalCase")]
-                #[skip_serializing_none]
+                #[::serde_with::skip_serializing_none]
                 struct Helper<$lt> {
                     $(
                         $field: $ty,
@@ -253,9 +253,9 @@ macro_rules! serde_with_tag {
             where
                 S: ::serde::Serializer
             {
-                #[derive(Serialize)]
+                #[derive(::serde::Serialize)]
                 #[serde(rename_all = "PascalCase")]
-                #[skip_serializing_none]
+                #[::serde_with::skip_serializing_none]
                 struct Helper {
                     $(
                         $field: $ty,
@@ -281,9 +281,9 @@ macro_rules! serde_with_tag {
             where
                 D: serde::Deserializer<'de>,
             {
-                #[derive(Deserialize)]
+                #[derive(::serde::Deserialize)]
                 #[serde(rename_all = "PascalCase")]
-                #[skip_serializing_none]
+                #[::serde_with::skip_serializing_none]
                 struct Helper {
                     $(
                         $field: $ty,

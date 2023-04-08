@@ -2,7 +2,10 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::amount::XRPAmount;
-use crate::models::{model::Model, Transaction, TransactionType};
+use crate::models::{
+    model::Model,
+    transactions::{Transaction, TransactionType},
+};
 
 /// See SetFee:
 /// `<https://xrpl.org/setfee.html>`

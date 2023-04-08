@@ -9,7 +9,9 @@ use alloc::string::ToString;
 
 use crate::models::transactions::XRPLSignerListSetException;
 use crate::models::{
-    amount::XRPAmount, model::Model, Memo, Signer, SignerListSetError, Transaction, TransactionType,
+    amount::XRPAmount,
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
 };
 use crate::{serde_with_tag, Err};
 
@@ -257,6 +259,11 @@ impl<'a> SignerListSet<'a> {
             signer_entries,
         }
     }
+}
+
+pub trait SignerListSetError {
+    fn _get_signer_entries_error(&self) -> Result<(), XRPLSignerListSetException>;
+    fn _get_signer_quorum_error(&self) -> Result<(), XRPLSignerListSetException>;
 }
 
 #[cfg(test)]

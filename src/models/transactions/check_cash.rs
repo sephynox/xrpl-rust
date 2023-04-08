@@ -9,7 +9,9 @@ use alloc::string::ToString;
 use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLCheckCashException;
 use crate::models::{
-    amount::Amount, model::Model, CheckCashError, Memo, Signer, Transaction, TransactionType,
+    amount::Amount,
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
 };
 
 /// Cancels an unredeemed Check, removing it from the ledger without
@@ -180,6 +182,10 @@ impl<'a> CheckCash<'a> {
             deliver_min,
         }
     }
+}
+
+pub trait CheckCashError {
+    fn _get_amount_and_deliver_min_error(&self) -> Result<(), XRPLCheckCashException>;
 }
 
 #[cfg(test)]

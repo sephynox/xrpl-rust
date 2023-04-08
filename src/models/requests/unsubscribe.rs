@@ -2,7 +2,12 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{currency::Currency, default_false, Model, RequestMethod, StreamParameter};
+use crate::models::{
+    currency::Currency,
+    default_false,
+    requests::{RequestMethod, StreamParameter},
+    Model,
+};
 
 /// Format for elements in the `books` array for Unsubscribe only.
 ///

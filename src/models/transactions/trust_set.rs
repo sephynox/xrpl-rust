@@ -4,7 +4,10 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
-use crate::models::{model::Model, Flag, Memo, Signer, Transaction, TransactionType};
+use crate::models::{
+    model::Model,
+    transactions::{Flag, Memo, Signer, Transaction, TransactionType},
+};
 
 use crate::_serde::txn_flags;
 use crate::models::amount::{IssuedCurrencyAmount, XRPAmount};

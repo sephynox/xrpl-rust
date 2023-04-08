@@ -9,7 +9,8 @@ use alloc::string::ToString;
 use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLNFTokenCancelOfferException;
 use crate::models::{
-    model::Model, Memo, NFTokenCancelOfferError, Signer, Transaction, TransactionType,
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
 };
 
 /// Cancels existing token offers created using NFTokenCreateOffer.
@@ -169,6 +170,10 @@ impl<'a> NFTokenCancelOffer<'a> {
             nftoken_offers,
         }
     }
+}
+
+pub trait NFTokenCancelOfferError {
+    fn _get_nftoken_offers_error(&self) -> Result<(), XRPLNFTokenCancelOfferException>;
 }
 
 #[cfg(test)]

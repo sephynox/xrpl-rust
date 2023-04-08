@@ -71,3 +71,179 @@ pub use subscribe::*;
 pub use transaction_entry::*;
 pub use tx::*;
 pub use unsubscribe::*;
+
+use serde::{Deserialize, Serialize};
+use strum_macros::Display;
+
+/// Represents the different options for the `method`
+/// field in a request.
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display)]
+#[strum(serialize_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
+pub enum RequestMethod {
+    // Account methods
+    AccountChannels,
+    AccountCurrencies,
+    AccountInfo,
+    AccountLines,
+    AccountNfts,
+    AccountObjects,
+    AccountOffers,
+    AccountTx,
+    GatewayBalances,
+    NoRippleCheck,
+
+    // Transaction methods
+    Sign,
+    SignFor,
+    Submit,
+    SubmitMultisigned,
+    TransactionEntry,
+    Tx,
+
+    // Channel methods
+    ChannelAuthorize,
+    ChannelVerify,
+
+    // Path methods
+    BookOffers,
+    DepositAuthorized,
+    NftBuyOffers,
+    NftSellOffers,
+    PathFind,
+    RipplePathFind,
+
+    // Ledger methods
+    Ledger,
+    LedgerClosed,
+    LedgerCurrent,
+    LedgerData,
+    LedgerEntry,
+
+    // Subscription methods
+    Subscribe,
+    Unsubscribe,
+
+    // Server info methods
+    Fee,
+    Manifest,
+    ServerInfo,
+    ServerState,
+
+    // Utility methods
+    Ping,
+    Random,
+}
+
+/// For use with serde defaults.
+/// TODO Find a better way
+impl RequestMethod {
+    fn account_channels() -> Self {
+        RequestMethod::AccountChannels
+    }
+    fn account_currencies() -> Self {
+        RequestMethod::AccountCurrencies
+    }
+    fn account_info() -> Self {
+        RequestMethod::AccountInfo
+    }
+    fn account_lines() -> Self {
+        RequestMethod::AccountLines
+    }
+    fn account_nfts() -> Self {
+        RequestMethod::AccountNfts
+    }
+    fn account_objects() -> Self {
+        RequestMethod::AccountObjects
+    }
+    fn account_offers() -> Self {
+        RequestMethod::AccountOffers
+    }
+    fn account_tx() -> Self {
+        RequestMethod::AccountTx
+    }
+    fn book_offers() -> Self {
+        RequestMethod::BookOffers
+    }
+    fn channel_authorize() -> Self {
+        RequestMethod::ChannelAuthorize
+    }
+    fn channel_verify() -> Self {
+        RequestMethod::ChannelVerify
+    }
+    fn deposit_authorization() -> Self {
+        RequestMethod::DepositAuthorized
+    }
+    fn fee() -> Self {
+        RequestMethod::Fee
+    }
+    fn ledger_closed() -> Self {
+        RequestMethod::LedgerClosed
+    }
+    fn ledger_current() -> Self {
+        RequestMethod::LedgerCurrent
+    }
+    fn ledger_data() -> Self {
+        RequestMethod::LedgerData
+    }
+    fn ledger_entry() -> Self {
+        RequestMethod::LedgerEntry
+    }
+    fn ledger() -> Self {
+        RequestMethod::Ledger
+    }
+    fn manifest() -> Self {
+        RequestMethod::Manifest
+    }
+    fn nft_buy_offers() -> Self {
+        RequestMethod::NftBuyOffers
+    }
+    fn nft_sell_offers() -> Self {
+        RequestMethod::NftSellOffers
+    }
+    fn no_ripple_check() -> Self {
+        RequestMethod::NoRippleCheck
+    }
+    fn path_find() -> Self {
+        RequestMethod::PathFind
+    }
+    fn ripple_path_find() -> Self {
+        RequestMethod::RipplePathFind
+    }
+    fn ping() -> Self {
+        RequestMethod::Ping
+    }
+    fn random() -> Self {
+        RequestMethod::Random
+    }
+    fn server_info() -> Self {
+        RequestMethod::ServerInfo
+    }
+    fn server_state() -> Self {
+        RequestMethod::ServerState
+    }
+    fn submit() -> Self {
+        RequestMethod::Submit
+    }
+    fn sign_for() -> Self {
+        RequestMethod::SignFor
+    }
+    fn sign() -> Self {
+        RequestMethod::Sign
+    }
+    fn submit_multisigned() -> Self {
+        RequestMethod::SubmitMultisigned
+    }
+    fn subscribe() -> Self {
+        RequestMethod::Subscribe
+    }
+    fn unsubscribe() -> Self {
+        RequestMethod::Unsubscribe
+    }
+    fn transaction_entry() -> Self {
+        RequestMethod::TransactionEntry
+    }
+    fn tx() -> Self {
+        RequestMethod::Tx
+    }
+}

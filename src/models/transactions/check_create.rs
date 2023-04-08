@@ -3,7 +3,11 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::amount::XRPAmount;
-use crate::models::{amount::Amount, model::Model, Memo, Signer, Transaction, TransactionType};
+use crate::models::{
+    amount::Amount,
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
+};
 
 /// Create a Check object in the ledger, which is a deferred
 /// payment that can be cashed by its intended destination.
