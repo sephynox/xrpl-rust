@@ -1,6 +1,6 @@
 [package]
 name = "xrpl-rust"
-version = "0.2.0-beta"
+version = "0.2.0"
 edition = "2018"
 authors = ["Tanveer Wahid <tan@wahid.email>"]
 description = "A 100% Rust library to interact with the XRPL"
