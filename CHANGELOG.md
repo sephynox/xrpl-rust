@@ -27,10 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `strum_macros::Display` instead of manual `core::fmt::Display`
 - Use `strum_macros::Display` for `CryptoAlgorithm` enum
 - Separated `Currency` to `Currency` and `Amount`
+- Make `Wallet` fields public
 ### Fixed
 - Broken documentation link
 - Flatten hex exceptions missed from previous pass
-- Make `Wallet` fields public
 
 ---
 
