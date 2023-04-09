@@ -22,7 +22,6 @@ pub mod transactions;
 pub mod amount;
 #[cfg(feature = "currencies")]
 pub mod currency;
-pub mod response;
 pub mod utils;
 
 use derive_new::new;
