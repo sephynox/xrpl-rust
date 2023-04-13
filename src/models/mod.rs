@@ -9,6 +9,7 @@
 
 pub mod exceptions;
 #[cfg(feature = "ledger")]
+#[allow(clippy::too_many_arguments)]
 pub mod ledger;
 pub mod model;
 #[cfg(feature = "requests")]

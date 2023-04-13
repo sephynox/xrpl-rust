@@ -59,6 +59,14 @@ fnv = { version = "1.0.7", default-features = false }
 derive-new = { version = "0.5.9", default-features = false }
 thiserror-no-std = "2.0.2"
 anyhow = { version ="1.0.69", default-features = false }
+tokio = { version = "1.28.0", default-features = false, optional = true }
+
+# Use git version as long as there is no release for em-as-net.
+[dependencies.em-as-net]
+git = "https://github.com/LimpidCrypto/em-as-net"
+package = "em-as-net"
+default-features = false
+optional = true
 
 [dev-dependencies]
 criterion = "0.4.0"
@@ -71,13 +79,14 @@ name = "benchmarks"
 harness = false
 
 [features]
-default = ["std", "core", "models", "utils"]
+default = ["std", "core", "models", "utils", "net"]
 models = ["core", "transactions", "requests", "ledger"]
 transactions = ["core", "amounts", "currencies"]
 requests = ["core", "amounts", "currencies"]
 ledger = ["core", "amounts", "currencies"]
 amounts = ["core"]
 currencies = ["core"]
+net = ["em-as-net"]
 core = ["utils"]
 utils = []
-std = ["rand/std", "regex/std", "chrono/std", "rand/std_rng", "hex/std", "rust_decimal/std", "bs58/std", "serde/std", "indexmap/std", "secp256k1/std"]
+std = ["em-as-net/std", "tokio/full", "rand/std", "regex/std", "chrono/std", "rand/std_rng", "hex/std", "rust_decimal/std", "bs58/std", "serde/std", "indexmap/std", "secp256k1/std"]
