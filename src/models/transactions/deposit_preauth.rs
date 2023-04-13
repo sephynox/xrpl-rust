@@ -4,8 +4,6 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use alloc::string::ToString;
-
 use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLDepositPreauthException;
 use crate::models::{
@@ -141,7 +139,7 @@ impl<'a> DepositPreauthError for DepositPreauth<'a> {
 }
 
 impl<'a> DepositPreauth<'a> {
-    fn new(
+    pub fn new(
         account: &'a str,
         fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,

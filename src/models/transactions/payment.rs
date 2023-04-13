@@ -11,7 +11,6 @@ use crate::models::{
     transactions::{Flag, Memo, Signer, Transaction, TransactionType},
     PathStep,
 };
-use alloc::string::ToString;
 
 use crate::Err;
 use crate::_serde::txn_flags;
@@ -260,7 +259,7 @@ impl<'a> PaymentError for Payment<'a> {
 }
 
 impl<'a> Payment<'a> {
-    fn new(
+    pub fn new(
         account: &'a str,
         amount: Amount<'a>,
         destination: &'a str,

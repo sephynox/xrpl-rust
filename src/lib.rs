@@ -19,12 +19,17 @@
 //! [XRP Ledger](https://xrpl.org/docs.html).
 #![no_std]
 #![allow(dead_code)] // Remove eventually
+#![allow(incomplete_features)]
+#![feature(async_fn_in_trait)]
+#![feature(inherent_associated_types)]
+#![feature(type_alias_impl_trait)]
 
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std as alloc;
 
+pub mod asynch;
 pub mod constants;
 #[cfg(feature = "core")]
 pub mod core;

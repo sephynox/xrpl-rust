@@ -4,8 +4,6 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use alloc::string::ToString;
-
 use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLNFTokenCancelOfferException;
 use crate::models::{
@@ -139,7 +137,7 @@ impl<'a> NFTokenCancelOfferError for NFTokenCancelOffer<'a> {
 }
 
 impl<'a> NFTokenCancelOffer<'a> {
-    fn new(
+    pub fn new(
         account: &'a str,
         nftoken_offers: Vec<&'a str>,
         fee: Option<XRPAmount<'a>>,

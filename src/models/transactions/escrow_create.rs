@@ -4,8 +4,6 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use alloc::string::ToString;
-
 use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLEscrowCreateException;
 use crate::models::{
@@ -152,7 +150,7 @@ impl<'a> EscrowCreateError for EscrowCreate<'a> {
 }
 
 impl<'a> EscrowCreate<'a> {
-    fn new(
+    pub fn new(
         account: &'a str,
         amount: XRPAmount<'a>,
         destination: &'a str,

@@ -4,8 +4,6 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use alloc::string::ToString;
-
 use crate::models::transactions::XRPLEscrowFinishException;
 use crate::models::{
     amount::XRPAmount,
@@ -144,7 +142,7 @@ impl<'a> EscrowFinishError for EscrowFinish<'a> {
 }
 
 impl<'a> EscrowFinish<'a> {
-    fn new(
+    pub fn new(
         account: &'a str,
         owner: &'a str,
         offer_sequence: u32,

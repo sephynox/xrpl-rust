@@ -3,8 +3,6 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use alloc::string::ToString;
-
 use crate::models::requests::XRPLLedgerEntryException;
 use crate::models::{requests::RequestMethod, Model};
 
@@ -178,7 +176,7 @@ impl<'a> LedgerEntryError for LedgerEntry<'a> {
 }
 
 impl<'a> LedgerEntry<'a> {
-    fn new(
+    pub fn new(
         id: Option<&'a str>,
         index: Option<&'a str>,
         account_root: Option<&'a str>,

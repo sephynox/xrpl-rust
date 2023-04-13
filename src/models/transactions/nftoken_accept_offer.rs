@@ -6,8 +6,6 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use alloc::string::ToString;
-
 use crate::models::amount::exceptions::XRPLAmountException;
 use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLNFTokenAcceptOfferException;
@@ -174,7 +172,7 @@ impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
 }
 
 impl<'a> NFTokenAcceptOffer<'a> {
-    fn new(
+    pub fn new(
         account: &'a str,
         fee: Option<XRPAmount<'a>>,
         sequence: Option<u32>,

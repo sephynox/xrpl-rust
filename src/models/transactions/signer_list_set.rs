@@ -5,8 +5,6 @@ use derive_new::new;
 use serde::{ser::SerializeMap, Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use alloc::string::ToString;
-
 use crate::models::transactions::XRPLSignerListSetException;
 use crate::models::{
     amount::XRPAmount,
@@ -226,7 +224,7 @@ impl<'a> SignerListSetError for SignerListSet<'a> {
 }
 
 impl<'a> SignerListSet<'a> {
-    fn new(
+    pub fn new(
         account: &'a str,
         signer_quorum: u32,
         fee: Option<XRPAmount<'a>>,

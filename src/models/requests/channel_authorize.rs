@@ -3,8 +3,6 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use alloc::string::ToString;
-
 use crate::models::requests::XRPLChannelAuthorizeException;
 use crate::{
     constants::CryptoAlgorithm,
@@ -120,7 +118,7 @@ impl<'a> ChannelAuthorizeError for ChannelAuthorize<'a> {
 }
 
 impl<'a> ChannelAuthorize<'a> {
-    fn new(
+    pub fn new(
         channel_id: &'a str,
         amount: &'a str,
         id: Option<&'a str>,
