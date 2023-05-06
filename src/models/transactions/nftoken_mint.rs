@@ -9,7 +9,10 @@ use alloc::string::ToString;
 
 use crate::{
     constants::{MAX_TRANSFER_FEE, MAX_URI_LENGTH},
-    models::{model::Model, Flag, Memo, NFTokenMintError, Signer, Transaction, TransactionType},
+    models::{
+        model::Model,
+        transactions::{Flag, Memo, Signer, Transaction, TransactionType},
+    },
     Err,
 };
 
@@ -274,13 +277,19 @@ impl<'a> NFTokenMint<'a> {
     }
 }
 
+pub trait NFTokenMintError {
+    fn _get_issuer_error(&self) -> Result<(), XRPLNFTokenMintException>;
+    fn _get_transfer_fee_error(&self) -> Result<(), XRPLNFTokenMintException>;
+    fn _get_uri_error(&self) -> Result<(), XRPLNFTokenMintException>;
+}
+
 #[cfg(test)]
 mod test_nftoken_mint_error {
 
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
     use alloc::string::ToString;
 
-    use super::NFTokenMint;
+    use super::*;
 
     #[test]
     fn test_issuer_error() {

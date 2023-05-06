@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::amount::XRPAmount;
-use crate::models::{model::Model, Memo, Signer, Transaction, TransactionType};
+use crate::models::{
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
+};
 
 /// Create a unidirectional channel and fund it with XRP.
 ///

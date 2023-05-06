@@ -8,7 +8,7 @@ use alloc::string::ToString;
 use crate::models::requests::XRPLChannelAuthorizeException;
 use crate::{
     constants::CryptoAlgorithm,
-    models::{ChannelAuthorizeError, Model, RequestMethod},
+    models::{requests::RequestMethod, Model},
     Err,
 };
 
@@ -144,16 +144,17 @@ impl<'a> ChannelAuthorize<'a> {
     }
 }
 
+pub trait ChannelAuthorizeError {
+    fn _get_field_error(&self) -> Result<(), XRPLChannelAuthorizeException>;
+}
+
 #[cfg(test)]
 mod test_channel_authorize_errors {
 
-    use crate::{
-        constants::CryptoAlgorithm,
-        models::{Model, RequestMethod},
-    };
+    use crate::{constants::CryptoAlgorithm, models::Model};
     use alloc::string::ToString;
 
-    use super::ChannelAuthorize;
+    use super::*;
 
     #[test]
     fn test_fields_error() {

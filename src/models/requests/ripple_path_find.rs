@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::currency::XRP;
-use crate::models::{currency::Currency, Model, RequestMethod};
+use crate::models::{currency::Currency, requests::RequestMethod, Model};
 
 /// The ripple_path_find method is a simpl<'a>ified version of
 /// the path_find method that provides a single response with

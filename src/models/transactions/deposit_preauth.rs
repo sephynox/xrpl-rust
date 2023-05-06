@@ -9,7 +9,8 @@ use alloc::string::ToString;
 use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLDepositPreauthException;
 use crate::models::{
-    model::Model, DepositPreauthError, Memo, Signer, Transaction, TransactionType,
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
 };
 
 /// A DepositPreauth transaction gives another account pre-approval
@@ -175,13 +176,17 @@ impl<'a> DepositPreauth<'a> {
     }
 }
 
+pub trait DepositPreauthError {
+    fn _get_authorize_and_unauthorize_error(&self) -> Result<(), XRPLDepositPreauthException>;
+}
+
 #[cfg(test)]
 mod test_deposit_preauth_exception {
 
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
     use alloc::string::ToString;
 
-    use super::DepositPreauth;
+    use super::*;
 
     #[test]
     fn test_authorize_and_unauthorize_error() {

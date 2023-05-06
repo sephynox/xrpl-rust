@@ -15,7 +15,10 @@ use crate::{
         DISABLE_TICK_SIZE, MAX_DOMAIN_LENGTH, MAX_TICK_SIZE, MAX_TRANSFER_RATE, MIN_TICK_SIZE,
         MIN_TRANSFER_RATE, SPECIAL_CASE_TRANFER_RATE,
     },
-    models::{model::Model, AccountSetError, Flag, Memo, Signer, Transaction, TransactionType},
+    models::{
+        model::Model,
+        transactions::{Flag, Memo, Signer, Transaction, TransactionType},
+    },
     Err,
 };
 
@@ -432,18 +435,26 @@ impl<'a> AccountSet<'a> {
     }
 }
 
+pub trait AccountSetError {
+    fn _get_tick_size_error(&self) -> Result<(), XRPLAccountSetException>;
+    fn _get_transfer_rate_error(&self) -> Result<(), XRPLAccountSetException>;
+    fn _get_domain_error(&self) -> Result<(), XRPLAccountSetException>;
+    fn _get_clear_flag_error(&self) -> Result<(), XRPLAccountSetException>;
+    fn _get_nftoken_minter_error(&self) -> Result<(), XRPLAccountSetException>;
+}
+
 #[cfg(test)]
 mod test_account_set_errors {
 
-    use crate::models::{AccountSetFlag, Model};
+    use crate::models::Model;
     use alloc::string::ToString;
 
-    use super::AccountSet;
+    use super::*;
 
     #[test]
     fn test_tick_size_error() {
         let mut account_set = AccountSet {
-            transaction_type: crate::models::TransactionType::AccountSet,
+            transaction_type: TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
             sequence: None,
@@ -485,7 +496,7 @@ mod test_account_set_errors {
     #[test]
     fn test_transfer_rate_error() {
         let mut account_set = AccountSet {
-            transaction_type: crate::models::TransactionType::AccountSet,
+            transaction_type: TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
             sequence: None,
@@ -527,7 +538,7 @@ mod test_account_set_errors {
     #[test]
     fn test_domain_error() {
         let mut account_set = AccountSet {
-            transaction_type: crate::models::TransactionType::AccountSet,
+            transaction_type: TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
             sequence: None,
@@ -569,7 +580,7 @@ mod test_account_set_errors {
     #[test]
     fn test_flag_error() {
         let account_set = AccountSet {
-            transaction_type: crate::models::TransactionType::AccountSet,
+            transaction_type: TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
             sequence: None,
@@ -601,7 +612,7 @@ mod test_account_set_errors {
     #[test]
     fn test_asf_authorized_nftoken_minter_error() {
         let mut account_set = AccountSet {
-            transaction_type: crate::models::TransactionType::AccountSet,
+            transaction_type: TransactionType::AccountSet,
             account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb",
             fee: None,
             sequence: None,

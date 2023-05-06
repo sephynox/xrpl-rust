@@ -8,7 +8,10 @@ use alloc::string::ToString;
 
 use crate::models::amount::XRPAmount;
 use crate::models::transactions::XRPLEscrowCreateException;
-use crate::models::{model::Model, EscrowCreateError, Memo, Signer, Transaction, TransactionType};
+use crate::models::{
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
+};
 
 /// Creates an Escrow, which sequests XRP until the escrow process either finishes or is canceled.
 ///
@@ -192,15 +195,19 @@ impl<'a> EscrowCreate<'a> {
     }
 }
 
+pub trait EscrowCreateError {
+    fn _get_finish_after_error(&self) -> Result<(), XRPLEscrowCreateException>;
+}
+
 #[cfg(test)]
 mod test_escrow_create_errors {
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
 
     use crate::models::amount::XRPAmount;
 
     use alloc::string::ToString;
 
-    use super::EscrowCreate;
+    use super::*;
 
     #[test]
     fn test_cancel_after_error() {

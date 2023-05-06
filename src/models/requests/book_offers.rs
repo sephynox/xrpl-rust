@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{currency::Currency, Model, RequestMethod};
+use crate::models::{currency::Currency, requests::RequestMethod, Model};
 
 /// The book_offers method retrieves a list of offers, also known
 /// as the order book, between two currencies.

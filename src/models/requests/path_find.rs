@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::currency::{Currency, XRP};
-use crate::models::{Model, PathStep, RequestMethod};
+use crate::models::{requests::RequestMethod, Model, PathStep};
 
 /// A path is an array. Each member of a path is an object that specifies a step on that path.
 pub type Path<'a> = Vec<PathStep<'a>>;

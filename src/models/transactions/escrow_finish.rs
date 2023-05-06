@@ -8,7 +8,9 @@ use alloc::string::ToString;
 
 use crate::models::transactions::XRPLEscrowFinishException;
 use crate::models::{
-    amount::XRPAmount, model::Model, EscrowFinishError, Memo, Signer, Transaction, TransactionType,
+    amount::XRPAmount,
+    model::Model,
+    transactions::{Memo, Signer, Transaction, TransactionType},
 };
 
 /// Finishes an Escrow and delivers XRP from a held payment to the recipient.
@@ -181,13 +183,17 @@ impl<'a> EscrowFinish<'a> {
     }
 }
 
+pub trait EscrowFinishError {
+    fn _get_condition_and_fulfillment_error(&self) -> Result<(), XRPLEscrowFinishException>;
+}
+
 #[cfg(test)]
 mod test_escrow_finish_errors {
 
-    use crate::models::{Model, TransactionType};
+    use crate::models::Model;
     use alloc::string::ToString;
 
-    use super::EscrowFinish;
+    use super::*;
 
     #[test]
     fn test_condition_and_fulfillment_error() {

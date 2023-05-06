@@ -1,8 +1,9 @@
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use strum_macros::Display;
 
-use crate::models::{currency::Currency, default_false, Model, RequestMethod, StreamParameter};
+use crate::models::{currency::Currency, default_false, requests::RequestMethod, Model};
 
 /// Format for elements in the `books` array for Subscribe only.
 ///
@@ -18,6 +19,21 @@ pub struct SubscribeBook<'a> {
     pub snapshot: Option<bool>,
     #[serde(default = "default_false")]
     pub both: Option<bool>,
+}
+
+/// Represents possible values of the streams query param
+/// for subscribe.
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display)]
+#[serde(rename_all = "snake_case")]
+pub enum StreamParameter {
+    Consensus,
+    Ledger,
+    Manifests,
+    PeerStatus,
+    Transactions,
+    TransactionsProposed,
+    Server,
+    Validations,
 }
 
 /// The subscribe method requests periodic notifications

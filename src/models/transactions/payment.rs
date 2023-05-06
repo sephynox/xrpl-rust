@@ -6,8 +6,10 @@ use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
 use crate::models::{
-    amount::Amount, model::Model, Flag, Memo, PathStep, PaymentError, Signer, Transaction,
-    TransactionType,
+    amount::Amount,
+    model::Model,
+    transactions::{Flag, Memo, Signer, Transaction, TransactionType},
+    PathStep,
 };
 use alloc::string::ToString;
 
@@ -304,6 +306,12 @@ impl<'a> Payment<'a> {
     }
 }
 
+pub trait PaymentError {
+    fn _get_xrp_transaction_error(&self) -> Result<(), XRPLPaymentException>;
+    fn _get_partial_payment_error(&self) -> Result<(), XRPLPaymentException>;
+    fn _get_exchange_error(&self) -> Result<(), XRPLPaymentException>;
+}
+
 #[cfg(test)]
 mod test_payment_error {
     use alloc::string::ToString;
@@ -311,10 +319,10 @@ mod test_payment_error {
 
     use crate::models::{
         amount::{Amount, IssuedCurrencyAmount, XRPAmount},
-        Model, PathStep, PaymentFlag, TransactionType,
+        Model, PathStep,
     };
 
-    use super::Payment;
+    use super::*;
 
     #[test]
     fn test_xrp_to_xrp_error() {

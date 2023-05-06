@@ -3,7 +3,11 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
-use crate::models::{amount::XRPAmount, model::Model, Transaction, TransactionType};
+use crate::models::{
+    amount::XRPAmount,
+    model::Model,
+    transactions::{Transaction, TransactionType},
+};
 
 #[derive(
     Debug, Eq, PartialEq, Clone, Serialize_repr, Deserialize_repr, Display, AsRefStr, EnumIter,
