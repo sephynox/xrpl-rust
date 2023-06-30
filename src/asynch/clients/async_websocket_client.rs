@@ -11,7 +11,7 @@ pub use em_as_net::core::io::{AsyncRead, AsyncWrite};
 // AsyncWebSocketClient
 #[cfg(feature = "std")]
 pub type AsyncWebsocketClient<'a, T, Rng, Status = Closed> =
-if_std::AsyncWebsocketClient<'a, T, Rng, Status>;
+    if_std::AsyncWebsocketClient<'a, T, Rng, Status>;
 pub use em_as_net::core::tcp::TcpSocket;
 // TCP Adapters
 pub use em_as_net::core::tcp::adapters::TcpAdapterTokio;
@@ -36,20 +36,20 @@ mod if_std {
     use core::cell::RefCell;
     use core::marker::PhantomData;
 
+    use crate::asynch::clients::exceptions::XRPLWebsocketException;
+    use crate::Err;
     use anyhow::Result;
     use em_as_net::client::websocket::{WebsocketClient, WebsocketClientConnect};
     use em_as_net::core::tcp::adapters::AdapterConnect;
     use em_as_net::core::tcp::{TcpConnect, TcpSocket};
     use rand::rngs::ThreadRng;
     use rand::{thread_rng, RngCore};
-    use crate::asynch::clients::exceptions::XRPLWebsocketException;
-    use crate::Err;
 
     /// An async client for interacting with the rippled WebSocket API.
     pub struct AsyncWebsocketClient<'a, T, Rng, Status = Closed>
-        where
-            T: TcpConnect<'a> + AsyncRead + AsyncWrite,
-            Rng: RngCore,
+    where
+        T: TcpConnect<'a> + AsyncRead + AsyncWrite,
+        Rng: RngCore,
     {
         pub uri: Cow<'a, str>,
         pub(crate) inner: RefCell<Option<WebsocketClient<'a, T, Rng>>>,
@@ -57,9 +57,9 @@ mod if_std {
     }
 
     impl<'a, T, Rng, Status> AsyncWebsocketClient<'a, T, Rng, Status>
-        where
-            T: TcpConnect<'a> + AsyncRead + AsyncWrite,
-            Rng: RngCore,
+    where
+        T: TcpConnect<'a> + AsyncRead + AsyncWrite,
+        Rng: RngCore,
     {
         pub fn new(uri: Cow<'a, str>, buffer: &'a mut [u8]) -> Self {
             let ws = WebsocketClient::new(uri.clone(), buffer);
@@ -72,9 +72,9 @@ mod if_std {
     }
 
     impl<'a, T, Rng, Status> WebsocketBase for AsyncWebsocketClient<'a, T, Rng, Status>
-        where
-            T: TcpConnect<'a> + AsyncRead + AsyncWrite,
-            Rng: RngCore,
+    where
+        T: TcpConnect<'a> + AsyncRead + AsyncWrite,
+        Rng: RngCore,
     {
         fn is_open(&self) -> bool {
             self.status == PhantomData::<Status>
@@ -82,9 +82,9 @@ mod if_std {
     }
 
     impl<'a, A> WebsocketOpen<'a, A, AsyncWebsocketClient<'a, TcpSocket<A>, ThreadRng, Open>>
-    for AsyncWebsocketClient<'a, TcpSocket<A>, ThreadRng, Closed>
-        where
-            A: AdapterConnect<'a> + AsyncRead + AsyncWrite + Sized + Unpin,
+        for AsyncWebsocketClient<'a, TcpSocket<A>, ThreadRng, Closed>
+    where
+        A: AdapterConnect<'a> + AsyncRead + AsyncWrite + Sized + Unpin,
     {
         async fn open(
             self,
@@ -92,8 +92,8 @@ mod if_std {
         ) -> Result<AsyncWebsocketClient<'a, TcpSocket<A>, ThreadRng, Open>> {
             let tcp_socket = TcpSocket::new(adapter);
             let mut websocket = match self.inner.take() {
-                None => { return Err!(XRPLWebsocketException::NotOpen) }
-                Some(ws) => ws
+                None => return Err!(XRPLWebsocketException::NotOpen),
+                Some(ws) => ws,
             };
             let rng = thread_rng();
             websocket
@@ -111,9 +111,9 @@ mod if_std {
 }
 
 impl<'a, T, Rng> WebsocketIo for AsyncWebsocketClient<'a, T, Rng, Open>
-    where
-        T: TcpConnect<'a> + AsyncRead + AsyncWrite + Unpin,
-        Rng: RngCore,
+where
+    T: TcpConnect<'a> + AsyncRead + AsyncWrite + Unpin,
+    Rng: RngCore,
 {
     async fn write<R: Model + Serialize>(&self, request: &R) -> Result<()> {
         let request_json = match serde_json::to_string(&request) {
@@ -149,14 +149,14 @@ impl<'a, T, Rng> WebsocketIo for AsyncWebsocketClient<'a, T, Rng, Open>
 }
 
 impl<'a, T, Rng> WebsocketClose for AsyncWebsocketClient<'a, T, Rng, Open>
-    where
-        T: TcpConnect<'a> + AsyncRead + AsyncWrite + Unpin,
-        Rng: RngCore,
+where
+    T: TcpConnect<'a> + AsyncRead + AsyncWrite + Unpin,
+    Rng: RngCore,
 {
     async fn close(&self) -> Result<()> {
         match self.inner.borrow_mut().as_mut() {
             None => Err!(XRPLWebsocketException::NotOpen),
-            Some(ws) => ws.close().await
+            Some(ws) => ws.close().await,
         }
     }
 }

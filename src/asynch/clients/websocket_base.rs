@@ -14,8 +14,8 @@ pub trait WebsocketBase {
 }
 
 pub trait WebsocketOpen<'a, A, OpenWS>
-    where
-        A: AdapterConnect<'a> + AsyncRead + AsyncWrite + Sized + Unpin,
+where
+    A: AdapterConnect<'a> + AsyncRead + AsyncWrite + Sized + Unpin,
 {
     /// Connects to the host. To communicate with a host we need a TCP Socket to
     /// send bytes from the client to the host. This socket requires a preferred
