@@ -73,6 +73,8 @@ criterion = "0.4.0"
 cargo-husky = { version = "1.5.0", default-features = false, features = [
     "user-hooks",
 ] }
+tokio = { version = "1.28.2", features = ["full"] }
+rand = { version = "0.8.5", default-features = false, features = ["getrandom"] }
 
 [[bench]]
 name = "benchmarks"
@@ -86,7 +88,7 @@ requests = ["core", "amounts", "currencies"]
 ledger = ["core", "amounts", "currencies"]
 amounts = ["core"]
 currencies = ["core"]
-net = ["em-as-net"]
+net = ["em-as-net/core", "em-as-net/client"]
 core = ["utils"]
 utils = []
 std = ["em-as-net/std", "tokio/full", "rand/std", "regex/std", "chrono/std", "rand/std_rng", "hex/std", "rust_decimal/std", "bs58/std", "serde/std", "indexmap/std", "secp256k1/std"]

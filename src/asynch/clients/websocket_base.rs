@@ -1,20 +1,38 @@
-use crate::asynch::clients::client::Client;
+//! Traits used for all websocket clients.
+
 use crate::models::Model;
 use anyhow::Result;
 use em_as_net::client::websocket::ReadResult;
+use em_as_net::core::io::{AsyncRead, AsyncWrite};
+use em_as_net::core::tcp::adapters::AdapterConnect;
+
 use serde::Serialize;
 
 // A client for interacting with the rippled WebSocket API.
-pub trait WebsocketBase<'a>: Client<'a> {
+pub trait WebsocketBase {
     fn is_open(&self) -> bool;
+}
 
-    async fn do_open(&self) -> Result<()>;
+pub trait WebsocketOpen<'a, A, OpenWS>
+    where
+        A: AdapterConnect<'a> + AsyncRead + AsyncWrite + Sized + Unpin,
+{
+    /// Connects to the host. To communicate with a host we need a TCP Socket to
+    /// send bytes from the client to the host. This socket requires a preferred
+    /// `adapter` like the `TcpAdapterTokio`. The adapter is the actual socket
+    /// which must implement `AdapterConnect + AsyncRead + AsyncWrite + Sized + Unpin`
+    async fn open(self, adapter: A) -> Result<OpenWS>;
+}
 
-    async fn do_close(&self) -> Result<()>;
+pub trait WebsocketClose {
+    /// Closes the websocket stream and disconnects from the host.
+    async fn close(&self) -> Result<()>;
+}
 
-    async fn do_write<T: Model + Serialize>(&self, request: T) -> Result<()>;
+pub trait WebsocketIo {
+    /// Writes the request to the stream.
+    async fn write<R: Model + Serialize>(&self, request: &R) -> Result<()>;
 
-    async fn do_read(&'a mut self) -> Result<Option<ReadResult<'a>>>;
-
-    async fn do_request_impl<T: Model + Serialize, R>(&mut self, request: T) -> Result<R>;
+    /// Read messages from the stream.
+    async fn read(&mut self) -> Result<Option<ReadResult<'_>>>;
 }
