@@ -17,6 +17,7 @@ pub mod ledger;
 pub mod ledger_closed;
 pub mod ledger_current;
 pub mod ledger_data;
+#[allow(clippy::result_large_err)]
 pub mod ledger_entry;
 pub mod manifest;
 pub mod nft_buy_offers;

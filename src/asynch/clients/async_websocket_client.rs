@@ -33,11 +33,8 @@ mod if_std {
     use super::{AsyncRead, AsyncWrite, Closed, Open, WebsocketBase, WebsocketOpen};
 
     use alloc::borrow::Cow;
-    use core::cell::RefCell;
     use core::marker::PhantomData;
 
-    use crate::asynch::clients::exceptions::XRPLWebsocketException;
-    use crate::Err;
     use anyhow::Result;
     use em_as_net::client::websocket::{WebsocketClient, WebsocketClientConnect};
     use em_as_net::core::tcp::adapters::AdapterConnect;
@@ -52,7 +49,7 @@ mod if_std {
         Rng: RngCore,
     {
         pub uri: Cow<'a, str>,
-        pub(crate) inner: RefCell<Option<WebsocketClient<'a, T, Rng>>>,
+        pub(crate) inner: WebsocketClient<'a, T, Rng>,
         pub(crate) status: PhantomData<Status>,
     }
 
@@ -62,10 +59,9 @@ mod if_std {
         Rng: RngCore,
     {
         pub fn new(uri: Cow<'a, str>, buffer: &'a mut [u8]) -> Self {
-            let ws = WebsocketClient::new(uri.clone(), buffer);
             Self {
-                uri,
-                inner: RefCell::new(Some(ws)),
+                uri: uri.clone(),
+                inner: WebsocketClient::new(uri.clone(), buffer),
                 status: PhantomData::default(),
             }
         }
@@ -87,23 +83,19 @@ mod if_std {
         A: AdapterConnect<'a> + AsyncRead + AsyncWrite + Sized + Unpin,
     {
         async fn open(
-            self,
+            mut self,
             adapter: A,
         ) -> Result<AsyncWebsocketClient<'a, TcpSocket<A>, ThreadRng, Open>> {
             let tcp_socket = TcpSocket::new(adapter);
-            let mut websocket = match self.inner.take() {
-                None => return Err!(XRPLWebsocketException::NotOpen),
-                Some(ws) => ws,
-            };
             let rng = thread_rng();
-            websocket
+            self.inner
                 .connect(tcp_socket, None, rng)
                 .await
                 .expect("TODO: panic message");
 
             Ok(AsyncWebsocketClient {
                 uri: self.uri,
-                inner: RefCell::new(Some(websocket)),
+                inner: self.inner,
                 status: PhantomData::<Open>,
             })
         }
@@ -115,36 +107,22 @@ where
     T: TcpConnect<'a> + AsyncRead + AsyncWrite + Unpin,
     Rng: RngCore,
 {
-    async fn write<R: Model + Serialize>(&self, request: &R) -> Result<()> {
+    async fn write<R: Model + Serialize>(&mut self, request: &R) -> Result<()> {
         let request_json = match serde_json::to_string(&request) {
             Ok(as_string) => as_string,
             Err(_) => return Err!(XRPLWebsocketException::RequestSerializationError),
         };
-        match self.inner.borrow_mut().as_mut() {
-            None => {
-                Err!(XRPLWebsocketException::NotOpen)
-            }
-            Some(ws) => {
-                ws.write(request_json.into(), Some(WebsocketSendMessageType::Text))
-                    .await
-                    .expect("TODO: panic message");
-
-                Ok(())
-            }
-        }
+        self.inner
+            .write(request_json.into(), Some(WebsocketSendMessageType::Text))
+            .await
     }
 
     async fn read(&mut self) -> Result<Option<ReadResult<'_>>> {
-        return match self.inner.get_mut() {
-            None => {
-                Err!(XRPLWebsocketException::NotOpen)
-            }
-            Some(ws) => match ws.read().await {
-                None => Ok(None),
-                Some(Ok(read_result)) => Ok(Some(read_result)),
-                Some(Err(read_error)) => Err(read_error),
-            },
-        };
+        match self.inner.read().await {
+            None => Ok(None),
+            Some(Ok(read_result)) => Ok(Some(read_result)),
+            Some(Err(read_error)) => Err(read_error),
+        }
     }
 }
 
@@ -153,10 +131,7 @@ where
     T: TcpConnect<'a> + AsyncRead + AsyncWrite + Unpin,
     Rng: RngCore,
 {
-    async fn close(&self) -> Result<()> {
-        match self.inner.borrow_mut().as_mut() {
-            None => Err!(XRPLWebsocketException::NotOpen),
-            Some(ws) => ws.close().await,
-        }
+    async fn close(&mut self) -> Result<()> {
+        self.inner.close().await
     }
 }
