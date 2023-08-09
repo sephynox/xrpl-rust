@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance Benchmarks
 
 ## [[Unreleased]]
+- Examples
+  - Wallet from seed
+  - New wallet generation
+- make `new` methods of models public
 
 ## [[v0.2.0-beta]]
 ### Added
