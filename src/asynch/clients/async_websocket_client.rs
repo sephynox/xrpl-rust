@@ -1,5 +1,5 @@
-use crate::Err;
 use super::exceptions::XRPLWebsocketException;
+use crate::Err;
 use anyhow::Result;
 use core::{
     fmt::{Debug, Display},
@@ -80,7 +80,10 @@ where
         mut self: core::pin::Pin<&mut Self>,
         item: I,
     ) -> core::result::Result<(), Self::Error> {
-        match Pin::new(&mut self.inner).start_send(TungsteniteMessage::Text(serde_json::to_string(&item).unwrap())) { // TODO: unwrap
+        match Pin::new(&mut self.inner).start_send(TungsteniteMessage::Text(
+            serde_json::to_string(&item).unwrap(),
+        )) {
+            // TODO: unwrap
             Ok(()) => Ok(()),
             Err(error) => Err!(error),
         }
@@ -215,7 +218,13 @@ where
         E: Debug,
     {
         self.inner
-            .write(stream, stream_buf, EmbeddedWebsocketSendMessageType::Binary, end_of_message, serde_json::to_vec(&frame_buf).unwrap().as_slice()) // TODO: unwrap
+            .write(
+                stream,
+                stream_buf,
+                EmbeddedWebsocketSendMessageType::Binary,
+                end_of_message,
+                serde_json::to_vec(&frame_buf).unwrap().as_slice(),
+            ) // TODO: unwrap
             .await
             .unwrap(); // TODO: unwrap
 
@@ -244,7 +253,8 @@ where
         &'a mut self,
         stream: &mut (impl Stream<Item = Result<B, E>> + Sink<&'a [u8], Error = E> + Unpin),
         buffer: &'a mut [u8],
-    ) -> Option<Result<EmbeddedWebsocketReadMessageType<'_>>> // TODO: Change to Response as soon as implemented
+    ) -> Option<Result<EmbeddedWebsocketReadMessageType<'_>>>
+    // TODO: Change to Response as soon as implemented
     where
         E: Debug,
     {
@@ -259,7 +269,8 @@ where
         &'a mut self,
         stream: &mut (impl Stream<Item = Result<B, E>> + Sink<&'a [u8], Error = E> + Unpin),
         buffer: &'a mut [u8],
-    ) -> Result<Option<EmbeddedWebsocketReadMessageType<'_>>> // TODO: Change to Response as soon as implemented
+    ) -> Result<Option<EmbeddedWebsocketReadMessageType<'_>>>
+    // TODO: Change to Response as soon as implemented
     where
         E: Debug,
     {

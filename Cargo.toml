@@ -46,35 +46,40 @@ chrono = { version = "0.4.19", default-features = false, features = [
     "clock",
 ] }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
-rand = { version = "0.8.4", default-features = false, features = ["getrandom"] }
+rand = { version = "0.8.5", default-features = false, features = ["getrandom"] }
 serde = { version = "1.0.130", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false, features = [
     "alloc",
 ] }
-serde_with = "2.3.1"
+serde_with = "3.2.0"
 serde_repr = "0.1"
 zeroize = "1.5.7"
-hashbrown = { version = "0.13.2", default-features = false, features = ["serde"] }
+hashbrown = { version = "0.14.0", default-features = false, features = ["serde"] }
 fnv = { version = "1.0.7", default-features = false }
 derive-new = { version = "0.5.9", default-features = false }
 thiserror-no-std = "2.0.2"
 anyhow = { version ="1.0.69", default-features = false }
 tokio = { version = "1.28.0", default-features = false, optional = true }
+url = { version = "2.2.2", default-features = false, optional = true }
+futures = { version = "0.3.28", default-features = false, optional = true }
+rand_core = { version = "0.6.3", default-features = false }
+tokio-tungstenite = { version = "0.20.0", optional = true }
 
-# Use git version as long as there is no release for em-as-net.
-[dependencies.em-as-net]
-git = "https://github.com/LimpidCrypto/em-as-net"
-package = "em-as-net"
+[dependencies.embedded-websocket]
+# git version needed to use `framer_async`
+git = "https://github.com/ninjasource/embedded-websocket"
+version = "0.9.2"
+rev = "8d87d46f46fa0c75e099ca8aad37e8d00c8854f8"
 default-features = false
-optional = true
 
 [dev-dependencies]
-criterion = "0.4.0"
+criterion = "0.5.1"
 cargo-husky = { version = "1.5.0", default-features = false, features = [
     "user-hooks",
 ] }
 tokio = { version = "1.28.2", features = ["full"] }
-rand = { version = "0.8.5", default-features = false, features = ["getrandom"] }
+tokio-util = { version = "0.7.7", features = ["codec"] }
+bytes = { version = "1.4.0", default-features = false }
 
 [[bench]]
 name = "benchmarks"
@@ -88,7 +93,22 @@ requests = ["core", "amounts", "currencies"]
 ledger = ["core", "amounts", "currencies"]
 amounts = ["core"]
 currencies = ["core"]
-net = ["em-as-net/core", "em-as-net/client"]
+net = ["url", "futures"]
 core = ["utils"]
 utils = []
-std = ["em-as-net/std", "tokio/full", "rand/std", "regex/std", "chrono/std", "rand/std_rng", "hex/std", "rust_decimal/std", "bs58/std", "serde/std", "indexmap/std", "secp256k1/std"]
+std = [
+    "embedded-websocket/std",
+    "tokio-tungstenite/native-tls",
+    "tokio/full",
+    "futures/std",
+    "rand/std",
+    "regex/std",
+    "chrono/std",
+    "rand/std_rng",
+    "hex/std",
+    "rust_decimal/std",
+    "bs58/std",
+    "serde/std",
+    "indexmap/std",
+    "secp256k1/std",
+]
