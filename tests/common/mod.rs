@@ -1,6 +1,6 @@
 pub mod codec;
 use xrpl::asynch::clients::async_websocket_client::{
-    AsyncWebsocketClientEmbeddedWebsocketTokio, AsyncWebsocketClientTungstenite,
+    AsyncWebsocketClientEmbeddedWebsocket, AsyncWebsocketClientTungstenite,
     EmbeddedWebsocketOptions, WebsocketOpen,
 };
 
@@ -22,7 +22,7 @@ pub async fn connect_to_wss_tungstinite_echo() -> AsyncWebsocketClientTungstenit
 pub async fn connect_to_ws_embedded_websocket_tokio_echo(
     stream: &mut Framed<TcpStream, codec::Codec>,
     buffer: &mut [u8],
-) -> AsyncWebsocketClientEmbeddedWebsocketTokio<rand::rngs::ThreadRng, WebsocketOpen> {
+) -> AsyncWebsocketClientEmbeddedWebsocket<rand::rngs::ThreadRng, WebsocketOpen> {
     let rng = rand::thread_rng();
     let websocket_options = EmbeddedWebsocketOptions {
         path: "/mirror",
@@ -33,7 +33,7 @@ pub async fn connect_to_ws_embedded_websocket_tokio_echo(
     };
 
     let websocket =
-        AsyncWebsocketClientEmbeddedWebsocketTokio::open(stream, buffer, rng, &websocket_options)
+        AsyncWebsocketClientEmbeddedWebsocket::open(stream, buffer, rng, &websocket_options)
             .await
             .unwrap();
 
