@@ -73,6 +73,7 @@ rev = "8d87d46f46fa0c75e099ca8aad37e8d00c8854f8"
 default-features = false
 
 [dev-dependencies]
+xrpl-rust = { path = "." }
 criterion = "0.5.1"
 cargo-husky = { version = "1.5.0", default-features = false, features = [
     "user-hooks",
