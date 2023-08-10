@@ -38,7 +38,7 @@ pub use embedded_websocket::{
 #[cfg(feature = "std")]
 pub type AsyncWebsocketClientTungstenite<Status> =
     AsyncWebsocketClient<TungsteniteWebsocketStream<TungsteniteMaybeTlsStream<TcpStream>>, Status>;
-pub type AsyncWebsocketClientEmbeddedWebsocketTokio<Rng, Status> =
+pub type AsyncWebsocketClientEmbeddedWebsocket<Rng, Status> =
     AsyncWebsocketClient<EmbeddedWebsocketFramer<Rng, EmbeddedWebsocketClient>, Status>;
 #[cfg(feature = "std")]
 pub use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
