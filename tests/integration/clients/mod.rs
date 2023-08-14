@@ -3,9 +3,7 @@ use super::common::{
 };
 use futures::{SinkExt, TryStreamExt};
 use tokio_util::codec::Framed;
-use xrpl::asynch::clients::async_websocket_client::{
-    EmbeddedWebsocketReadMessageType, TungsteniteMessage,
-};
+use xrpl::asynch::clients::{EmbeddedWebsocketReadMessageType, TungsteniteMessage};
 use xrpl::models::requests::AccountInfo;
 
 #[tokio::test]
