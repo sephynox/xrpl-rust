@@ -1,5 +1,5 @@
 pub mod codec;
-use xrpl::asynch::clients::async_websocket_client::{
+use xrpl::asynch::clients::{
     AsyncWebsocketClientEmbeddedWebsocket, AsyncWebsocketClientTungstenite,
     EmbeddedWebsocketOptions, WebsocketOpen,
 };
