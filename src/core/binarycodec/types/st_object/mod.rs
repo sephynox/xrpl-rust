@@ -23,12 +23,12 @@ use crate::{
     Err,
 };
 
-pub struct STObject {
-    buffer: Vec<u8>,
+pub(crate) struct STObject {
+    pub(crate) buffer: Vec<u8>,
 }
 
 impl STObject {
-    fn from_json_value(value: Value, only_signing: bool) -> Result<Self> {
+    pub fn from_json_value(value: Value, only_signing: bool) -> Result<Self> {
         let mut serializer = BinarySerializer::new();
 
         if let Value::Object(object) = value.clone() {

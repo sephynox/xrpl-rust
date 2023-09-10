@@ -1,11 +1,14 @@
 //! Functions for encoding objects into the XRP Ledger's
 //! canonical binary format and decoding them.
 
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
+use anyhow::Result;
+use hex::ToHex;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::{asynch::transaction::PreparedTransaction, models::transactions::Transaction};
+
+use self::types::st_object::STObject;
 
 pub mod binary_wrappers;
 pub mod exceptions;
@@ -13,19 +16,45 @@ pub(crate) mod test_cases;
 pub mod types;
 pub mod utils;
 
+const TRANSACTION_SIGNATURE_PREFIX: &'static str = "53545800";
+
+pub fn encode_for_signing<T>(prepared_transaction: &PreparedTransaction<'_, T>) -> Result<String>
+where
+    T: Transaction + Serialize + for<'de> Deserialize<'de> + Clone,
+{
+    serialize_json(
+        prepared_transaction,
+        Some(
+            serde_json::to_vec(TRANSACTION_SIGNATURE_PREFIX)
+                .unwrap()
+                .as_slice(),
+        ),
+        None,
+        true,
+    )
+}
+
 fn serialize_json<T>(
-    prepared_transaction: PreparedTransaction<'_, T>,
+    prepared_transaction: &PreparedTransaction<'_, T>,
     prefix: Option<&[u8]>,
     suffix: Option<&[u8]>,
     signing_only: bool,
-) -> Value
+) -> Result<String>
 where
     T: Transaction + Serialize + for<'de> Deserialize<'de> + Clone,
 {
     let mut buffer = Vec::new();
-    if let Some(pre) = prefix {
-        buffer.extend_from_slice(pre);
+    if let Some(p) = prefix {
+        buffer.extend(p);
+    }
+    let json_value = serde_json::to_value(prepared_transaction).unwrap();
+    let st_object = STObject::from_json_value(json_value, signing_only).unwrap();
+    buffer.extend(st_object.buffer);
+    if let Some(s) = suffix {
+        buffer.extend(s);
     }
 
-    todo!()
+    let hex_string = buffer.encode_hex_upper::<String>();
+
+    Ok(hex_string)
 }

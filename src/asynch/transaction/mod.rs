@@ -9,6 +9,7 @@ use crate::{
     asynch::transaction::exceptions::XRPLSignTransactionException,
     core::{
         addresscodec::{is_valid_xaddress, xaddress_to_classic_address},
+        binarycodec::encode_for_signing,
         keypairs::sign as keypairs_sign,
     },
     models::transactions::{Transaction, XRPLTransactionFieldException},
@@ -49,12 +50,17 @@ enum AccountFieldType {
     Destination,
 }
 
-pub fn sign<T>(transaction: T, wallet: &Wallet, multisign: bool) -> Result<SignedTransaction<'_, T>>
+pub fn sign<T>(
+    transaction: T,
+    wallet: &Wallet,
+    _multisign: bool,
+) -> Result<SignedTransaction<'_, T>>
 where
     T: Transaction + Serialize + for<'de> Deserialize<'de> + Clone,
 {
     let prepared_transaction = prepare_transaction(transaction, wallet)?;
-    let serialized_bytes = serde_json::to_vec(&prepared_transaction).unwrap(); // TODO: handle unwrap
+    let serialized_for_signing = encode_for_signing(&prepared_transaction)?;
+    let serialized_bytes = hex::decode(serialized_for_signing).unwrap(); // TODO: handle unwrap
     let signature = keypairs_sign(&serialized_bytes, &wallet.private_key).unwrap(); // TODO: handle unwrap
     let signed_transaction = SignedTransaction::new(prepared_transaction, signature.into());
 
@@ -165,5 +171,42 @@ where
         set_transaction_field_value(transaction, field_name, classic_address)
     } else {
         Ok(transaction.clone())
+    }
+}
+
+#[cfg(test)]
+mod test_sign {
+    use crate::{
+        models::{transactions::AccountSet, Model},
+        wallet::Wallet,
+    };
+
+    #[test]
+    fn test_sign() {
+        let wallet = Wallet::create(None).unwrap();
+        let account_set = AccountSet::new(
+            wallet.classic_address.as_str(),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+
+        let signed_transaction = super::sign(account_set, &wallet, false).unwrap();
     }
 }
