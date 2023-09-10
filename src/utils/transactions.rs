@@ -1,0 +1,74 @@
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    models::transactions::{Transaction, XRPLTransactionFieldException},
+    Err,
+};
+
+pub fn get_transaction_field_value<T, R>(transaction: &T, field_name: &str) -> Result<R>
+where
+    T: Transaction + Serialize,
+    R: for<'de> Deserialize<'de>,
+{
+    match serde_json::to_value(transaction) {
+        Ok(transaction_json) => match transaction_json.get(field_name) {
+            Some(common_field_value) => {
+                match serde_json::from_value::<R>(common_field_value.clone()) {
+                    Ok(val) => Ok(val),
+                    Err(error) => Err!(error),
+                }
+            }
+            None => Err!(XRPLTransactionFieldException::FieldMissing(field_name)),
+        },
+        Err(error) => Err!(error),
+    }
+}
+
+pub fn set_transaction_field_value<T, V>(
+    transaction: &T,
+    field_name: &str,
+    field_value: V,
+) -> Result<T>
+where
+    T: Transaction + Serialize + for<'de> Deserialize<'de>,
+    V: Serialize,
+{
+    match serde_json::to_value(transaction) {
+        Ok(mut transaction_json) => {
+            transaction_json[field_name] = match serde_json::to_value(field_value) {
+                Ok(json_value) => json_value,
+                Err(error) => return Err!(error),
+            };
+            match serde_json::from_value::<T>(transaction_json) {
+                Ok(val) => Ok(val),
+                Err(error) => Err!(error),
+            }
+        }
+        Err(error) => Err!(error),
+    }
+}
+
+pub fn validate_transaction_has_field<T>(transaction: &T, field_name: &str) -> Result<()>
+where
+    T: Transaction + Serialize,
+{
+    match serde_json::to_value(transaction) {
+        Ok(transaction_json) => match transaction_json.get(field_name) {
+            Some(_) => Ok(()),
+            None => Err!(XRPLTransactionFieldException::FieldMissing(field_name)),
+        },
+        Err(error) => Err!(error),
+    }
+}
+
+pub fn validate_common_fied(common_field_name: &str) -> Result<()> {
+    match common_field_name {
+        "Account" | "TransactionType" | "Fee" | "Sequence" | "AccountTxnID" | "Flags"
+        | "LastLedgerSequence" | "Memos" | "NetworkID" | "Signers" | "SourceTag"
+        | "SigningPubKey" | "TicketSequence" | "TxnSignature" => Ok(()),
+        _ => Err!(XRPLTransactionFieldException::InvalidCommonField(
+            common_field_name
+        )),
+    }
+}
