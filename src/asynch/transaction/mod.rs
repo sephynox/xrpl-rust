@@ -499,3 +499,40 @@ mod test_autofill {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test_sign {
+    use crate::{
+        models::{transactions::AccountSet, Model},
+        wallet::Wallet,
+    };
+
+    #[test]
+    fn test_sign() {
+        let wallet = Wallet::create(None).unwrap();
+        let account_set = AccountSet::new(
+            wallet.classic_address.as_str(),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+
+        let signed_transaction = super::sign(account_set, &wallet, false).unwrap();
+    }
+}
