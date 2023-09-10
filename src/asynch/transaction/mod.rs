@@ -239,7 +239,6 @@ fn is_not_later_rippled_version<'a>(
     }
 }
 
-pub mod exceptions;
 use alloc::{borrow::Cow, string::String};
 use anyhow::Result;
 use derive_new::new;
