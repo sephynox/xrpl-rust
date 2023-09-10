@@ -65,7 +65,7 @@ pub struct FieldHeader {
 /// let field_instance: FieldInstance =
 ///     FieldInstance::new(&field_info, "Generic", field_header);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FieldInstance {
     pub nth: i16,
     pub is_vl_encoded: bool,
