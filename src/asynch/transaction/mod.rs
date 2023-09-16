@@ -500,18 +500,69 @@ mod test_autofill {
     }
 }
 
+#[cfg(all(feature = "websocket-std", feature = "std", not(feature = "websocket")))]
+#[cfg(test)]
+mod test_autofill {
+    use super::autofill;
+    use crate::{
+        asynch::clients::{AsyncWebsocketClient, SingleExecutorMutex},
+        models::{
+            amount::{IssuedCurrencyAmount, XRPAmount},
+            transactions::{OfferCreate, Transaction},
+        },
+    };
+    use anyhow::Result;
+
+    #[tokio::test]
+    async fn test_autofill_txn() -> Result<()> {
+        let mut txn = OfferCreate::new(
+            "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq".into(),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            XRPAmount::from("1000000").into(),
+            IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq".into(),
+                "0.3".into(),
+            )
+            .into(),
+            None,
+            None,
+        );
+        let client = AsyncWebsocketClient::<SingleExecutorMutex, _>::open(
+            "wss://testnet.xrpl-labs.com/".parse().unwrap(),
+        )
+        .await
+        .unwrap();
+        autofill(&mut txn, &client, None).await?;
+
+        assert!(txn.get_common_fields().network_id.is_none());
+        assert!(txn.get_common_fields().sequence.is_some());
+        assert!(txn.get_common_fields().fee.is_some());
+        assert!(txn.get_common_fields().last_ledger_sequence.is_some());
+
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod test_sign {
-    use crate::{
-        models::{transactions::AccountSet, Model},
-        wallet::Wallet,
-    };
+    use alloc::{borrow::Cow, println};
+
+    use crate::{models::transactions::AccountSet, wallet::Wallet};
 
     #[test]
     fn test_sign() {
         let wallet = Wallet::create(None).unwrap();
         let account_set = AccountSet::new(
-            wallet.classic_address.as_str(),
+            wallet.classic_address.as_ref(),
             None,
             None,
             None,
@@ -534,5 +585,6 @@ mod test_sign {
         );
 
         let signed_transaction = super::sign(account_set, &wallet, false).unwrap();
+        println!("{:?}", signed_transaction);
     }
 }
