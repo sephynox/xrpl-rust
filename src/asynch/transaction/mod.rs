@@ -1,8 +1,8 @@
 pub mod exceptions;
-use alloc::{borrow::Cow, string::String};
+use alloc::{borrow::Cow, println, string::String};
 use anyhow::Result;
 use derive_new::new;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::{
@@ -23,10 +23,7 @@ use crate::{
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
 #[serde(rename_all = "PascalCase")]
-pub struct PreparedTransaction<'a, T>
-where
-    T: Transaction + Serialize,
-{
+pub struct PreparedTransaction<'a, T> {
     #[serde(flatten)]
     transaction: T,
     signing_pub_key: Cow<'a, str>,
@@ -35,10 +32,7 @@ where
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
 #[serde(rename_all = "PascalCase")]
-pub struct SignedTransaction<'a, T>
-where
-    T: Transaction + Serialize,
-{
+pub struct SignedTransaction<'a, T> {
     #[serde(flatten)]
     prepared_transaction: PreparedTransaction<'a, T>,
     signature: Cow<'a, str>,
@@ -56,7 +50,7 @@ pub fn sign<T>(
     _multisign: bool,
 ) -> Result<SignedTransaction<'_, T>>
 where
-    T: Transaction + Serialize + for<'de> Deserialize<'de> + Clone,
+    T: Transaction + Serialize + DeserializeOwned + 'static + Clone,
 {
     let prepared_transaction = prepare_transaction(transaction, wallet)?;
     let serialized_for_signing = encode_for_signing(&prepared_transaction)?;
@@ -69,7 +63,7 @@ where
 
 fn prepare_transaction<T>(transaction: T, wallet: &Wallet) -> Result<PreparedTransaction<'_, T>>
 where
-    T: Transaction + Serialize + for<'de> Deserialize<'de> + Clone,
+    T: Transaction + Serialize + DeserializeOwned + Clone,
 {
     let mut prepared_transaction =
         PreparedTransaction::new(transaction, Cow::from(wallet.classic_address.clone()));
@@ -104,18 +98,19 @@ fn validate_account_xaddress<T>(
     account_field: AccountFieldType,
 ) -> Result<PreparedTransaction<'_, T>>
 where
-    T: Transaction + Serialize + for<'de> Deserialize<'de>,
+    T: Transaction + Serialize + DeserializeOwned + Clone,
 {
     let (account_field_name, tag_field_name) = match serde_json::to_string(&account_field) {
-        Ok(name) => match name.as_str() {
-            "Account" => ("Account", "SourceTag"),
-            "Destination" => ("Destination", "DestinationTag"),
-            _ => {
-                return Err!(XRPLTransactionFieldException::UnknownAccountField(
-                    name.as_str()
-                ))
+        Ok(name) => {
+            let name_str = name.as_str().trim();
+            if name_str == "\"Account\"" {
+                ("Account", "SourceTag")
+            } else if name_str == "\"Destination\"" {
+                ("Destination", "DestinationTag")
+            } else {
+                return Err!(XRPLTransactionFieldException::UnknownAccountField(name_str));
             }
-        },
+        }
         Err(error) => return Err!(error),
     };
     let account_address = get_transaction_field_value::<_, String>(
@@ -160,7 +155,7 @@ where
 
 fn convert_to_classic_address<T>(transaction: &T, field_name: &str) -> Result<T>
 where
-    T: Transaction + Serialize + for<'de> Deserialize<'de> + Clone,
+    T: Transaction + Serialize + DeserializeOwned + Clone,
 {
     let address = get_transaction_field_value::<_, String>(transaction, field_name)?;
     if is_valid_xaddress(&address) {
@@ -176,16 +171,15 @@ where
 
 #[cfg(test)]
 mod test_sign {
-    use crate::{
-        models::{transactions::AccountSet, Model},
-        wallet::Wallet,
-    };
+    use alloc::{borrow::Cow, println};
+
+    use crate::{models::transactions::AccountSet, wallet::Wallet};
 
     #[test]
     fn test_sign() {
         let wallet = Wallet::create(None).unwrap();
         let account_set = AccountSet::new(
-            wallet.classic_address.as_str(),
+            wallet.classic_address.as_ref(),
             None,
             None,
             None,
@@ -208,5 +202,6 @@ mod test_sign {
         );
 
         let signed_transaction = super::sign(account_set, &wallet, false).unwrap();
+        println!("{:?}", signed_transaction);
     }
 }

@@ -4,7 +4,7 @@
 use alloc::{string::String, vec::Vec};
 use anyhow::Result;
 use hex::ToHex;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{asynch::transaction::PreparedTransaction, models::transactions::Transaction};
 
@@ -20,7 +20,7 @@ const TRANSACTION_SIGNATURE_PREFIX: &'static str = "53545800";
 
 pub fn encode_for_signing<T>(prepared_transaction: &PreparedTransaction<'_, T>) -> Result<String>
 where
-    T: Transaction + Serialize + for<'de> Deserialize<'de> + Clone,
+    T: Transaction + Serialize + DeserializeOwned + Clone,
 {
     serialize_json(
         prepared_transaction,
@@ -41,7 +41,7 @@ fn serialize_json<T>(
     signing_only: bool,
 ) -> Result<String>
 where
-    T: Transaction + Serialize + for<'de> Deserialize<'de> + Clone,
+    T: Transaction + Serialize + DeserializeOwned + Clone,
 {
     let mut buffer = Vec::new();
     if let Some(p) = prefix {

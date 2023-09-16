@@ -1,5 +1,5 @@
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     models::transactions::{Transaction, XRPLTransactionFieldException},
@@ -9,7 +9,7 @@ use crate::{
 pub fn get_transaction_field_value<T, R>(transaction: &T, field_name: &str) -> Result<R>
 where
     T: Transaction + Serialize,
-    R: for<'de> Deserialize<'de>,
+    R: DeserializeOwned,
 {
     match serde_json::to_value(transaction) {
         Ok(transaction_json) => match transaction_json.get(field_name) {
@@ -31,7 +31,7 @@ pub fn set_transaction_field_value<T, V>(
     field_value: V,
 ) -> Result<T>
 where
-    T: Transaction + Serialize + for<'de> Deserialize<'de>,
+    T: Transaction + Serialize + DeserializeOwned,
     V: Serialize,
 {
     match serde_json::to_value(transaction) {
