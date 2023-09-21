@@ -554,18 +554,20 @@ mod test_autofill {
 
 #[cfg(test)]
 mod test_sign {
-    use alloc::{borrow::Cow, println};
+    use alloc::borrow::Cow;
 
-    use crate::{models::transactions::AccountSet, wallet::Wallet};
+    use crate::{
+        models::{amount::XRPAmount, transactions::Payment},
+        wallet::Wallet,
+    };
 
     #[test]
     fn test_sign() {
         let wallet = Wallet::create(None).unwrap();
-        let account_set = AccountSet::new(
-            wallet.classic_address.as_ref(),
-            None,
-            None,
-            None,
+        let payment = Payment::new(
+            Cow::from(wallet.classic_address.clone()),
+            XRPAmount::from("1000").into(),
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
             None,
             None,
             None,
@@ -584,7 +586,7 @@ mod test_sign {
             None,
         );
 
-        let signed_transaction = super::sign(account_set, &wallet, false).unwrap();
-        println!("{:?}", signed_transaction);
+        let signed_transaction = super::sign(payment, &wallet, false);
+        assert!(signed_transaction.is_ok());
     }
 }
