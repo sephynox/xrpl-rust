@@ -1,6 +1,6 @@
-use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
 use crate::models::Model;
+use crate::{_serde::lgr_obj_flags, models::transactions::FlagCollection};
 use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -50,7 +50,7 @@ pub struct SignerList<'a> {
     ledger_entry_type: LedgerEntryType,
     /// A bit-map of Boolean flags enabled for this signer list.
     #[serde(with = "lgr_obj_flags")]
-    flags: Vec<SignerListFlag>,
+    flags: FlagCollection<SignerListFlag>,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
@@ -76,27 +76,11 @@ pub struct SignerList<'a> {
     pub signer_quorum: u32,
 }
 
-impl<'a> Default for SignerList<'a> {
-    fn default() -> Self {
-        Self {
-            ledger_entry_type: LedgerEntryType::SignerList,
-            flags: Default::default(),
-            index: Default::default(),
-            owner_node: Default::default(),
-            previous_txn_id: Default::default(),
-            previous_txn_lgr_seq: Default::default(),
-            signer_entries: Default::default(),
-            signer_list_id: Default::default(),
-            signer_quorum: Default::default(),
-        }
-    }
-}
-
 impl<'a> Model for SignerList<'a> {}
 
 impl<'a> SignerList<'a> {
     pub fn new(
-        flags: Vec<SignerListFlag>,
+        flags: FlagCollection<SignerListFlag>,
         index: Cow<'a, str>,
         owner_node: Cow<'a, str>,
         previous_txn_id: Cow<'a, str>,
@@ -128,7 +112,7 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let signer_list = SignerList::new(
-            vec![],
+            vec![].into(),
             Cow::from("A9C28A28B85CD533217F5C0A0C7767666B093FA58A0F2D80026FCC4CD932DDC7"),
             Cow::from("0000000000000000"),
             Cow::from("5904C0DC72C58A83AEFED2FFC5386356AA83FCA6A88C89D00646E51E687CDBE4"),

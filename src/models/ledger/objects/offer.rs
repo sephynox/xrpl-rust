@@ -1,5 +1,6 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
+use crate::models::transactions::FlagCollection;
 use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 
@@ -37,7 +38,7 @@ pub struct Offer<'a> {
     ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean flags enabled for this offer.
     #[serde(with = "lgr_obj_flags")]
-    flags: Vec<OfferFlag>,
+    flags: FlagCollection<OfferFlag>,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
@@ -69,31 +70,11 @@ pub struct Offer<'a> {
     pub expiration: Option<u32>,
 }
 
-impl<'a> Default for Offer<'a> {
-    fn default() -> Self {
-        Self {
-            ledger_entry_type: LedgerEntryType::Offer,
-            flags: Default::default(),
-            index: Default::default(),
-            account: Default::default(),
-            book_directory: Default::default(),
-            book_node: Default::default(),
-            owner_node: Default::default(),
-            previous_txn_id: Default::default(),
-            previous_txn_lgr_seq: Default::default(),
-            sequence: Default::default(),
-            taker_gets: Default::default(),
-            taker_pays: Default::default(),
-            expiration: Default::default(),
-        }
-    }
-}
-
 impl<'a> Model for Offer<'a> {}
 
 impl<'a> Offer<'a> {
     pub fn new(
-        flags: Vec<OfferFlag>,
+        flags: FlagCollection<OfferFlag>,
         index: Cow<'a, str>,
         account: Cow<'a, str>,
         book_directory: Cow<'a, str>,
@@ -134,7 +115,7 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let offer = Offer::new(
-            vec![OfferFlag::LsfSell],
+            vec![OfferFlag::LsfSell].into(),
             Cow::from("96F76F27D8A327FC48753167EC04A46AA0E382E6F57F32FD12274144D00F1797"),
             Cow::from("rBqb89MRQJnMPq8wTwEbtz4kvxrEDfcYvt"),
             Cow::from("ACC27DE91DBA86FC509069EAF4BC511D73128B780F2E54BF5E07A369E2446000"),

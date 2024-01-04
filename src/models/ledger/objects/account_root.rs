@@ -1,5 +1,6 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
+use crate::models::transactions::FlagCollection;
 use crate::models::{amount::XRPAmount, Model};
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
@@ -55,7 +56,7 @@ pub struct AccountRoot<'a> {
     pub ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean flags enabled for this account.
     #[serde(with = "lgr_obj_flags")]
-    pub flags: Vec<AccountRootFlag>,
+    pub flags: FlagCollection<AccountRootFlag>,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
@@ -117,40 +118,11 @@ pub struct AccountRoot<'a> {
     pub wallet_size: Option<u32>,
 }
 
-impl<'a> Default for AccountRoot<'a> {
-    fn default() -> Self {
-        Self {
-            flags: Default::default(),
-            index: Default::default(),
-            account: Default::default(),
-            ledger_entry_type: LedgerEntryType::AccountRoot,
-            owner_count: Default::default(),
-            previous_txn_id: Default::default(),
-            previous_txn_lgr_seq: Default::default(),
-            sequence: Default::default(),
-            account_txn_id: Default::default(),
-            balance: Default::default(),
-            burned_nftokens: Default::default(),
-            domain: Default::default(),
-            email_hash: Default::default(),
-            message_key: Default::default(),
-            minted_nftokens: Default::default(),
-            nftoken_minter: Default::default(),
-            regular_key: Default::default(),
-            ticket_count: Default::default(),
-            tick_size: Default::default(),
-            transfer_rate: Default::default(),
-            wallet_locator: Default::default(),
-            wallet_size: Default::default(),
-        }
-    }
-}
-
 impl<'a> Model for AccountRoot<'a> {}
 
 impl<'a> AccountRoot<'a> {
     pub fn new(
-        flags: Vec<AccountRootFlag>,
+        flags: FlagCollection<AccountRootFlag>,
         index: Cow<'a, str>,
         account: Cow<'a, str>,
         owner_count: u32,
@@ -208,7 +180,7 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let account_root = AccountRoot::new(
-            vec![AccountRootFlag::LsfDefaultRipple],
+            vec![AccountRootFlag::LsfDefaultRipple].into(),
             Cow::from("13F1A95D7AAB7108D5CE7EEAF504B2894B8C674E6D68499076441C4837282BF8"),
             Cow::from("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
             3,

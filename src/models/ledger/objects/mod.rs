@@ -32,10 +32,15 @@ pub use offer::*;
 pub use pay_channel::*;
 pub use ripple_state::*;
 pub use ripple_state::*;
+use strum::IntoEnumIterator;
 pub use ticket::*;
 
+use alloc::borrow::Cow;
 use serde::{Deserialize, Serialize};
+use serde_with::skip_serializing_none;
 use strum_macros::Display;
+
+use crate::models::transactions::FlagCollection;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Display, PartialEq, Eq)]
 pub enum LedgerEntryType {
@@ -56,4 +61,22 @@ pub enum LedgerEntryType {
     RippleState = 0x0072,
     SignerList = 0x0053,
     Ticket = 0x0054,
+}
+
+/// The base fields for all ledger object models.
+///
+/// See Ledger Object Common Fields:
+/// `<https://xrpl.org/ledger-entry-common-fields.html>`
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(rename_all = "PascalCase")]
+pub struct CommonFields<'a, F>
+where
+    F: IntoEnumIterator + Serialize + core::fmt::Debug,
+{
+    #[serde(rename = "index")]
+    index: Option<Cow<'a, str>>,
+    ledger_index: Option<Cow<'a, str>>,
+    ledger_entry_type: LedgerEntryType,
+    flags: FlagCollection<F>,
 }

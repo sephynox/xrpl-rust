@@ -47,136 +47,289 @@ pub use payment_channel_claim::*;
 pub use payment_channel_create::*;
 pub use payment_channel_fund::*;
 pub use pseudo_transactions::*;
+use serde_repr::{Deserialize_repr, Serialize_repr};
 pub use set_regular_key::*;
 pub use signer_list_set::*;
 pub use ticket_create::*;
 pub use trust_set::*;
 
-use crate::serde_with_tag;
+use crate::models::amount::XRPAmount;
+use crate::Err;
+use crate::{_serde::txn_flags, serde_with_tag};
 use alloc::borrow::Cow;
 use alloc::string::String;
+use alloc::vec::Vec;
+use anyhow::Result;
+use core::convert::TryFrom;
 use derive_new::new;
 use serde::ser::SerializeMap;
 use serde::{Deserialize, Serialize};
-use strum_macros::{AsRefStr, Display};
+use serde_with::skip_serializing_none;
+use strum::IntoEnumIterator;
+use strum_macros::{AsRefStr, Display, EnumIter};
 
 /// Enum containing the different Transaction types.
 #[derive(Debug, Clone, Serialize, Deserialize, Display, PartialEq, Eq)]
 pub enum TransactionType {
+    #[serde(rename = "AccountDelete")]
     AccountDelete,
+    #[serde(rename = "AccountSet")]
     AccountSet,
+    #[serde(rename = "CheckCancel")]
     CheckCancel,
+    #[serde(rename = "CheckCash")]
     CheckCash,
+    #[serde(rename = "CheckCreate")]
     CheckCreate,
+    #[serde(rename = "DepositPreauth")]
     DepositPreauth,
+    #[serde(rename = "EscrowCancel")]
     EscrowCancel,
+    #[serde(rename = "EscrowCreate")]
     EscrowCreate,
+    #[serde(rename = "EscrowFinish")]
     EscrowFinish,
+    #[serde(rename = "NFTokenAcceptOffer")]
     NFTokenAcceptOffer,
+    #[serde(rename = "NFTokenBurn")]
     NFTokenBurn,
+    #[serde(rename = "NFTokenCancelOffer")]
     NFTokenCancelOffer,
+    #[serde(rename = "NFTokenCreateOffer")]
     NFTokenCreateOffer,
+    #[serde(rename = "NFTokenMint")]
     NFTokenMint,
+    #[serde(rename = "OfferCancel")]
     OfferCancel,
+    #[serde(rename = "OfferCreate")]
     OfferCreate,
+    #[serde(rename = "Payment")]
     Payment,
+    #[serde(rename = "PaymentChannelClaim")]
     PaymentChannelClaim,
+    #[serde(rename = "PaymentChannelCreate")]
     PaymentChannelCreate,
+    #[serde(rename = "PaymentChannelFund")]
     PaymentChannelFund,
+    #[serde(rename = "SetRegularKey")]
     SetRegularKey,
+    #[serde(rename = "SignerListSet")]
     SignerListSet,
+    #[serde(rename = "TicketCreate")]
     TicketCreate,
+    #[serde(rename = "TrustSet")]
     TrustSet,
 
     // Psuedo-Transaction types,
+    #[serde(rename = "EnableAmendment")]
     EnableAmendment,
+    #[serde(rename = "SetFee")]
     SetFee,
+    #[serde(rename = "UNLModify")]
     UNLModify,
 }
 
-/// For use with serde defaults.
-/// TODO Find a better way
-impl TransactionType {
-    fn account_delete() -> Self {
-        TransactionType::AccountDelete
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
+#[serde(rename_all = "PascalCase")]
+pub struct PreparedTransaction<'a, T> {
+    #[serde(flatten)]
+    pub transaction: T,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
+    pub signing_pub_key: Cow<'a, str>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
+#[serde(rename_all = "PascalCase")]
+pub struct SignedTransaction<'a, T> {
+    #[serde(flatten)]
+    pub prepared_transaction: PreparedTransaction<'a, T>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
+    pub txn_signature: Cow<'a, str>,
+}
+
+/// The base fields for all transaction models.
+///
+/// See Transaction Common Fields:
+/// `<https://xrpl.org/transaction-common-fields.html>`
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(rename_all = "PascalCase")]
+pub struct CommonFields<'a, F>
+where
+    F: IntoEnumIterator + Serialize + core::fmt::Debug,
+{
+    /// The unique address of the account that initiated the transaction.
+    pub account: Cow<'a, str>,
+    /// The type of transaction.
+    ///
+    /// See Transaction Types:
+    /// `<https://xrpl.org/transaction-types.html>`
+    pub transaction_type: TransactionType,
+    /// Hash value identifying another transaction. If provided, this
+    /// transaction is only valid if the sending account's
+    /// previously-sent transaction matches the provided hash.
+    #[serde(rename = "AccountTxnID")]
+    pub account_txn_id: Option<Cow<'a, str>>,
+    /// Integer amount of XRP, in drops, to be destroyed as a cost
+    /// for distributing this transaction to the network. Some
+    /// transaction types have different minimum requirements.
+    /// See Transaction Cost for details.
+    pub fee: Option<XRPAmount<'a>>,
+    /// Set of bit-flags for this transaction.
+    #[serde(with = "txn_flags")]
+    pub flags: Option<FlagCollection<F>>,
+    /// Highest ledger index this transaction can appear in.
+    /// Specifying this field places a strict upper limit on how long
+    /// the transaction can wait to be validated or rejected.
+    /// See Reliable Transaction Submission for more details.
+    pub last_ledger_sequence: Option<u32>,
+    /// Additional arbitrary information used to identify this transaction.
+    pub memos: Option<Vec<Memo>>,
+    /// The sequence number of the account sending the transaction.
+    /// A transaction is only valid if the Sequence number is exactly
+    /// 1 greater than the previous transaction from the same account.
+    /// The special case 0 means the transaction is using a Ticket instead.
+    pub sequence: Option<u32>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction is
+    /// made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
+    pub signers: Option<Vec<Signer<'a>>>,
+    /// Arbitrary integer used to identify the reason for this
+    /// payment, or a sender on whose behalf this transaction
+    /// is made. Conventionally, a refund should specify the initial
+    /// payment's SourceTag as the refund payment's DestinationTag.
+    pub source_tag: Option<u32>,
+    /// The sequence number of the ticket to use in place
+    /// of a Sequence number. If this is provided, Sequence must
+    /// be 0. Cannot be used with AccountTxnID.
+    pub ticket_sequence: Option<u32>,
+}
+
+impl<'a, T> CommonFields<'a, T>
+where
+    T: IntoEnumIterator + Serialize + core::fmt::Debug,
+{
+    pub fn new(
+        account: Cow<'a, str>,
+        transaction_type: TransactionType,
+        account_txn_id: Option<Cow<'a, str>>,
+        fee: Option<XRPAmount<'a>>,
+        flags: Option<FlagCollection<T>>,
+        last_ledger_sequence: Option<u32>,
+        memos: Option<Vec<Memo>>,
+        sequence: Option<u32>,
+        signers: Option<Vec<Signer<'a>>>,
+        source_tag: Option<u32>,
+        ticket_sequence: Option<u32>,
+    ) -> Self {
+        CommonFields {
+            account,
+            transaction_type,
+            account_txn_id,
+            fee,
+            flags,
+            last_ledger_sequence,
+            memos,
+            sequence,
+            signers,
+            source_tag,
+            ticket_sequence,
+        }
     }
-    fn account_set() -> Self {
-        TransactionType::AccountSet
+}
+
+impl<'a, T> Transaction<T> for CommonFields<'a, T>
+where
+    T: IntoEnumIterator + Serialize + PartialEq + core::fmt::Debug,
+{
+    fn has_flag(&self, flag: &T) -> bool {
+        let flag_collection = self.flags.as_ref().unwrap();
+        flag_collection.0.contains(flag)
     }
-    fn check_cancel() -> Self {
-        TransactionType::CheckCancel
+
+    fn get_transaction_type(&self) -> TransactionType {
+        self.transaction_type.clone()
     }
-    fn check_cash() -> Self {
-        TransactionType::CheckCash
+}
+
+#[derive(
+    Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr, EnumIter, Copy,
+)]
+pub enum NoFlags {}
+
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Default, new)]
+pub struct FlagCollection<T>(pub(crate) Vec<T>)
+where
+    T: IntoEnumIterator;
+
+impl<T> Iterator for FlagCollection<T>
+where
+    T: IntoEnumIterator,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.pop()
     }
-    fn check_create() -> Self {
-        TransactionType::CheckCreate
+}
+
+impl<T> From<Vec<T>> for FlagCollection<T>
+where
+    T: IntoEnumIterator,
+{
+    fn from(flags: Vec<T>) -> Self {
+        FlagCollection(flags)
     }
-    fn deposit_preauth() -> Self {
-        TransactionType::DepositPreauth
+}
+
+impl<T> TryFrom<u32> for FlagCollection<T>
+where
+    T: IntoEnumIterator + Serialize,
+{
+    type Error = anyhow::Error;
+
+    fn try_from(flags: u32) -> Result<Self> {
+        let mut flag_collection = Vec::new();
+        for flag in T::iter() {
+            let flag_as_u32 = flag_to_u32(&flag)?;
+            if flags & flag_as_u32 == flag_as_u32 {
+                flag_collection.push(flag);
+            }
+        }
+        Ok(FlagCollection::new(flag_collection))
     }
-    fn escrow_cancel() -> Self {
-        TransactionType::EscrowCancel
+}
+
+impl<T> TryFrom<FlagCollection<T>> for u32
+where
+    T: IntoEnumIterator + Serialize,
+{
+    type Error = anyhow::Error;
+
+    fn try_from(flag_collection: FlagCollection<T>) -> Result<Self> {
+        let mut flags = 0;
+        for flag in flag_collection {
+            let flag_as_u32 = flag_to_u32(&flag)?;
+            flags |= flag_as_u32;
+        }
+        Ok(flags)
     }
-    fn escrow_create() -> Self {
-        TransactionType::EscrowCreate
-    }
-    fn escrow_finish() -> Self {
-        TransactionType::EscrowFinish
-    }
-    fn nftoken_accept_offer() -> Self {
-        TransactionType::NFTokenAcceptOffer
-    }
-    fn nftoken_burn() -> Self {
-        TransactionType::NFTokenBurn
-    }
-    fn nftoken_cancel_offer() -> Self {
-        TransactionType::NFTokenCancelOffer
-    }
-    fn nftoken_create_offer() -> Self {
-        TransactionType::NFTokenCreateOffer
-    }
-    fn nftoken_mint() -> Self {
-        TransactionType::NFTokenMint
-    }
-    fn offer_cancel() -> Self {
-        TransactionType::OfferCancel
-    }
-    fn offer_create() -> Self {
-        TransactionType::OfferCreate
-    }
-    fn payment() -> Self {
-        TransactionType::Payment
-    }
-    fn payment_channel_claim() -> Self {
-        TransactionType::PaymentChannelClaim
-    }
-    fn payment_channel_create() -> Self {
-        TransactionType::PaymentChannelCreate
-    }
-    fn payment_channel_fund() -> Self {
-        TransactionType::PaymentChannelFund
-    }
-    fn set_regular_key() -> Self {
-        TransactionType::SetRegularKey
-    }
-    fn signer_list_set() -> Self {
-        TransactionType::SignerListSet
-    }
-    fn ticket_create() -> Self {
-        TransactionType::TicketCreate
-    }
-    fn trust_set() -> Self {
-        TransactionType::TrustSet
-    }
-    fn enable_amendment() -> Self {
-        TransactionType::EnableAmendment
-    }
-    fn set_fee() -> Self {
-        TransactionType::SetFee
-    }
-    fn unl_modify() -> Self {
-        TransactionType::UNLModify
+}
+
+fn flag_to_u32<T>(flag: &T) -> Result<u32>
+where
+    T: Serialize,
+{
+    match serde_json::to_string(flag) {
+        Ok(flag_as_string) => match flag_as_string.parse::<u32>() {
+            Ok(flag_as_u32) => Ok(flag_as_u32),
+            Err(error) => Err!(XRPLCommonFieldsException::CannotConvertFlagToU32),
+        },
+        Err(error) => Err!(XRPLCommonFieldsException::CannotConvertFlagToU32),
     }
 }
 
@@ -214,9 +367,11 @@ pub struct Signer<'a> {
 }
 
 /// Standard functions for transactions.
-pub trait Transaction {
-    // TODO: use generic type
-    fn has_flag(&self, flag: &Flag) -> bool {
+pub trait Transaction<T>
+where
+    T: IntoEnumIterator + Serialize,
+{
+    fn has_flag(&self, flag: &T) -> bool {
         let _txn_flag = flag;
         false
     }

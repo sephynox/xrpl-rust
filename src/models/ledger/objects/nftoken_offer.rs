@@ -1,5 +1,6 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
+use crate::models::transactions::FlagCollection;
 use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 
@@ -33,7 +34,7 @@ pub struct NFTokenOffer<'a> {
     pub ledger_entry_type: LedgerEntryType,
     /// A set of flags associated with this object, used to specify various options or settings.
     #[serde(with = "lgr_obj_flags")]
-    pub flags: Vec<NFTokenOfferFlag>,
+    pub flags: FlagCollection<NFTokenOfferFlag>,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
@@ -71,30 +72,11 @@ pub struct NFTokenOffer<'a> {
     pub owner_node: Option<Cow<'a, str>>,
 }
 
-impl<'a> Default for NFTokenOffer<'a> {
-    fn default() -> Self {
-        Self {
-            ledger_entry_type: LedgerEntryType::NFTokenOffer,
-            flags: Default::default(),
-            index: Default::default(),
-            amount: Default::default(),
-            nftoken_id: Default::default(),
-            owner: Default::default(),
-            previous_txn_id: Default::default(),
-            previous_txn_lgr_seq: Default::default(),
-            destination: Default::default(),
-            expiration: Default::default(),
-            nftoken_offer_node: Default::default(),
-            owner_node: Default::default(),
-        }
-    }
-}
-
 impl<'a> Model for NFTokenOffer<'a> {}
 
 impl<'a> NFTokenOffer<'a> {
     pub fn new(
-        flags: Vec<NFTokenOfferFlag>,
+        flags: FlagCollection<NFTokenOfferFlag>,
         index: Cow<'a, str>,
         amount: Amount<'a>,
         nftoken_id: Cow<'a, str>,
@@ -132,7 +114,7 @@ mod test_serde {
     #[test]
     fn test_serialization() {
         let nftoken_offer = NFTokenOffer::new(
-            vec![NFTokenOfferFlag::LsfSellNFToken],
+            vec![NFTokenOfferFlag::LsfSellNFToken].into(),
             Cow::from("AEBABA4FAC212BF28E0F9A9C3788A47B085557EC5D1429E7A8266FB859C863B3"),
             Amount::XRPAmount("1000000".into()),
             Cow::from("00081B5825A08C22787716FA031B432EBBC1B101BB54875F0002D2A400000000"),

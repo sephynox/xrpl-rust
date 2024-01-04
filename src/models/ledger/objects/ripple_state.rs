@@ -1,5 +1,6 @@
 use crate::_serde::lgr_obj_flags;
 use crate::models::ledger::LedgerEntryType;
+use crate::models::transactions::FlagCollection;
 use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
@@ -47,7 +48,7 @@ pub struct RippleState<'a> {
     ledger_entry_type: LedgerEntryType,
     /// A bit-map of boolean options enabled for this object.
     #[serde(with = "lgr_obj_flags")]
-    flags: Vec<RippleStateFlag>,
+    flags: FlagCollection<RippleStateFlag>,
     /// The object ID of a single object to retrieve from the ledger, as a
     /// 64-character (256-bit) hexadecimal string.
     #[serde(rename = "index")]
@@ -87,32 +88,11 @@ pub struct RippleState<'a> {
     pub low_quality_out: Option<u32>,
 }
 
-impl<'a> Default for RippleState<'a> {
-    fn default() -> Self {
-        Self {
-            ledger_entry_type: LedgerEntryType::RippleState,
-            flags: Default::default(),
-            index: Default::default(),
-            balance: Default::default(),
-            high_limit: Default::default(),
-            high_node: Default::default(),
-            low_limit: Default::default(),
-            low_node: Default::default(),
-            previous_txn_id: Default::default(),
-            previous_txn_lgr_seq: Default::default(),
-            high_quality_in: Default::default(),
-            high_quality_out: Default::default(),
-            low_quality_in: Default::default(),
-            low_quality_out: Default::default(),
-        }
-    }
-}
-
 impl<'a> Model for RippleState<'a> {}
 
 impl<'a> RippleState<'a> {
     pub fn new(
-        flags: Vec<RippleStateFlag>,
+        flags: FlagCollection<RippleStateFlag>,
         index: Cow<'a, str>,
         balance: Amount<'a>,
         high_limit: Amount<'a>,
@@ -154,7 +134,7 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let ripple_state = RippleState::new(
-            vec![RippleStateFlag::LsfHighReserve, RippleStateFlag::LsfLowAuth],
+            vec![RippleStateFlag::LsfHighReserve, RippleStateFlag::LsfLowAuth].into(),
             Cow::from("9CA88CDEDFF9252B3DE183CE35B038F57282BC9503CDFA1923EF9A95DF0D6F7B"),
             Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
                 "USD".into(),

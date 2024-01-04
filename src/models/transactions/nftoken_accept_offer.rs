@@ -9,12 +9,14 @@ use serde_with::skip_serializing_none;
 
 use crate::models::amount::exceptions::XRPLAmountException;
 use crate::models::amount::XRPAmount;
-use crate::models::transactions::XRPLNFTokenAcceptOfferException;
+use crate::models::transactions::{NoFlags, XRPLNFTokenAcceptOfferException};
 use crate::models::{
     amount::Amount,
     model::Model,
     transactions::{Memo, Signer, Transaction, TransactionType},
 };
+
+use super::CommonFields;
 
 /// Accept offers to buy or sell an NFToken.
 ///
@@ -32,55 +34,8 @@ pub struct NFTokenAcceptOffer<'a> {
     // See Transaction Common Fields:
     // `<https://xrpl.org/transaction-common-fields.html>`
     /// The type of transaction.
-    #[serde(default = "TransactionType::nftoken_accept_offer")]
-    pub transaction_type: TransactionType,
-    /// The unique address of the account that initiated the transaction.
-    pub account: Cow<'a, str>,
-    /// Integer amount of XRP, in drops, to be destroyed as a cost
-    /// for distributing this transaction to the network. Some
-    /// transaction types have different minimum requirements.
-    /// See Transaction Cost for details.
-    pub fee: Option<XRPAmount<'a>>,
-    /// The sequence number of the account sending the transaction.
-    /// A transaction is only valid if the Sequence number is exactly
-    /// 1 greater than the previous transaction from the same account.
-    /// The special case 0 means the transaction is using a Ticket instead.
-    pub sequence: Option<u32>,
-    /// Highest ledger index this transaction can appear in.
-    /// Specifying this field places a strict upper limit on how long
-    /// the transaction can wait to be validated or rejected.
-    /// See Reliable Transaction Submission for more details.
-    pub last_ledger_sequence: Option<u32>,
-    /// Hash value identifying another transaction. If provided, this
-    /// transaction is only valid if the sending account's
-    /// previously-sent transaction matches the provided hash.
-    #[serde(rename = "AccountTxnID")]
-    pub account_txn_id: Option<Cow<'a, str>>,
-    /// Hex representation of the public key that corresponds to the
-    /// private key used to sign this transaction. If an empty string,
-    /// indicates a multi-signature is present in the Signers field instead.
-    pub signing_pub_key: Option<Cow<'a, str>>,
-    /// Arbitrary integer used to identify the reason for this
-    /// payment, or a sender on whose behalf this transaction
-    /// is made. Conventionally, a refund should specify the initial
-    /// payment's SourceTag as the refund payment's DestinationTag.
-    pub source_tag: Option<u32>,
-    /// The sequence number of the ticket to use in place
-    /// of a Sequence number. If this is provided, Sequence must
-    /// be 0. Cannot be used with AccountTxnID.
-    pub ticket_sequence: Option<u32>,
-    /// The signature that verifies this transaction as originating
-    /// from the account it says it is from.
-    pub txn_signature: Option<Cow<'a, str>>,
-    /// Set of bit-flags for this transaction.
-    pub flags: Option<u32>,
-    /// Additional arbitrary information used to identify this transaction.
-    pub memos: Option<Vec<Memo>>,
-    /// Arbitrary integer used to identify the reason for this
-    /// payment, or a sender on whose behalf this transaction is
-    /// made. Conventionally, a refund should specify the initial
-    /// payment's SourceTag as the refund payment's DestinationTag.
-    pub signers: Option<Vec<Signer<'a>>>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, NoFlags>,
     /// The custom fields for the NFTokenAcceptOffer model.
     ///
     /// See NFTokenAcceptOffer fields:
@@ -91,29 +46,6 @@ pub struct NFTokenAcceptOffer<'a> {
     pub nftoken_buy_offer: Option<Cow<'a, str>>,
     #[serde(rename = "NFTokenBrokerFee")]
     pub nftoken_broker_fee: Option<Amount<'a>>,
-}
-
-impl<'a> Default for NFTokenAcceptOffer<'a> {
-    fn default() -> Self {
-        Self {
-            transaction_type: TransactionType::NFTokenAcceptOffer,
-            account: Default::default(),
-            fee: Default::default(),
-            sequence: Default::default(),
-            last_ledger_sequence: Default::default(),
-            account_txn_id: Default::default(),
-            signing_pub_key: Default::default(),
-            source_tag: Default::default(),
-            ticket_sequence: Default::default(),
-            txn_signature: Default::default(),
-            flags: Default::default(),
-            memos: Default::default(),
-            signers: Default::default(),
-            nftoken_sell_offer: Default::default(),
-            nftoken_buy_offer: Default::default(),
-            nftoken_broker_fee: Default::default(),
-        }
-    }
 }
 
 impl<'a: 'static> Model for NFTokenAcceptOffer<'a> {
@@ -128,9 +60,9 @@ impl<'a: 'static> Model for NFTokenAcceptOffer<'a> {
     }
 }
 
-impl<'a> Transaction for NFTokenAcceptOffer<'a> {
+impl<'a> Transaction<NoFlags> for NFTokenAcceptOffer<'a> {
     fn get_transaction_type(&self) -> TransactionType {
-        self.transaction_type.clone()
+        self.common_fields.transaction_type.clone()
     }
 }
 
@@ -175,34 +107,32 @@ impl<'a> NFTokenAcceptOfferError for NFTokenAcceptOffer<'a> {
 impl<'a> NFTokenAcceptOffer<'a> {
     pub fn new(
         account: Cow<'a, str>,
-        fee: Option<XRPAmount<'a>>,
-        sequence: Option<u32>,
-        last_ledger_sequence: Option<u32>,
         account_txn_id: Option<Cow<'a, str>>,
-        signing_pub_key: Option<Cow<'a, str>>,
+        fee: Option<XRPAmount<'a>>,
+        last_ledger_sequence: Option<u32>,
+        memos: Option<Vec<Memo>>,
+        sequence: Option<u32>,
+        signers: Option<Vec<Signer<'a>>>,
         source_tag: Option<u32>,
         ticket_sequence: Option<u32>,
-        txn_signature: Option<Cow<'a, str>>,
-        memos: Option<Vec<Memo>>,
-        signers: Option<Vec<Signer<'a>>>,
         nftoken_sell_offer: Option<Cow<'a, str>>,
         nftoken_buy_offer: Option<Cow<'a, str>>,
         nftoken_broker_fee: Option<Amount<'a>>,
     ) -> Self {
         Self {
-            transaction_type: TransactionType::NFTokenAcceptOffer,
-            account,
-            fee,
-            sequence,
-            last_ledger_sequence,
-            account_txn_id,
-            signing_pub_key,
-            source_tag,
-            ticket_sequence,
-            txn_signature,
-            flags: None,
-            memos,
-            signers,
+            common_fields: CommonFields {
+                account,
+                transaction_type: TransactionType::NFTokenAcceptOffer,
+                account_txn_id,
+                fee,
+                flags: None,
+                last_ledger_sequence,
+                memos,
+                sequence,
+                signers,
+                source_tag,
+                ticket_sequence,
+            },
             nftoken_sell_offer,
             nftoken_buy_offer,
             nftoken_broker_fee,
@@ -229,24 +159,20 @@ mod test_nftoken_accept_offer_error {
 
     #[test]
     fn test_brokered_mode_error() {
-        let nftoken_accept_offer = NFTokenAcceptOffer {
-            transaction_type: TransactionType::NFTokenAcceptOffer,
-            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb".into(),
-            fee: None,
-            sequence: None,
-            last_ledger_sequence: None,
-            account_txn_id: None,
-            signing_pub_key: None,
-            source_tag: None,
-            ticket_sequence: None,
-            txn_signature: None,
-            flags: None,
-            memos: None,
-            signers: None,
-            nftoken_sell_offer: None,
-            nftoken_buy_offer: None,
-            nftoken_broker_fee: Some(Amount::XRPAmount(XRPAmount::from("100"))),
-        };
+        let nftoken_accept_offer = NFTokenAcceptOffer::new(
+            "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb".into(),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(Amount::XRPAmount(XRPAmount::from("100"))),
+        );
 
         assert_eq!(
             nftoken_accept_offer.validate().unwrap_err().to_string().as_str(),
@@ -256,24 +182,20 @@ mod test_nftoken_accept_offer_error {
 
     #[test]
     fn test_broker_fee_error() {
-        let nftoken_accept_offer = NFTokenAcceptOffer {
-            transaction_type: TransactionType::NFTokenAcceptOffer,
-            account: "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb".into(),
-            fee: None,
-            sequence: None,
-            last_ledger_sequence: None,
-            account_txn_id: None,
-            signing_pub_key: None,
-            source_tag: None,
-            ticket_sequence: None,
-            txn_signature: None,
-            flags: None,
-            memos: None,
-            signers: None,
-            nftoken_sell_offer: Some("".into()),
-            nftoken_buy_offer: None,
-            nftoken_broker_fee: Some(Amount::XRPAmount(XRPAmount::from("0"))),
-        };
+        let nftoken_accept_offer = NFTokenAcceptOffer::new(
+            "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb".into(),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("".into()),
+            None,
+            Some(Amount::XRPAmount(XRPAmount::from("0"))),
+        );
 
         assert_eq!(
             nftoken_accept_offer.validate().unwrap_err().to_string().as_str(),
@@ -293,14 +215,9 @@ mod test_serde {
     fn test_serialize() {
         let default_txn = NFTokenAcceptOffer::new(
             "r9spUPhPBfB6kQeF6vPhwmtFwRhBh2JUCG".into(),
+            None,
             Some("12".into()),
-            Some(68549302),
             Some(75447550),
-            None,
-            None,
-            None,
-            None,
-            None,
             Some(vec![Memo::new(
                 Some(
                     "61356534373538372D633134322D346663382D616466362D393666383562356435386437"
@@ -309,6 +226,9 @@ mod test_serde {
                 None,
                 None,
             )]),
+            Some(68549302),
+            None,
+            None,
             None,
             Some("68CD1F6F906494EA08C9CB5CAFA64DFA90D4E834B7151899B73231DE5A0C3B77".into()),
             None,
@@ -326,14 +246,9 @@ mod test_serde {
     fn test_deserialize() {
         let default_txn = NFTokenAcceptOffer::new(
             "r9spUPhPBfB6kQeF6vPhwmtFwRhBh2JUCG".into(),
+            None,
             Some("12".into()),
-            Some(68549302),
             Some(75447550),
-            None,
-            None,
-            None,
-            None,
-            None,
             Some(vec![Memo::new(
                 Some(
                     "61356534373538372D633134322D346663382D616466362D393666383562356435386437"
@@ -342,6 +257,9 @@ mod test_serde {
                 None,
                 None,
             )]),
+            Some(68549302),
+            None,
+            None,
             None,
             Some("68CD1F6F906494EA08C9CB5CAFA64DFA90D4E834B7151899B73231DE5A0C3B77".into()),
             None,
