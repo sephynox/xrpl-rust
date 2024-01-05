@@ -1,5 +1,6 @@
 use crate::models::ledger::LedgerEntryType;
-use crate::models::Model;
+use crate::models::transactions::FlagCollection;
+use crate::models::{Model, NoFlags};
 use alloc::vec::Vec;
 use alloc::{borrow::Cow, string::String};
 use derive_new::new;
@@ -7,6 +8,8 @@ use serde::{ser::SerializeMap, Deserialize, Serialize};
 
 use crate::serde_with_tag;
 use serde_with::skip_serializing_none;
+
+use super::{CommonFields, LedgerObject};
 
 serde_with_tag! {
     /// `<https://xrpl.org/amendments-object.html#amendments-fields>`
@@ -28,16 +31,8 @@ serde_with_tag! {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Amendments<'a> {
-    /// The value `0x0066`, mapped to the string `Amendments`, indicates that this object describes
-    /// the status of `amendments` to the XRP Ledger.
-    pub ledger_entry_type: LedgerEntryType,
-    /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no flags
-    /// for `Amendments` objects. The value is always 0.
-    pub flags: u32,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, NoFlags>,
     /// Array of 256-bit amendment IDs for all currently enabled amendments. If omitted, there are
     /// no enabled amendments.
     pub amendments: Option<Vec<Cow<'a, str>>>,
@@ -48,28 +43,26 @@ pub struct Amendments<'a> {
 
 impl<'a> Model for Amendments<'a> {}
 
-impl<'a> Default for Amendments<'a> {
-    fn default() -> Self {
-        Self {
-            ledger_entry_type: LedgerEntryType::Amendments,
-            flags: Default::default(),
-            index: Default::default(),
-            amendments: Default::default(),
-            majorities: Default::default(),
-        }
+impl<'a> LedgerObject<NoFlags> for Amendments<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
     }
 }
 
 impl<'a> Amendments<'a> {
     pub fn new(
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         amendments: Option<Vec<Cow<'a, str>>>,
         majorities: Option<Vec<Majority>>,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::Amendments,
-            flags: 0,
-            index,
+            common_fields: CommonFields {
+                flags: Vec::new().into(),
+                ledger_entry_type: LedgerEntryType::Amendments,
+                index,
+                ledger_index,
+            },
             amendments,
             majorities,
         }
@@ -86,7 +79,10 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let amendments = Amendments::new(
-            Cow::from("7DB0788C020F02780A673DC74757F23823FA3014C1866E72CC4CD8B226CD6EF4"),
+            Some(Cow::from(
+                "7DB0788C020F02780A673DC74757F23823FA3014C1866E72CC4CD8B226CD6EF4",
+            )),
+            None,
             Some(vec![
                 Cow::from("42426C4D4F1009EE67080A9B7965B44656D7714D104A72F9B4369F97ABF044EE"),
                 Cow::from("4C97EBA926031A7CF7D7B36FDE3ED66DDA5421192D63DE53FFB46E43B9DC8373"),

@@ -1,10 +1,14 @@
 use crate::models::ledger::LedgerEntryType;
+use crate::models::NoFlags;
 use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 
+use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
+
+use super::{CommonFields, LedgerObject};
 
 /// A Check object describes a check, similar to a paper personal check, which can be cashed by its
 /// destination to get money from its sender.
@@ -14,15 +18,8 @@ use serde_with::skip_serializing_none;
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Check<'a> {
-    /// The value `0x0043`, mapped to the string `Check`, indicates that this object is a `Check` object.
-    pub ledger_entry_type: LedgerEntryType,
-    /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no flags
-    /// for `Check` objects. The value is always 0.
-    pub flags: u32,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, NoFlags>,
     /// The sender of the `Check`. Cashing the `Check` debits this address's balance.
     pub account: Cow<'a, str>,
     /// The intended recipient of the `Check`. Only this address can cash the `Check`, using a
@@ -57,33 +54,18 @@ pub struct Check<'a> {
     pub source_tag: Option<u32>,
 }
 
-impl<'a> Default for Check<'a> {
-    fn default() -> Self {
-        Self {
-            ledger_entry_type: LedgerEntryType::Check,
-            flags: Default::default(),
-            index: Default::default(),
-            account: Default::default(),
-            destination: Default::default(),
-            destination_node: Default::default(),
-            destination_tag: Default::default(),
-            expiration: Default::default(),
-            invoice_id: Default::default(),
-            owner_node: Default::default(),
-            previous_txn_id: Default::default(),
-            previous_txn_lgr_seq: Default::default(),
-            send_max: Default::default(),
-            sequence: Default::default(),
-            source_tag: Default::default(),
-        }
+impl<'a> Model for Check<'a> {}
+
+impl<'a> LedgerObject<NoFlags> for Check<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
     }
 }
 
-impl<'a> Model for Check<'a> {}
-
 impl<'a> Check<'a> {
     pub fn new(
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         account: Cow<'a, str>,
         destination: Cow<'a, str>,
         owner_node: Cow<'a, str>,
@@ -98,9 +80,12 @@ impl<'a> Check<'a> {
         source_tag: Option<u32>,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::Check,
-            flags: 0,
-            index,
+            common_fields: CommonFields {
+                flags: Vec::new().into(),
+                ledger_entry_type: LedgerEntryType::Check,
+                index,
+                ledger_index,
+            },
             account,
             destination,
             owner_node,
@@ -125,7 +110,10 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let check = Check::new(
-            Cow::from("49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0"),
+            Some(Cow::from(
+                "49647F0D748DC3FE26BDACBC57F251AADEFFF391403EC9BF87C97F67E9977FB0",
+            )),
+            None,
             Cow::from("rUn84CUYbNjRoTQ6mSW7BVJPSVJNLb1QLo"),
             Cow::from("rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy"),
             Cow::from("0000000000000000"),

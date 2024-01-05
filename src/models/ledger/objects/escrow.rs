@@ -1,9 +1,13 @@
 use crate::models::ledger::LedgerEntryType;
+use crate::models::NoFlags;
 use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
+use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
+
+use super::{CommonFields, LedgerObject};
 
 /// The `Escrow` object type represents a held payment of XRP waiting to be executed or canceled.
 /// An `EscrowCreate` transaction creates an `Escrow` object in the ledger. A successful `EscrowFinish`
@@ -24,16 +28,8 @@ use serde_with::skip_serializing_none;
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Escrow<'a> {
-    /// The value `0x0075`, mapped to the string `Escrow`, indicates that this object is an
-    /// `Escrow` object.
-    pub ledger_entry_type: LedgerEntryType,
-    /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no
-    /// flags for `Escrow` objects. The value is always `0`.
-    pub flags: u32,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, NoFlags>,
     /// The address of the owner (sender) of this held payment. This is the account that provided
     /// the XRP, and gets it back if the held payment is canceled.
     pub account: Cow<'a, str>,
@@ -72,33 +68,18 @@ pub struct Escrow<'a> {
     pub source_tag: Option<u32>,
 }
 
-impl<'a> Default for Escrow<'a> {
-    fn default() -> Self {
-        Self {
-            ledger_entry_type: LedgerEntryType::Escrow,
-            flags: Default::default(),
-            index: Default::default(),
-            account: Default::default(),
-            amount: Default::default(),
-            cancel_after: Default::default(),
-            condition: Default::default(),
-            destination: Default::default(),
-            destination_node: Default::default(),
-            destination_tag: Default::default(),
-            finish_after: Default::default(),
-            owner_node: Default::default(),
-            previous_txn_id: Default::default(),
-            previous_txn_lgr_seq: Default::default(),
-            source_tag: Default::default(),
-        }
+impl<'a> Model for Escrow<'a> {}
+
+impl<'a> LedgerObject<NoFlags> for Escrow<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
     }
 }
 
-impl<'a> Model for Escrow<'a> {}
-
 impl<'a> Escrow<'a> {
     pub fn new(
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         account: Cow<'a, str>,
         amount: Amount<'a>,
         destination: Cow<'a, str>,
@@ -113,9 +94,12 @@ impl<'a> Escrow<'a> {
         source_tag: Option<u32>,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::Escrow,
-            flags: 0,
-            index,
+            common_fields: CommonFields {
+                flags: Vec::new().into(),
+                ledger_entry_type: LedgerEntryType::Escrow,
+                index,
+                ledger_index,
+            },
             account,
             amount,
             destination,
@@ -140,7 +124,10 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let escrow = Escrow::new(
-            Cow::from("DC5F3851D8A1AB622F957761E5963BC5BD439D5C24AC6AD7AC4523F0640244AC"),
+            Some(Cow::from(
+                "DC5F3851D8A1AB622F957761E5963BC5BD439D5C24AC6AD7AC4523F0640244AC",
+            )),
+            None,
             Cow::from("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
             Amount::XRPAmount("10000".into()),
             Cow::from("ra5nK24KXen9AHvsdFTKHSANinZseWnPcX"),

@@ -1,9 +1,12 @@
-use crate::models::ledger::LedgerEntryType;
 use crate::models::Model;
+use crate::models::{ledger::LedgerEntryType, NoFlags};
 use alloc::borrow::Cow;
+use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
+
+use super::{CommonFields, LedgerObject};
 
 /// A `DepositPreauth` object tracks a preauthorization from one account to another.
 /// `DepositPreauth` transactions create these objects.
@@ -13,16 +16,8 @@ use serde_with::skip_serializing_none;
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct DepositPreauth<'a> {
-    /// The value `0x0070`, mapped to the string `DepositPreauth`, indicates that this is a
-    /// `DepositPreauth` object.
-    pub ledger_entry_type: LedgerEntryType,
-    /// A bit-map of boolean flags enabled for this object. Currently, the protocol defines no flags
-    /// for `DepositPreauth` objects. The value is always 0.
-    pub flags: u32,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, NoFlags>,
     /// The account that granted the preauthorization.
     pub account: Cow<'a, str>,
     /// The account that received the preauthorization.
@@ -37,26 +32,18 @@ pub struct DepositPreauth<'a> {
     pub previous_txn_lgr_seq: u32,
 }
 
-impl<'a> Default for DepositPreauth<'a> {
-    fn default() -> Self {
-        Self {
-            ledger_entry_type: LedgerEntryType::DepositPreauth,
-            flags: Default::default(),
-            index: Default::default(),
-            account: Default::default(),
-            authorize: Default::default(),
-            owner_node: Default::default(),
-            previous_txn_id: Default::default(),
-            previous_txn_lgr_seq: Default::default(),
-        }
+impl<'a> Model for DepositPreauth<'a> {}
+
+impl<'a> LedgerObject<NoFlags> for DepositPreauth<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
     }
 }
 
-impl<'a> Model for DepositPreauth<'a> {}
-
 impl<'a> DepositPreauth<'a> {
     pub fn new(
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         account: Cow<'a, str>,
         authorize: Cow<'a, str>,
         owner_node: Cow<'a, str>,
@@ -64,9 +51,12 @@ impl<'a> DepositPreauth<'a> {
         previous_txn_lgr_seq: u32,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::DepositPreauth,
-            flags: 0,
-            index,
+            common_fields: CommonFields {
+                flags: Vec::new().into(),
+                ledger_entry_type: LedgerEntryType::DepositPreauth,
+                index,
+                ledger_index,
+            },
             account,
             authorize,
             owner_node,
@@ -83,7 +73,10 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let deposit_preauth = DepositPreauth::new(
-            Cow::from("4A255038CC3ADCC1A9C91509279B59908251728D0DAADB248FFE297D0F7E068C"),
+            Some(Cow::from(
+                "4A255038CC3ADCC1A9C91509279B59908251728D0DAADB248FFE297D0F7E068C",
+            )),
+            None,
             Cow::from("rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8"),
             Cow::from("rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de"),
             Cow::from("0000000000000000"),

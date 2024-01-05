@@ -6,7 +6,8 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
-use crate::models::transactions::{CommonFields, Memo, NoFlags, Signer};
+use crate::models::transactions::{CommonFields, Memo, Signer};
+use crate::models::NoFlags;
 use crate::models::{
     amount::XRPAmount,
     model::Model,

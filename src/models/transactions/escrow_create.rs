@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::amount::XRPAmount;
-use crate::models::transactions::{CommonFields, NoFlags, XRPLEscrowCreateException};
+use crate::models::transactions::{CommonFields, XRPLEscrowCreateException};
+use crate::models::NoFlags;
 use crate::models::{
     model::Model,
     transactions::{Memo, Signer, Transaction, TransactionType},

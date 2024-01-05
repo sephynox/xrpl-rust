@@ -1,11 +1,13 @@
-use crate::models::ledger::LedgerEntryType;
 use crate::models::Model;
+use crate::models::{ledger::LedgerEntryType, NoFlags};
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
+
+use super::{CommonFields, LedgerObject};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new, Default)]
 #[serde(rename_all = "PascalCase")]
@@ -23,16 +25,8 @@ pub struct NFToken<'a> {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NFTokenPage<'a> {
-    /// The value `0x0050`, mapped to the string `NFTokenPage`, indicates that this is a page
-    /// containing `NFToken` objects.
-    pub ledger_entry_type: LedgerEntryType,
-    /// A bit-map of boolean flags. No flags are defined for the NegativeUNL object type, so this
-    /// value is always 0.
-    pub flags: u32,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, NoFlags>,
     /// The collection of NFToken objects contained in this `NFTokenPage` object.
     /// This specification places an upper bound of 32 `NFToken` objects per page.
     /// Objects are sorted from low to high with the `NFTokenID` used as the sorting parameter.
@@ -53,26 +47,18 @@ pub struct NFTokenPage<'a> {
     pub previous_txn_lgr_seq: Option<u32>,
 }
 
-impl<'a> Default for NFTokenPage<'a> {
-    fn default() -> Self {
-        Self {
-            ledger_entry_type: LedgerEntryType::NFTokenPage,
-            flags: Default::default(),
-            index: Default::default(),
-            nftokens: Default::default(),
-            next_page_min: Default::default(),
-            previous_page_min: Default::default(),
-            previous_txn_id: Default::default(),
-            previous_txn_lgr_seq: Default::default(),
-        }
+impl<'a> Model for NFTokenPage<'a> {}
+
+impl<'a> LedgerObject<NoFlags> for NFTokenPage<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
     }
 }
 
-impl<'a> Model for NFTokenPage<'a> {}
-
 impl<'a> NFTokenPage<'a> {
     pub fn new(
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         nftokens: Vec<NFToken<'a>>,
         next_page_min: Option<Cow<'a, str>>,
         previous_page_min: Option<Cow<'a, str>>,
@@ -80,9 +66,12 @@ impl<'a> NFTokenPage<'a> {
         previous_txn_lgr_seq: Option<u32>,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::NFTokenPage,
-            flags: 0,
-            index,
+            common_fields: CommonFields {
+                flags: Vec::new().into(),
+                ledger_entry_type: LedgerEntryType::NFTokenPage,
+                index,
+                ledger_index,
+            },
             nftokens,
             next_page_min,
             previous_page_min,
@@ -100,7 +89,8 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let nftoken_page = NFTokenPage::new(
-            Cow::from("ForTest"),
+            Some(Cow::from("ForTest")),
+            None,
             vec![NFToken::new(
                 Cow::from("000B013A95F14B0044F78A264E41713C64B5F89242540EE208C3098E00000D65"),
                 Cow::from("697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469")

@@ -1,4 +1,5 @@
 use crate::models::ledger::LedgerEntryType;
+use crate::models::NoFlags;
 use crate::models::{amount::Amount, Currency, Model};
 use alloc::borrow::Cow;
 use alloc::string::String;
@@ -8,6 +9,8 @@ use serde::{ser::SerializeMap, Deserialize, Serialize};
 
 use crate::serde_with_tag;
 use serde_with::skip_serializing_none;
+
+use super::{CommonFields, LedgerObject};
 
 serde_with_tag! {
     #[derive(Debug, PartialEq, Eq, Clone, new, Default)]
@@ -51,14 +54,8 @@ serde_with_tag! {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AMM<'a> {
-    /// The value `0x0079`, mapped to the string `AMM`, indicates that this is an `AMM` object.
-    pub ledger_entry_type: LedgerEntryType,
-    /// Currently there are no flags for the AMM ledger object
-    pub flags: u32,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, NoFlags>,
     /// The address of the special account that holds this `AMM's` assets.
     #[serde(rename = "AMMAccount")]
     pub amm_account: Cow<'a, str>,
@@ -84,28 +81,18 @@ pub struct AMM<'a> {
     pub vote_slots: Option<Vec<VoteEntry>>,
 }
 
-impl<'a> Default for AMM<'a> {
-    fn default() -> Self {
-        Self {
-            ledger_entry_type: LedgerEntryType::AMM,
-            flags: Default::default(),
-            index: Default::default(),
-            amm_account: Default::default(),
-            asset: Default::default(),
-            asset2: Default::default(),
-            lptoken_balance: Default::default(),
-            trading_fee: Default::default(),
-            auction_slot: Default::default(),
-            vote_slots: Default::default(),
-        }
+impl<'a> Model for AMM<'a> {}
+
+impl<'a> LedgerObject<NoFlags> for AMM<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
     }
 }
 
-impl<'a> Model for AMM<'a> {}
-
 impl<'a> AMM<'a> {
     pub fn new(
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         amm_account: Cow<'a, str>,
         asset: Currency<'a>,
         asset2: Currency<'a>,
@@ -115,9 +102,12 @@ impl<'a> AMM<'a> {
         vote_slots: Option<Vec<VoteEntry>>,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::AMM,
-            flags: 0,
-            index,
+            common_fields: CommonFields {
+                flags: Vec::new().into(),
+                ledger_entry_type: LedgerEntryType::AMM,
+                index,
+                ledger_index,
+            },
             amm_account,
             asset,
             asset2,
@@ -141,7 +131,8 @@ mod test_serde {
     #[test]
     fn test_serialize() {
         let amm = AMM::new(
-            Cow::from("ForTest"),
+            Some(Cow::from("ForTest")),
+            None,
             Cow::from("rE54zDvgnghAoPopCgvtiqWNq3dU5y836S"),
             Currency::XRP(XRP::new()),
             Currency::IssuedCurrency(IssuedCurrency::new(

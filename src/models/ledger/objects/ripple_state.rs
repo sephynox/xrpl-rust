@@ -10,6 +10,8 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 
 use serde_with::skip_serializing_none;
 
+use super::{CommonFields, LedgerObject};
+
 #[derive(
     Debug, Eq, PartialEq, Clone, Serialize_repr, Deserialize_repr, Display, AsRefStr, EnumIter,
 )]
@@ -43,16 +45,8 @@ pub enum RippleStateFlag {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct RippleState<'a> {
-    /// The value 0x0072, mapped to the string RippleState, indicates that this object
-    /// is a RippleState object.
-    ledger_entry_type: LedgerEntryType,
-    /// A bit-map of boolean options enabled for this object.
-    #[serde(with = "lgr_obj_flags")]
-    flags: FlagCollection<RippleStateFlag>,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, RippleStateFlag>,
     /// The balance of the trust line, from the perspective of the low account. A negative
     /// balance indicates that the high account holds tokens issued by the low account.
     pub balance: Amount<'a>,
@@ -90,10 +84,17 @@ pub struct RippleState<'a> {
 
 impl<'a> Model for RippleState<'a> {}
 
+impl<'a> LedgerObject<RippleStateFlag> for RippleState<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
+    }
+}
+
 impl<'a> RippleState<'a> {
     pub fn new(
         flags: FlagCollection<RippleStateFlag>,
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         balance: Amount<'a>,
         high_limit: Amount<'a>,
         high_node: Cow<'a, str>,
@@ -107,9 +108,12 @@ impl<'a> RippleState<'a> {
         low_quality_out: Option<u32>,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::RippleState,
-            flags,
-            index,
+            common_fields: CommonFields {
+                flags,
+                ledger_entry_type: LedgerEntryType::RippleState,
+                index,
+                ledger_index,
+            },
             balance,
             high_limit,
             high_node,
@@ -135,7 +139,10 @@ mod test_serde {
     fn test_serialize() {
         let ripple_state = RippleState::new(
             vec![RippleStateFlag::LsfHighReserve, RippleStateFlag::LsfLowAuth].into(),
-            Cow::from("9CA88CDEDFF9252B3DE183CE35B038F57282BC9503CDFA1923EF9A95DF0D6F7B"),
+            Some(Cow::from(
+                "9CA88CDEDFF9252B3DE183CE35B038F57282BC9503CDFA1923EF9A95DF0D6F7B",
+            )),
+            None,
             Amount::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
                 "USD".into(),
                 "rrrrrrrrrrrrrrrrrrrrBZbvji".into(),

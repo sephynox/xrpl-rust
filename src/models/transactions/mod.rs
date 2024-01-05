@@ -71,61 +71,34 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 /// Enum containing the different Transaction types.
 #[derive(Debug, Clone, Serialize, Deserialize, Display, PartialEq, Eq)]
 pub enum TransactionType {
-    #[serde(rename = "AccountDelete")]
     AccountDelete,
-    #[serde(rename = "AccountSet")]
     AccountSet,
-    #[serde(rename = "CheckCancel")]
     CheckCancel,
-    #[serde(rename = "CheckCash")]
     CheckCash,
-    #[serde(rename = "CheckCreate")]
     CheckCreate,
-    #[serde(rename = "DepositPreauth")]
     DepositPreauth,
-    #[serde(rename = "EscrowCancel")]
     EscrowCancel,
-    #[serde(rename = "EscrowCreate")]
     EscrowCreate,
-    #[serde(rename = "EscrowFinish")]
     EscrowFinish,
-    #[serde(rename = "NFTokenAcceptOffer")]
     NFTokenAcceptOffer,
-    #[serde(rename = "NFTokenBurn")]
     NFTokenBurn,
-    #[serde(rename = "NFTokenCancelOffer")]
     NFTokenCancelOffer,
-    #[serde(rename = "NFTokenCreateOffer")]
     NFTokenCreateOffer,
-    #[serde(rename = "NFTokenMint")]
     NFTokenMint,
-    #[serde(rename = "OfferCancel")]
     OfferCancel,
-    #[serde(rename = "OfferCreate")]
     OfferCreate,
-    #[serde(rename = "Payment")]
     Payment,
-    #[serde(rename = "PaymentChannelClaim")]
     PaymentChannelClaim,
-    #[serde(rename = "PaymentChannelCreate")]
     PaymentChannelCreate,
-    #[serde(rename = "PaymentChannelFund")]
     PaymentChannelFund,
-    #[serde(rename = "SetRegularKey")]
     SetRegularKey,
-    #[serde(rename = "SignerListSet")]
     SignerListSet,
-    #[serde(rename = "TicketCreate")]
     TicketCreate,
-    #[serde(rename = "TrustSet")]
     TrustSet,
 
     // Psuedo-Transaction types,
-    #[serde(rename = "EnableAmendment")]
     EnableAmendment,
-    #[serde(rename = "SetFee")]
     SetFee,
-    #[serde(rename = "UNLModify")]
     UNLModify,
 }
 
@@ -247,19 +220,16 @@ where
     T: IntoEnumIterator + Serialize + PartialEq + core::fmt::Debug,
 {
     fn has_flag(&self, flag: &T) -> bool {
-        let flag_collection = self.flags.as_ref().unwrap();
-        flag_collection.0.contains(flag)
+        match &self.flags {
+            Some(flag_collection) => flag_collection.0.contains(flag),
+            None => false,
+        }
     }
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
     }
 }
-
-#[derive(
-    Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr, EnumIter, Copy,
-)]
-pub enum NoFlags {}
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Default, new)]
 pub struct FlagCollection<T>(pub(crate) Vec<T>)

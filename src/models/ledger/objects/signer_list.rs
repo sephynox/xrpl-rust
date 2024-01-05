@@ -12,6 +12,8 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 use crate::serde_with_tag;
 use serde_with::skip_serializing_none;
 
+use super::{CommonFields, LedgerObject};
+
 #[derive(
     Debug, Eq, PartialEq, Clone, Serialize_repr, Deserialize_repr, Display, AsRefStr, EnumIter,
 )]
@@ -45,16 +47,8 @@ serde_with_tag! {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct SignerList<'a> {
-    /// The value 0x0053, mapped to the string SignerList, indicates that this object is a
-    /// SignerList object.
-    ledger_entry_type: LedgerEntryType,
-    /// A bit-map of Boolean flags enabled for this signer list.
-    #[serde(with = "lgr_obj_flags")]
-    flags: FlagCollection<SignerListFlag>,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, SignerListFlag>,
     /// A hint indicating which page of the owner directory links to this object, in case
     /// the directory consists of multiple pages.
     pub owner_node: Cow<'a, str>,
@@ -78,10 +72,17 @@ pub struct SignerList<'a> {
 
 impl<'a> Model for SignerList<'a> {}
 
+impl<'a> LedgerObject<SignerListFlag> for SignerList<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
+    }
+}
+
 impl<'a> SignerList<'a> {
     pub fn new(
         flags: FlagCollection<SignerListFlag>,
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         owner_node: Cow<'a, str>,
         previous_txn_id: Cow<'a, str>,
         previous_txn_lgr_seq: u32,
@@ -90,9 +91,12 @@ impl<'a> SignerList<'a> {
         signer_quorum: u32,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::SignerList,
-            flags,
-            index,
+            common_fields: CommonFields {
+                flags,
+                ledger_entry_type: LedgerEntryType::SignerList,
+                index,
+                ledger_index,
+            },
             owner_node,
             previous_txn_id,
             previous_txn_lgr_seq,
@@ -113,7 +117,10 @@ mod test_serde {
     fn test_serialize() {
         let signer_list = SignerList::new(
             vec![].into(),
-            Cow::from("A9C28A28B85CD533217F5C0A0C7767666B093FA58A0F2D80026FCC4CD932DDC7"),
+            Some(Cow::from(
+                "A9C28A28B85CD533217F5C0A0C7767666B093FA58A0F2D80026FCC4CD932DDC7",
+            )),
+            None,
             Cow::from("0000000000000000"),
             Cow::from("5904C0DC72C58A83AEFED2FFC5386356AA83FCA6A88C89D00646E51E687CDBE4"),
             16061435,

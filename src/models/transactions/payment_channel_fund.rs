@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::transactions::NoFlags;
+use crate::models::NoFlags;
 use crate::models::{
     amount::XRPAmount,
     model::Model,

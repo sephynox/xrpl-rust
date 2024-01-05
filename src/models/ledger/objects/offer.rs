@@ -12,6 +12,8 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 
 use serde_with::skip_serializing_none;
 
+use super::{CommonFields, LedgerObject};
+
 #[derive(
     Debug, Eq, PartialEq, Clone, Serialize_repr, Deserialize_repr, Display, AsRefStr, EnumIter,
 )]
@@ -33,16 +35,8 @@ pub enum OfferFlag {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Offer<'a> {
-    /// The value `0x006F`, mapped to the string `Offer`, indicates that this object
-    /// describes an `Offer`.
-    ledger_entry_type: LedgerEntryType,
-    /// A bit-map of boolean flags enabled for this offer.
-    #[serde(with = "lgr_obj_flags")]
-    flags: FlagCollection<OfferFlag>,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, OfferFlag>,
     /// The address of the account that owns this `Offer`.
     pub account: Cow<'a, str>,
     /// The ID of the `Offer Directory` that links to this Offer.
@@ -72,10 +66,17 @@ pub struct Offer<'a> {
 
 impl<'a> Model for Offer<'a> {}
 
+impl<'a> LedgerObject<OfferFlag> for Offer<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
+    }
+}
+
 impl<'a> Offer<'a> {
     pub fn new(
         flags: FlagCollection<OfferFlag>,
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         account: Cow<'a, str>,
         book_directory: Cow<'a, str>,
         book_node: Cow<'a, str>,
@@ -88,9 +89,12 @@ impl<'a> Offer<'a> {
         expiration: Option<u32>,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::Offer,
-            flags,
-            index,
+            common_fields: CommonFields {
+                flags,
+                ledger_entry_type: LedgerEntryType::Offer,
+                index,
+                ledger_index,
+            },
             account,
             book_directory,
             book_node,
@@ -116,7 +120,10 @@ mod test_serde {
     fn test_serialize() {
         let offer = Offer::new(
             vec![OfferFlag::LsfSell].into(),
-            Cow::from("96F76F27D8A327FC48753167EC04A46AA0E382E6F57F32FD12274144D00F1797"),
+            Some(Cow::from(
+                "96F76F27D8A327FC48753167EC04A46AA0E382E6F57F32FD12274144D00F1797",
+            )),
+            None,
             Cow::from("rBqb89MRQJnMPq8wTwEbtz4kvxrEDfcYvt"),
             Cow::from("ACC27DE91DBA86FC509069EAF4BC511D73128B780F2E54BF5E07A369E2446000"),
             Cow::from("0000000000000000"),

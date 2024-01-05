@@ -12,6 +12,8 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
+use super::{CommonFields, LedgerObject};
+
 #[derive(
     Debug, Eq, PartialEq, Clone, Serialize_repr, Deserialize_repr, Display, AsRefStr, EnumIter,
 )]
@@ -29,16 +31,8 @@ pub enum NFTokenOfferFlag {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NFTokenOffer<'a> {
-    /// The value `0x0037`, mapped to the string `NFTokenOffer`, indicates that this is an offer
-    /// to trade a `NFToken`.
-    pub ledger_entry_type: LedgerEntryType,
-    /// A set of flags associated with this object, used to specify various options or settings.
-    #[serde(with = "lgr_obj_flags")]
-    pub flags: FlagCollection<NFTokenOfferFlag>,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, NFTokenOfferFlag>,
     /// Amount expected or offered for the `NFToken`. If the token has the `lsfOnlyXRP` flag set,
     /// the amount must be specified in XRP. Sell offers that specify assets other than XRP
     /// must specify a non-zero amount. Sell offers that specify XRP can be 'free'
@@ -74,10 +68,17 @@ pub struct NFTokenOffer<'a> {
 
 impl<'a> Model for NFTokenOffer<'a> {}
 
+impl<'a> LedgerObject<NFTokenOfferFlag> for NFTokenOffer<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
+    }
+}
+
 impl<'a> NFTokenOffer<'a> {
     pub fn new(
         flags: FlagCollection<NFTokenOfferFlag>,
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         amount: Amount<'a>,
         nftoken_id: Cow<'a, str>,
         owner: Cow<'a, str>,
@@ -89,9 +90,12 @@ impl<'a> NFTokenOffer<'a> {
         owner_node: Option<Cow<'a, str>>,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::NFTokenOffer,
-            flags,
-            index,
+            common_fields: CommonFields {
+                flags,
+                ledger_entry_type: LedgerEntryType::NFTokenOffer,
+                index,
+                ledger_index,
+            },
             amount,
             nftoken_id,
             owner,
@@ -115,7 +119,10 @@ mod test_serde {
     fn test_serialization() {
         let nftoken_offer = NFTokenOffer::new(
             vec![NFTokenOfferFlag::LsfSellNFToken].into(),
-            Cow::from("AEBABA4FAC212BF28E0F9A9C3788A47B085557EC5D1429E7A8266FB859C863B3"),
+            Some(Cow::from(
+                "AEBABA4FAC212BF28E0F9A9C3788A47B085557EC5D1429E7A8266FB859C863B3",
+            )),
+            None,
             Amount::XRPAmount("1000000".into()),
             Cow::from("00081B5825A08C22787716FA031B432EBBC1B101BB54875F0002D2A400000000"),
             Cow::from("rhRxL3MNvuKEjWjL7TBbZSDacb8PmzAd7m"),

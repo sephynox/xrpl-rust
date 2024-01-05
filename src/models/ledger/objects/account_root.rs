@@ -9,6 +9,8 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
 use strum_macros::{AsRefStr, Display, EnumIter};
 
+use super::{CommonFields, LedgerObject};
+
 /// There are several options which can be either enabled or disabled for an account.
 /// These options can be changed with an `AccountSet` transaction.
 ///
@@ -51,16 +53,8 @@ pub enum AccountRootFlag {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AccountRoot<'a> {
-    /// The value `0x0061`, mapped to the string `AccountRoot`, indicates that this is an `AccountRoot`
-    /// object.
-    pub ledger_entry_type: LedgerEntryType,
-    /// A bit-map of boolean flags enabled for this account.
-    #[serde(with = "lgr_obj_flags")]
-    pub flags: FlagCollection<AccountRootFlag>,
-    /// The object ID of a single object to retrieve from the ledger, as a
-    /// 64-character (256-bit) hexadecimal string.
-    #[serde(rename = "index")]
-    pub index: Cow<'a, str>,
+    #[serde(flatten)]
+    pub common_fields: CommonFields<'a, AccountRootFlag>,
     /// The identifying (classic) address of this account.
     pub account: Cow<'a, str>,
     /// The number of objects this account owns in the ledger, which contributes to its owner
@@ -120,10 +114,17 @@ pub struct AccountRoot<'a> {
 
 impl<'a> Model for AccountRoot<'a> {}
 
+impl<'a> LedgerObject<AccountRootFlag> for AccountRoot<'a> {
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.common_fields.get_ledger_entry_type()
+    }
+}
+
 impl<'a> AccountRoot<'a> {
     pub fn new(
         flags: FlagCollection<AccountRootFlag>,
-        index: Cow<'a, str>,
+        index: Option<Cow<'a, str>>,
+        ledger_index: Option<Cow<'a, str>>,
         account: Cow<'a, str>,
         owner_count: u32,
         previous_txn_id: Cow<'a, str>,
@@ -145,9 +146,12 @@ impl<'a> AccountRoot<'a> {
         wallet_size: Option<u32>,
     ) -> Self {
         Self {
-            ledger_entry_type: LedgerEntryType::AccountRoot,
-            flags,
-            index,
+            common_fields: CommonFields::new(
+                flags,
+                LedgerEntryType::AccountRoot,
+                index,
+                ledger_index,
+            ),
             account,
             owner_count,
             previous_txn_id,
@@ -181,7 +185,10 @@ mod test_serde {
     fn test_serialize() {
         let account_root = AccountRoot::new(
             vec![AccountRootFlag::LsfDefaultRipple].into(),
-            Cow::from("13F1A95D7AAB7108D5CE7EEAF504B2894B8C674E6D68499076441C4837282BF8"),
+            Some(Cow::from(
+                "13F1A95D7AAB7108D5CE7EEAF504B2894B8C674E6D68499076441C4837282BF8",
+            )),
+            None,
             Cow::from("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"),
             3,
             Cow::from("0D5FB50FA65C9FE1538FD7E398FFFE9D1908DFA4576D8D7A020040686F93C77D"),

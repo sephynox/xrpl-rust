@@ -9,7 +9,8 @@ use serde_with::skip_serializing_none;
 
 use crate::models::amount::exceptions::XRPLAmountException;
 use crate::models::amount::XRPAmount;
-use crate::models::transactions::{NoFlags, XRPLNFTokenAcceptOfferException};
+use crate::models::transactions::XRPLNFTokenAcceptOfferException;
+use crate::models::NoFlags;
 use crate::models::{
     amount::Amount,
     model::Model,

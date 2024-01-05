@@ -30,7 +30,7 @@ pub use model::Model;
 use crate::models::currency::{Currency, XRP};
 use alloc::borrow::Cow;
 use serde::{Deserialize, Serialize};
-use strum_macros::Display;
+use strum_macros::{AsRefStr, Display, EnumIter};
 
 /// Represents the object types that an AccountObjects
 /// Request can ask for.
@@ -48,6 +48,11 @@ pub enum AccountObjectType {
     RippleState,
     Ticket,
 }
+
+#[derive(
+    Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr, EnumIter, Copy,
+)]
+pub enum NoFlags {}
 
 /// A PathStep represents an individual step along a Path.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default, Clone, new)]
