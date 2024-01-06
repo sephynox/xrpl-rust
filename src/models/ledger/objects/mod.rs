@@ -32,7 +32,7 @@ pub use nftoken_page::*;
 pub use offer::*;
 pub use pay_channel::*;
 pub use ripple_state::*;
-pub use ripple_state::*;
+
 use strum::IntoEnumIterator;
 pub use ticket::*;
 

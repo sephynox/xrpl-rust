@@ -9,7 +9,7 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 use crate::models::{
     amount::Amount,
     model::Model,
-    transactions::{Flag, Memo, Signer, Transaction, TransactionType},
+    transactions::{Memo, Signer, Transaction, TransactionType},
     PathStep,
 };
 

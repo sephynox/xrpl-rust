@@ -1,5 +1,5 @@
 use crate::models::ledger::LedgerEntryType;
-use crate::models::transactions::FlagCollection;
+
 use crate::models::{Model, NoFlags};
 use alloc::vec::Vec;
 use alloc::{borrow::Cow, string::String};

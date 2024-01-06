@@ -10,7 +10,7 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 
 use crate::models::{
     model::Model,
-    transactions::{Flag, Memo, Signer, Transaction, TransactionType},
+    transactions::{Memo, Signer, Transaction, TransactionType},
 };
 
 use crate::models::amount::exceptions::XRPLAmountException;

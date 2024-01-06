@@ -47,7 +47,7 @@ pub use payment_channel_claim::*;
 pub use payment_channel_create::*;
 pub use payment_channel_fund::*;
 pub use pseudo_transactions::*;
-use serde_repr::{Deserialize_repr, Serialize_repr};
+
 pub use set_regular_key::*;
 pub use signer_list_set::*;
 pub use ticket_create::*;
@@ -66,7 +66,7 @@ use serde::ser::SerializeMap;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use strum::IntoEnumIterator;
-use strum_macros::{AsRefStr, Display, EnumIter};
+use strum_macros::{AsRefStr, Display};
 
 /// Enum containing the different Transaction types.
 #[derive(Debug, Clone, Serialize, Deserialize, Display, PartialEq, Eq)]
@@ -297,9 +297,9 @@ where
     match serde_json::to_string(flag) {
         Ok(flag_as_string) => match flag_as_string.parse::<u32>() {
             Ok(flag_as_u32) => Ok(flag_as_u32),
-            Err(error) => Err!(XRPLCommonFieldsException::CannotConvertFlagToU32),
+            Err(_error) => Err!(XRPLCommonFieldsException::CannotConvertFlagToU32),
         },
-        Err(error) => Err!(XRPLCommonFieldsException::CannotConvertFlagToU32),
+        Err(_error) => Err!(XRPLCommonFieldsException::CannotConvertFlagToU32),
     }
 }
 

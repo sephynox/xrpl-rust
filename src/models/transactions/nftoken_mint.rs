@@ -10,7 +10,7 @@ use crate::{
     constants::{MAX_TRANSFER_FEE, MAX_URI_LENGTH},
     models::{
         model::Model,
-        transactions::{Flag, Memo, Signer, Transaction, TransactionType},
+        transactions::{Memo, Signer, Transaction, TransactionType},
     },
     Err,
 };

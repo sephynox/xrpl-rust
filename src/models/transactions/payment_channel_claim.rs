@@ -1,6 +1,6 @@
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
-use anyhow::Result;
+
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_with::skip_serializing_none;
@@ -8,7 +8,7 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 
 use crate::models::{
     model::Model,
-    transactions::{Flag, Memo, Signer, Transaction, TransactionType},
+    transactions::{Memo, Signer, Transaction, TransactionType},
 };
 
 use crate::models::amount::XRPAmount;
