@@ -56,12 +56,17 @@ pub struct TrustSet<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, TrustSetFlag>,
-    /// The custom fields for the TrustSet model.
-    ///
-    /// See TrustSet fields:
-    /// `<https://xrpl.org/trustset.html#trustset-fields>`
+    // The custom fields for the TrustSet model.
+    //
+    // See TrustSet fields:
+    // `<https://xrpl.org/trustset.html#trustset-fields>`
+    /// Object defining the trust line to create or modify, in the format of a Currency Amount.
     pub limit_amount: IssuedCurrencyAmount<'a>,
+    /// Value incoming balances on this trust line at the ratio of this number per
+    /// 1,000,000,000 units. A value of 0 is shorthand for treating balances at face value.
     pub quality_in: Option<u32>,
+    /// Value outgoing balances on this trust line at the ratio of this number per
+    /// 1,000,000,000 units. A value of 0 is shorthand for treating balances at face value.
     pub quality_out: Option<u32>,
 }
 

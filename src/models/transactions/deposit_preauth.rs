@@ -28,11 +28,13 @@ pub struct DepositPreauth<'a> {
     /// `<https://xrpl.org/transaction-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the DepositPreauth model.
-    ///
-    /// See DepositPreauth fields:
-    /// `<https://xrpl.org/depositpreauth.html#depositpreauth-fields>`
+    // The custom fields for the DepositPreauth model.
+    //
+    // See DepositPreauth fields:
+    // `<https://xrpl.org/depositpreauth.html#depositpreauth-fields>`
+    /// The XRP Ledger address of the sender to preauthorize.
     pub authorize: Option<Cow<'a, str>>,
+    /// The XRP Ledger address of a sender whose preauthorization should be revoked.
     pub unauthorize: Option<Cow<'a, str>>,
 }
 

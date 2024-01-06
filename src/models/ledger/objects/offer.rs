@@ -35,8 +35,16 @@ pub enum OfferFlag {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Offer<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, OfferFlag>,
+    // The custom fields for the Offer model.
+    //
+    // See Offer fields:
+    // `<https://xrpl.org/offer.html#offer-fields>`
     /// The address of the account that owns this `Offer`.
     pub account: Cow<'a, str>,
     /// The ID of the `Offer Directory` that links to this Offer.

@@ -30,10 +30,12 @@ pub struct TicketCreate<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the TicketCreate model.
-    ///
-    /// See TicketCreate fields:
-    /// `<https://xrpl.org/ticketcreate.html#ticketcreate-fields>`
+    // The custom fields for the TicketCreate model.
+    //
+    // See TicketCreate fields:
+    // `<https://xrpl.org/ticketcreate.html#ticketcreate-fields>`
+    /// How many Tickets to create. This must be a positive number and cannot cause
+    /// the account to own more than 250 Tickets after executing this transaction.
     pub ticket_count: u32,
 }
 

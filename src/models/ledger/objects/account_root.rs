@@ -53,8 +53,16 @@ pub enum AccountRootFlag {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AccountRoot<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, AccountRootFlag>,
+    // The custom fields for the AccountRoot model.
+    //
+    // See AccountRoot fields:
+    // `<https://xrpl.org/accountroot.html#accountroot-fields>`
     /// The identifying (classic) address of this account.
     pub account: Cow<'a, str>,
     /// The number of objects this account owns in the ledger, which contributes to its owner

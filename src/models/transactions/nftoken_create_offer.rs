@@ -55,15 +55,29 @@ pub struct NFTokenCreateOffer<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NFTokenCreateOfferFlag>,
-    /// The custom fields for the NFTokenCreateOffer model.
-    ///
-    /// See NFTokenCreateOffer fields:
-    /// `<https://xrpl.org/nftokencreateoffer.html#nftokencreateoffer-fields>`
+    // The custom fields for the NFTokenCreateOffer model.
+    //
+    // See NFTokenCreateOffer fields:
+    // `<https://xrpl.org/nftokencreateoffer.html#nftokencreateoffer-fields>`
+    /// Identifies the NFToken object that the offer references.
     #[serde(rename = "NFTokenID")]
     pub nftoken_id: Cow<'a, str>,
+    /// Indicates the amount expected or offered for the corresponding NFToken.
+    /// The amount must be non-zero, except where this is an offer to sell and the
+    /// asset is XRP; then, it is legal to specify an amount of zero, which means
+    /// that the current owner of the token is giving it away, gratis, either to
+    /// anyone at all, or to the account identified by the Destination field.
     pub amount: Amount<'a>,
+    /// Who owns the corresponding NFToken. If the offer is to buy a token, this field
+    /// must be present and it must be different than the Account field (since an offer
+    /// to buy a token one already holds is meaningless). If the offer is to sell a token,
+    /// this field must not be present, as the owner is, implicitly, the same as the
+    /// Account (since an offer to sell a token one doesn't already hold is meaningless)
     pub owner: Option<Cow<'a, str>>,
+    /// Time after which the offer is no longer active, in seconds since the Ripple Epoch.
     pub expiration: Option<u32>,
+    /// If present, indicates that this offer may only be accepted by the specified account.
+    /// Attempts by other accounts to accept this offer MUST fail.
     pub destination: Option<Cow<'a, str>>,
 }
 

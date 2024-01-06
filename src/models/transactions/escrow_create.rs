@@ -27,15 +27,32 @@ pub struct EscrowCreate<'a> {
     /// `<https://xrpl.org/transaction-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the EscrowCreate model.
-    ///
-    /// See EscrowCreate fields:
-    /// `<https://xrpl.org/escrowcreate.html>`
+    // The custom fields for the EscrowCreate model.
+    //
+    // See EscrowCreate fields:
+    // `<https://xrpl.org/escrowcreate.html>`
+    /// Amount of XRP, in drops, to deduct from the sender's balance and escrow.
+    /// Once escrowed, the XRP can either go to the Destination address
+    /// (after the FinishAfter time) or returned to the sender (after the CancelAfter time).
     pub amount: XRPAmount<'a>,
+    /// Address to receive escrowed XRP.
     pub destination: Cow<'a, str>,
+    /// Arbitrary tag to further specify the destination for this escrowed
+    /// payment, such as a hosted recipient at the destination address.
     pub destination_tag: Option<u32>,
+    /// The time, in seconds since the Ripple Epoch, when this
+    /// escrow expires. This value is immutable; the funds can
+    /// only be returned to the sender after this time.
     pub cancel_after: Option<u32>,
+    /// The time, in seconds since the Ripple Epoch, when the escrowed XRP
+    /// can be released to the recipient. This value is immutable, and the
+    /// funds can't be accessed until this time.
     pub finish_after: Option<u32>,
+    /// Hex value representing a PREIMAGE-SHA-256 crypto-condition.
+    /// The funds can only be delivered to the recipient if this
+    /// condition is fulfilled. If the condition is not fulfilled
+    /// before the expiration time specified in the CancelAfter
+    /// field, the XRP can only revert to the sender.
     pub condition: Option<Cow<'a, str>>,
 }
 

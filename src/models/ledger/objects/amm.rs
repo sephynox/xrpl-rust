@@ -54,8 +54,16 @@ serde_with_tag! {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AMM<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
+    // The custom fields for the AMM model.
+    //
+    // See AMM fields:
+    // `<https://xrpl.org/amm.html#amm-fields>`
     /// The address of the special account that holds this `AMM's` assets.
     #[serde(rename = "AMMAccount")]
     pub amm_account: Cow<'a, str>,

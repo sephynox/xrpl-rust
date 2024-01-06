@@ -33,11 +33,15 @@ pub struct NFTokenCancelOffer<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the NFTokenCancelOffer model.
-    ///
-    /// See NFTokenCancelOffer fields:
-    /// `<https://xrpl.org/nftokencanceloffer.html#nftokencanceloffer-fields>`
-    /// Lifetime issue
+    // The custom fields for the NFTokenCancelOffer model.
+    //
+    // See NFTokenCancelOffer fields:
+    // `<https://xrpl.org/nftokencanceloffer.html#nftokencanceloffer-fields>`
+    // Lifetime issue
+    /// An array of IDs of the NFTokenOffer objects to cancel (not the IDs of NFToken
+    /// objects, but the IDs of the NFTokenOffer objects). Each entry must be a
+    /// different object ID of an NFTokenOffer object; the transaction is invalid
+    /// if the array contains duplicate entries.
     #[serde(borrow)]
     #[serde(rename = "NFTokenOffers")]
     pub nftoken_offers: Vec<Cow<'a, str>>,

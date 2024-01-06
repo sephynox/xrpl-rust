@@ -25,8 +25,16 @@ use super::{CommonFields, LedgerObject};
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct LedgerHashes<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
+    // The custom fields for the LedgerHashes model.
+    //
+    // See LedgerHashes fields:
+    // `<https://xrpl.org/ledgerhashes.html#ledgerhashes-fields>`
     /// **DEPRECATED** Do not use.
     pub first_ledger_sequence: u32,
     /// An array of up to 256 ledger hashes. The contents depend on which sub-type of `LedgerHashes`

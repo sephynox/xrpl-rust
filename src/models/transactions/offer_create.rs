@@ -65,13 +65,17 @@ pub struct OfferCreate<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, OfferCreateFlag>,
-    /// The custom fields for the OfferCreate model.
-    ///
-    /// See OfferCreate fields:
-    /// `<https://xrpl.org/offercreate.html#offercreate-fields>`
+    // The custom fields for the OfferCreate model.
+    //
+    // See OfferCreate fields:
+    // `<https://xrpl.org/offercreate.html#offercreate-fields>`
+    /// The amount and type of currency being sold.
     pub taker_gets: Amount<'a>,
+    /// The amount and type of currency being bought.
     pub taker_pays: Amount<'a>,
+    /// Time after which the Offer is no longer active, in seconds since the Ripple Epoch.
     pub expiration: Option<u32>,
+    /// An Offer to delete first, specified in the same way as OfferCancel.
     pub offer_sequence: Option<u32>,
 }
 

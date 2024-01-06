@@ -32,12 +32,17 @@ pub struct NFTokenBurn<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the NFTokenBurn model.
-    ///
-    /// See NFTokenBurn fields:
-    /// `<https://xrpl.org/nftokenburn.html#nftokenburn-fields>`
+    // The custom fields for the NFTokenBurn model.
+    //
+    // See NFTokenBurn fields:
+    // `<https://xrpl.org/nftokenburn.html#nftokenburn-fields>`
     #[serde(rename = "NFTokenID")]
+    /// The NFToken to be removed by this transaction.
     pub nftoken_id: Cow<'a, str>,
+    /// The owner of the NFToken to burn. Only used if that owner is
+    /// different than the account sending this transaction. The
+    /// issuer or authorized minter can use this field to burn NFTs
+    /// that have the lsfBurnable flag enabled.
     pub owner: Option<Cow<'a, str>>,
 }
 

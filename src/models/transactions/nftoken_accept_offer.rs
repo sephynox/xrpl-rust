@@ -37,15 +37,24 @@ pub struct NFTokenAcceptOffer<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the NFTokenAcceptOffer model.
-    ///
-    /// See NFTokenAcceptOffer fields:
-    /// `<https://xrpl.org/nftokenacceptoffer.html#nftokenacceptoffer-fields>`
+    // The custom fields for the NFTokenAcceptOffer model.
+    //
+    // See NFTokenAcceptOffer fields:
+    // `<https://xrpl.org/nftokenacceptoffer.html#nftokenacceptoffer-fields>`
+    /// Identifies the NFTokenOffer that offers to sell the NFToken.
     #[serde(rename = "NFTokenSellOffer")]
     pub nftoken_sell_offer: Option<Cow<'a, str>>,
+    /// Identifies the NFTokenOffer that offers to buy the NFToken.
     #[serde(rename = "NFTokenBuyOffer")]
     pub nftoken_buy_offer: Option<Cow<'a, str>>,
     #[serde(rename = "NFTokenBrokerFee")]
+    /// This field is only valid in brokered mode, and specifies the
+    /// amount that the broker keeps as part of their fee for bringing
+    /// the two offers together; the remaining amount is sent to the
+    /// seller of the NFToken being bought. If specified, the fee must
+    /// be such that, before applying the transfer fee, the amount that
+    /// the seller would receive is at least as much as the amount
+    /// indicated in the sell offer.
     pub nftoken_broker_fee: Option<Amount<'a>>,
 }
 

@@ -28,11 +28,13 @@ pub struct EscrowCancel<'a> {
     /// `<https://xrpl.org/transaction-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the EscrowCancel model.
-    ///
-    /// See EscrowCancel fields:
-    /// `<https://xrpl.org/escrowcancel.html#escrowcancel-flags>`
+    // The custom fields for the EscrowCancel model.
+    //
+    // See EscrowCancel fields:
+    // `<https://xrpl.org/escrowcancel.html#escrowcancel-flags>`
+    /// Address of the source account that funded the escrow payment.
     pub owner: Cow<'a, str>,
+    /// Transaction sequence (or Ticket number) of EscrowCreate transaction that created the escrow to cancel.
     pub offer_sequence: u32,
 }
 

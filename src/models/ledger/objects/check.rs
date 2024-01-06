@@ -18,8 +18,16 @@ use super::{CommonFields, LedgerObject};
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Check<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
+    // The custom fields for the Check model.
+    //
+    // See Check fields:
+    // `<https://xrpl.org/check.html#check-fields>`
     /// The sender of the `Check`. Cashing the `Check` debits this address's balance.
     pub account: Cow<'a, str>,
     /// The intended recipient of the `Check`. Only this address can cash the `Check`, using a

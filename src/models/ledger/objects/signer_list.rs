@@ -47,8 +47,16 @@ serde_with_tag! {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct SignerList<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, SignerListFlag>,
+    // The custom fields for the SignerList model.
+    //
+    // See SignerList fields:
+    // `<https://xrpl.org/signerlist.html#signerlist-fields>`
     /// A hint indicating which page of the owner directory links to this object, in case
     /// the directory consists of multiple pages.
     pub owner_node: Cow<'a, str>,

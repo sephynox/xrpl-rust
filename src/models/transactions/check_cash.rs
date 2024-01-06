@@ -31,13 +31,19 @@ pub struct CheckCash<'a> {
     /// `<https://xrpl.org/transaction-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the CheckCash model.
-    ///
-    /// See CheckCash fields:
-    /// `<https://xrpl.org/checkcash.html#checkcash-fields>`
+    // The custom fields for the CheckCash model.
+    //
+    // See CheckCash fields:
+    // `<https://xrpl.org/checkcash.html#checkcash-fields>`
+    /// The ID of the Check ledger object to cash, as a 64-character hexadecimal string.
     #[serde(rename = "CheckID")]
     pub check_id: Cow<'a, str>,
+    /// Redeem the Check for exactly this amount, if possible. The currency must match that of the
+    /// SendMax of the corresponding CheckCreate transaction. You must provide either this field or DeliverMin.
     pub amount: Option<Amount<'a>>,
+    /// Redeem the Check for at least this amount and for as much as possible. The currency must
+    /// match that of the SendMax of the corresponding CheckCreate transaction. You must provide
+    /// either this field or Amount.
     pub deliver_min: Option<Amount<'a>>,
 }
 

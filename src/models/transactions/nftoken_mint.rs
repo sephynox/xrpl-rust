@@ -60,14 +60,32 @@ pub struct NFTokenMint<'a> {
     // `<https://xrpl.org/transaction-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NFTokenMintFlag>,
-    /// The custom fields for the NFTokenMint model.
-    ///
-    /// See NFTokenMint fields:
-    /// `<https://xrpl.org/nftokenmint.html#nftokenmint-fields>`
+    // The custom fields for the NFTokenMint model.
+    //
+    // See NFTokenMint fields:
+    // `<https://xrpl.org/nftokenmint.html#nftokenmint-fields>`
+    /// An arbitrary taxon, or shared identifier, for a series or collection of related NFTs.
+    /// To mint a series of NFTs, give them all the same taxon.
     #[serde(rename = "NFTokenTaxon")]
     pub nftoken_taxon: u32,
+    /// The issuer of the token, if the sender of the account is issuing it on behalf of
+    /// another account. This field must be omitted if the account sending the transaction
+    /// is the issuer of the NFToken. If provided, the issuer's AccountRoot object must have
+    /// the NFTokenMinter field set to the sender of this transaction (this transaction's
+    /// Account field).
     pub issuer: Option<Cow<'a, str>>,
+    /// The value specifies the fee charged by the issuer for secondary sales of the NFToken,
+    /// if such sales are allowed. Valid values for this field are between 0 and 50000
+    /// inclusive, allowing transfer rates of between 0.00% and 50.00% in increments of
+    /// 0.001. If this field is provided, the transaction MUST have the tfTransferable
+    /// flag enabled.
     pub transfer_fee: Option<u32>,
+    /// Up to 256 bytes of arbitrary data. In JSON, this should be encoded as a string of
+    /// hexadecimal. You can use the xrpl.convertStringToHex  utility to convert a URI to
+    /// its hexadecimal equivalent. This is intended to be a URI that points to the data or
+    /// metadata associated with the NFT. The contents could decode to an HTTP or HTTPS URL,
+    /// an IPFS URI, a magnet link, immediate data encoded as an RFC 2379 "data" URL , or
+    /// even an issuer-specific encoding. The URI is NOT checked for validity.
     #[serde(rename = "URI")]
     pub uri: Option<Cow<'a, str>>,
 }

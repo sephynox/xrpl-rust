@@ -15,8 +15,16 @@ use super::{CommonFields, LedgerObject};
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Ticket<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
+    // The custom fields for the Ticket model.
+    //
+    // See Ticket fields:
+    // `<https://xrpl.org/ticket.html#ticket-fields>`
     /// The account that owns this Ticket.
     pub account: Cow<'a, str>,
     /// A hint indicating which page of the owner directory links to this object, in case the

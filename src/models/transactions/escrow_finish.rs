@@ -33,13 +33,17 @@ pub struct EscrowFinish<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the EscrowFinish model.
-    ///
-    /// See EscrowFinish fields:
-    /// `<https://xrpl.org/escrowfinish.html#escrowfinish-fields>`
+    // The custom fields for the EscrowFinish model.
+    //
+    // See EscrowFinish fields:
+    // `<https://xrpl.org/escrowfinish.html#escrowfinish-fields>`
+    /// Address of the source account that funded the held payment.
     pub owner: Cow<'a, str>,
+    /// Transaction sequence of EscrowCreate transaction that created the held payment to finish.
     pub offer_sequence: u32,
+    /// Hex value matching the previously-supplied PREIMAGE-SHA-256 crypto-condition  of the held payment.
     pub condition: Option<Cow<'a, str>>,
+    /// Hex value of the PREIMAGE-SHA-256 crypto-condition fulfillment  matching the held payment's Condition.
     pub fulfillment: Option<Cow<'a, str>>,
 }
 

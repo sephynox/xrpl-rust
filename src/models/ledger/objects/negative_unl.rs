@@ -30,8 +30,16 @@ serde_with_tag! {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NegativeUNL<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
+    // The custom fields for the NegativeUNL model.
+    //
+    // See NegativeUNL fields:
+    // `<https://xrpl.org/negativeunl.html#negativeunl-fields>`
     /// A list of `DisabledValidator` objects (see below), each representing a trusted validator
     /// that is currently disabled.
     pub disabled_validators: Option<Vec<DisabledValidator>>,

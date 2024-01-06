@@ -31,10 +31,13 @@ pub struct OfferCancel<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the OfferCancel model.
-    ///
-    /// See OfferCancel fields:
-    /// `<https://xrpl.org/offercancel.html#offercancel-fields>`
+    // The custom fields for the OfferCancel model.
+    //
+    // See OfferCancel fields:
+    // `<https://xrpl.org/offercancel.html#offercancel-fields>`
+    /// The sequence number (or Ticket number) of a previous OfferCreate transaction.
+    /// If specified, cancel any offer object in the ledger that was created by that
+    /// transaction. It is not considered an error if the offer specified does not exist.
     pub offer_sequence: u32,
 }
 

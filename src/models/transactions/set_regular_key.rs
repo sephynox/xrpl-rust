@@ -35,10 +35,13 @@ pub struct SetRegularKey<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the SetRegularKey model.
-    ///
-    /// See SetRegularKey fields:
-    /// `<https://xrpl.org/setregularkey.html#setregularkey-fields>`
+    // The custom fields for the SetRegularKey model.
+    //
+    // See SetRegularKey fields:
+    // `<https://xrpl.org/setregularkey.html#setregularkey-fields>`
+    /// A base-58-encoded Address that indicates the regular key pair to be
+    /// assigned to the account. If omitted, removes any existing regular key
+    /// pair from the account. Must not match the master key pair for the address.
     pub regular_key: Option<Cow<'a, str>>,
 }
 

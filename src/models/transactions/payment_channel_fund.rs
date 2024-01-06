@@ -32,12 +32,21 @@ pub struct PaymentChannelFund<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the PaymentChannelFund model.
-    ///
-    /// See PaymentChannelFund fields:
-    /// `<https://xrpl.org/paymentchannelfund.html#paymentchannelfund-fields>`
+    // The custom fields for the PaymentChannelFund model.
+    //
+    // See PaymentChannelFund fields:
+    // `<https://xrpl.org/paymentchannelfund.html#paymentchannelfund-fields>`
+    /// Amount of XRP, in drops to add to the channel. Must be a positive amount of XRP.
     pub amount: XRPAmount<'a>,
+    /// The unique ID of the channel to fund, as a 64-character hexadecimal string.
     pub channel: Cow<'a, str>,
+    /// New Expiration time to set for the channel, in seconds since the Ripple Epoch.
+    /// This must be later than either the current time plus the SettleDelay of the
+    /// channel, or the existing Expiration of the channel. After the Expiration time,
+    /// any transaction that would access the channel closes the channel without
+    /// taking its normal action. Any unspent XRP is returned to the source address when
+    /// the channel closes. (Expiration is separate from the channel's immutable
+    /// CancelAfter time.) For more information, see the PayChannel ledger object type.
     pub expiration: Option<u32>,
 }
 

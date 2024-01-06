@@ -31,15 +31,30 @@ pub struct PaymentChannelCreate<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the PaymentChannelCreate model.
-    ///
-    /// See PaymentChannelCreate fields:
-    /// `<https://xrpl.org/paymentchannelcreate.html#paymentchannelcreate-fields>`
+    // The custom fields for the PaymentChannelCreate model.
+    //
+    // See PaymentChannelCreate fields:
+    // `<https://xrpl.org/paymentchannelcreate.html#paymentchannelcreate-fields>`
+    /// Amount of XRP, in drops, to deduct from the sender's balance and set aside in this channel.
+    /// While the channel is open, the XRP can only go to the Destination address. When the channel
+    /// closes, any unclaimed XRP is returned to the source address's balance.
     pub amount: XRPAmount<'a>,
+    /// Address to receive XRP claims against this channel. This is also known as the
+    /// "destination address" for the channel. Cannot be the same as the sender (Account).
     pub destination: Cow<'a, str>,
+    /// Amount of time the source address must wait before closing the channel if it has unclaimed XRP.
     pub settle_delay: u32,
+    /// The 33-byte public key of the key pair the source will use to sign claims against this channel,
+    /// in hexadecimal. This can be any secp256k1 or Ed25519 public key. For more information on key
+    /// pairs, see Key Derivation
     pub public_key: Cow<'a, str>,
+    /// The time, in seconds since the Ripple Epoch, when this channel expires. Any transaction that
+    /// would modify the channel after this time closes the channel without otherwise affecting it.
+    /// This value is immutable; the channel can be closed earlier than this time but cannot remain
+    /// open after this time.
     pub cancel_after: Option<u32>,
+    /// Arbitrary tag to further specify the destination for this payment channel, such as a hosted
+    /// recipient at the destination address.
     pub destination_tag: Option<u32>,
 }
 

@@ -16,8 +16,16 @@ use super::{CommonFields, LedgerObject};
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct DepositPreauth<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
+    // The custom fields for the DepositPreauth model.
+    //
+    // See DepositPreauth fields:
+    // `<https://xrpl.org/depositpreauth-object.html#depositpreauth-fields>`
     /// The account that granted the preauthorization.
     pub account: Cow<'a, str>,
     /// The account that received the preauthorization.

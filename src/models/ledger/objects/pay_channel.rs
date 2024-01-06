@@ -18,8 +18,16 @@ use super::{CommonFields, LedgerObject};
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct PayChannel<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
+    // The custom fields for the PayChannel model.
+    //
+    // See PayChannel fields:
+    // `<https://xrpl.org/paychannel.html#paychannel-fields>`
     /// The source address that owns this payment channel.
     pub account: Cow<'a, str>,
     /// Total XRP, in drops, that has been allocated to this channel. This includes XRP

@@ -25,8 +25,16 @@ pub struct NFToken<'a> {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NFTokenPage<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
+    // The custom fields for the NFTokenPage model.
+    //
+    // See NFTokenPage fields:
+    // `<https://xrpl.org/nftokenpage.html#nftokenpage-fields>`
     /// The collection of NFToken objects contained in this `NFTokenPage` object.
     /// This specification places an upper bound of 32 `NFToken` objects per page.
     /// Objects are sorted from low to high with the `NFTokenID` used as the sorting parameter.

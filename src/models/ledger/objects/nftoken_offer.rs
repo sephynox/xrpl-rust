@@ -31,8 +31,16 @@ pub enum NFTokenOfferFlag {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NFTokenOffer<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NFTokenOfferFlag>,
+    // The custom fields for the NFTokenOffer model.
+    //
+    // See NFTokenOffer fields:
+    // `<https://xrpl.org/nftokenoffer.html#nftokenoffer-fields>`
     /// Amount expected or offered for the `NFToken`. If the token has the `lsfOnlyXRP` flag set,
     /// the amount must be specified in XRP. Sell offers that specify assets other than XRP
     /// must specify a non-zero amount. Sell offers that specify XRP can be 'free'

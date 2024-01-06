@@ -31,8 +31,16 @@ serde_with_tag! {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Amendments<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
+    // The custom fields for the Amendments model.
+    //
+    // See Amendments fields:
+    // `<https://xrpl.org/amendments-object.html#amendments-fields>`
     /// Array of 256-bit amendment IDs for all currently enabled amendments. If omitted, there are
     /// no enabled amendments.
     pub amendments: Option<Vec<Cow<'a, str>>>,

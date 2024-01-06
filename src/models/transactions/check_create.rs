@@ -24,20 +24,28 @@ use super::{Memo, Signer};
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct CheckCreate<'a> {
-    // The base fields for all transaction models.
-    //
-    // See Transaction Common Fields:
-    // `<https://xrpl.org/transaction-common-fields.html>`
+    /// The base fields for all transaction models.
+    ///
+    /// See Transaction Common Fields:
+    /// `<https://xrpl.org/transaction-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the CheckCreate model.
-    ///
-    /// See CheckCreate fields:
-    /// `<https://xrpl.org/checkcreate.html#checkcreate-fields>`
+    // The custom fields for the CheckCreate model.
+    //
+    // See CheckCreate fields:
+    // `<https://xrpl.org/checkcreate.html#checkcreate-fields>`
+    /// The unique address of the account that can cash the Check.
     pub destination: Cow<'a, str>,
+    /// Maximum amount of source currency the Check is allowed to debit the sender,
+    /// including transfer fees on non-XRP currencies. The Check can only credit
+    /// the destination with the same currency (from the same issuer, for non-XRP
+    /// currencies). For non-XRP amounts, the nested field names MUST be lower-case.
     pub send_max: Amount<'a>,
+    /// Arbitrary tag that identifies the reason for the Check, or a hosted recipient to pay.
     pub destination_tag: Option<u32>,
+    /// Time after which the Check is no longer valid, in seconds since the Ripple Epoch.
     pub expiration: Option<u32>,
+    /// Arbitrary 256-bit hash representing a specific reason or identifier for this Check.
     #[serde(rename = "InvoiceID")]
     pub invoice_id: Option<Cow<'a, str>>,
 }

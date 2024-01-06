@@ -34,6 +34,7 @@ pub struct CheckCancel<'a> {
     //
     // See CheckCancel fields:
     // `<https://xrpl.org/checkcancel.html#checkcancel-fields>`
+    /// The ID of the Check ledger object to cancel, as a 64-character hexadecimal string.
     #[serde(rename = "CheckID")]
     pub check_id: Cow<'a, str>,
 }

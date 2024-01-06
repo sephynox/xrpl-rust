@@ -48,11 +48,17 @@ pub struct SignerListSet<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    /// The custom fields for the TicketCreate model.
-    ///
-    /// See TicketCreate fields:
-    /// `<https://xrpl.org/signerlistset.html#signerlistset-fields>`
+    // The custom fields for the TicketCreate model.
+    //
+    // See TicketCreate fields:
+    // `<https://xrpl.org/signerlistset.html#signerlistset-fields>`
+    /// A target number for the signer weights. A multi-signature from this list
+    /// is valid only if the sum weights of the signatures provided is greater
+    /// than or equal to this value. To delete a signer list, use the value 0.
     pub signer_quorum: u32,
+    /// A target number for the signer weights. A multi-signature from this list is
+    /// valid only if the sum weights of the signatures provided is greater than
+    /// or equal to this value. To delete a signer list, use the value 0.
     pub signer_entries: Option<Vec<SignerEntry>>,
 }
 

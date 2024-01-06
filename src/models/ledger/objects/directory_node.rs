@@ -26,8 +26,16 @@ use super::{CommonFields, LedgerObject};
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct DirectoryNode<'a> {
+    /// The base fields for all ledger object models.
+    ///
+    /// See Ledger Object Common Fields:
+    /// `<https://xrpl.org/ledger-entry-common-fields.html>`
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
+    // The custom fields for the DirectoryNode model.
+    //
+    // See DirectoryNode fields:
+    // `<https://xrpl.org/directorynode.html#directorynode-fields>`
     /// (`Offer` Directories only) DEPRECATED. Do not use.
     pub exchange_rate: Option<Cow<'a, str>>,
     /// The contents of this `Directory`: an array of IDs of other objects.

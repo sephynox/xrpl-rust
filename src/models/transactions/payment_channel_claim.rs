@@ -61,14 +61,30 @@ pub struct PaymentChannelClaim<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, PaymentChannelClaimFlag>,
-    /// The custom fields for the PaymentChannelClaim model.
-    ///
-    /// See PaymentChannelClaim fields:
-    /// `<https://xrpl.org/paymentchannelclaim.html#paymentchannelclaim-fields>`
+    // The custom fields for the PaymentChannelClaim model.
+    //
+    // See PaymentChannelClaim fields:
+    // `<https://xrpl.org/paymentchannelclaim.html#paymentchannelclaim-fields>`
+    /// The unique ID of the channel, as a 64-character hexadecimal string.
     pub channel: Cow<'a, str>,
+    /// otal amount of XRP, in drops, delivered by this channel after processing this claim.
+    /// Required to deliver XRP. Must be more than the total amount delivered by the channel
+    /// so far, but not greater than the Amount of the signed claim. Must be provided except
+    /// when closing the channel.
     pub balance: Option<Cow<'a, str>>,
+    /// The amount of XRP, in drops, authorized by the Signature. This must match the amount
+    /// in the signed message. This is the cumulative amount of XRP that can be dispensed by
+    /// the channel, including XRP previously redeemed.
     pub amount: Option<Cow<'a, str>>,
+    /// The signature of this claim, as hexadecimal. The signed message contains the channel
+    /// ID and the amount of the claim. Required unless the sender of the transaction is the
+    /// source address of the channel.
     pub signature: Option<Cow<'a, str>>,
+    /// The public key used for the signature, as hexadecimal. This must match the PublicKey
+    /// stored in the ledger for the channel. Required unless the sender of the transaction
+    /// is the source address of the channel and the Signature field is omitted. (The transaction
+    /// includes the public key so that rippled can check the validity of the signature before
+    /// trying to apply the transaction to the ledger.)
     pub public_key: Option<Cow<'a, str>>,
 }
 

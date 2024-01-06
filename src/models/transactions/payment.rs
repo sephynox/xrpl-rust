@@ -61,16 +61,32 @@ pub struct Payment<'a> {
     /// The type of transaction.
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, PaymentFlag>,
-    /// The custom fields for the Payment model.
-    ///
-    /// See Payment fields:
-    /// `<https://xrpl.org/payment.html#payment-fields>`
+    // The custom fields for the Payment model.
+    //
+    // See Payment fields:
+    // `<https://xrpl.org/payment.html#payment-fields>`
+    /// The amount of currency to deliver. For non-XRP amounts, the nested field names
+    /// MUST be lower-case. If the tfPartialPayment flag is set, deliver up to this
+    /// amount instead.
     pub amount: Amount<'a>,
+    /// The unique address of the account receiving the payment.
     pub destination: Cow<'a, str>,
+    /// Arbitrary tag that identifies the reason for the payment to the destination,
+    /// or a hosted recipient to pay.
     pub destination_tag: Option<u32>,
+    /// Arbitrary 256-bit hash representing a specific reason or identifier for this payment.
     pub invoice_id: Option<u32>,
+    /// Array of payment paths to be used for this transaction. Must be omitted for
+    /// XRP-to-XRP transactions.
     pub paths: Option<Vec<Vec<PathStep<'a>>>>,
+    /// Highest amount of source currency this transaction is allowed to cost, including
+    /// transfer fees, exchange rates, and slippage . Does not include the XRP destroyed
+    /// as a cost for submitting the transaction. For non-XRP amounts, the nested field
+    /// names MUST be lower-case. Must be supplied for cross-currency/cross-issue payments.
+    /// Must be omitted for XRP-to-XRP payments.
     pub send_max: Option<Amount<'a>>,
+    /// Minimum amount of destination currency this transaction should deliver. Only valid
+    /// if this is a partial payment. For non-XRP amounts, the nested field names are lower-case.
     pub deliver_min: Option<Amount<'a>>,
 }
 
