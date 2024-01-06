@@ -1,9 +1,10 @@
 use crate::models::ledger::LedgerEntryType;
+use crate::models::transactions::FlagCollection;
 use crate::models::NoFlags;
 use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
 
-use alloc::vec::Vec;
+
 use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
@@ -89,7 +90,7 @@ impl<'a> Check<'a> {
     ) -> Self {
         Self {
             common_fields: CommonFields {
-                flags: Vec::new().into(),
+                flags: FlagCollection::default(),
                 ledger_entry_type: LedgerEntryType::Check,
                 index,
                 ledger_index,

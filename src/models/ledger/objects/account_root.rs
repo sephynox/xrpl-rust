@@ -1,4 +1,3 @@
-
 use crate::models::ledger::LedgerEntryType;
 use crate::models::transactions::FlagCollection;
 use crate::models::{amount::XRPAmount, Model};

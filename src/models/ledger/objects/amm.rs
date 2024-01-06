@@ -1,4 +1,5 @@
 use crate::models::ledger::LedgerEntryType;
+use crate::models::transactions::FlagCollection;
 use crate::models::NoFlags;
 use crate::models::{amount::Amount, Currency, Model};
 use alloc::borrow::Cow;
@@ -111,7 +112,7 @@ impl<'a> AMM<'a> {
     ) -> Self {
         Self {
             common_fields: CommonFields {
-                flags: Vec::new().into(),
+                flags: FlagCollection::default(),
                 ledger_entry_type: LedgerEntryType::AMM,
                 index,
                 ledger_index,

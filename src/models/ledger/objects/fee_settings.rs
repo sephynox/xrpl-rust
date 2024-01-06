@@ -1,7 +1,8 @@
+use crate::models::transactions::FlagCollection;
 use crate::models::Model;
 use crate::models::{ledger::LedgerEntryType, NoFlags};
 use alloc::borrow::Cow;
-use alloc::vec::Vec;
+
 use serde::{Deserialize, Serialize};
 
 use serde_with::skip_serializing_none;
@@ -55,7 +56,7 @@ impl<'a> FeeSettings<'a> {
     ) -> Self {
         Self {
             common_fields: CommonFields {
-                flags: Vec::new().into(),
+                flags: FlagCollection::default(),
                 ledger_entry_type: LedgerEntryType::FeeSettings,
                 index,
                 ledger_index,

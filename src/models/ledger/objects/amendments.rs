@@ -1,5 +1,6 @@
 use crate::models::ledger::LedgerEntryType;
 
+use crate::models::transactions::FlagCollection;
 use crate::models::{Model, NoFlags};
 use alloc::vec::Vec;
 use alloc::{borrow::Cow, string::String};
@@ -66,7 +67,7 @@ impl<'a> Amendments<'a> {
     ) -> Self {
         Self {
             common_fields: CommonFields {
-                flags: Vec::new().into(),
+                flags: FlagCollection::default(),
                 ledger_entry_type: LedgerEntryType::Amendments,
                 index,
                 ledger_index,

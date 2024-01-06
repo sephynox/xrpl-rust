@@ -1,3 +1,4 @@
+use crate::models::transactions::FlagCollection;
 use crate::models::Model;
 use crate::models::{ledger::LedgerEntryType, NoFlags};
 use alloc::borrow::Cow;
@@ -69,7 +70,7 @@ impl<'a> NegativeUNL<'a> {
     ) -> Self {
         Self {
             common_fields: CommonFields {
-                flags: Vec::new().into(),
+                flags: FlagCollection::default(),
                 ledger_entry_type: LedgerEntryType::NegativeUNL,
                 index,
                 ledger_index,

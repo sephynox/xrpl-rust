@@ -231,7 +231,7 @@ where
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Default, new)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, new)]
 pub struct FlagCollection<T>(pub(crate) Vec<T>)
 where
     T: IntoEnumIterator;
@@ -244,6 +244,15 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         self.0.pop()
+    }
+}
+
+impl<T> Default for FlagCollection<T>
+where
+    T: IntoEnumIterator,
+{
+    fn default() -> Self {
+        FlagCollection(Vec::new())
     }
 }
 
