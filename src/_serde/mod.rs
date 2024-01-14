@@ -1,6 +1,6 @@
 //! Serde functionalities
 
-use crate::models::transactions::FlagCollection;
+use crate::models::FlagCollection;
 use alloc::format;
 use alloc::vec::Vec;
 use core::hash::BuildHasherDefault;
@@ -87,7 +87,7 @@ pub(crate) mod txn_flags {
 
     use serde::{Deserializer, Serialize, Serializer};
 
-    use crate::models::transactions::FlagCollection;
+    use crate::models::FlagCollection;
     use strum::IntoEnumIterator;
 
     pub fn serialize<F, S>(flags: &Option<FlagCollection<F>>, s: S) -> Result<S::Ok, S::Error>
@@ -125,7 +125,7 @@ pub(crate) mod lgr_obj_flags {
     use core::fmt::Debug;
 
     use crate::_serde::{deserialize_flags, serialize_flag};
-    use crate::models::transactions::FlagCollection;
+    use crate::models::FlagCollection;
     use serde::{Deserializer, Serialize, Serializer};
     use strum::IntoEnumIterator;
 

@@ -1,6 +1,6 @@
 use crate::models::ledger::LedgerEntryType;
+use crate::models::FlagCollection;
 use crate::models::Model;
-use crate::{models::transactions::FlagCollection};
 use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::vec::Vec;

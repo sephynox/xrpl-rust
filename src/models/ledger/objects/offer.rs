@@ -1,10 +1,7 @@
-
 use crate::models::ledger::LedgerEntryType;
-use crate::models::transactions::FlagCollection;
+use crate::models::FlagCollection;
 use crate::models::{amount::Amount, Model};
 use alloc::borrow::Cow;
-
-
 
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};

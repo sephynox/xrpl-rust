@@ -1,4 +1,4 @@
-use crate::models::transactions::FlagCollection;
+use crate::models::FlagCollection;
 use crate::models::Model;
 use crate::models::{ledger::LedgerEntryType, NoFlags};
 use alloc::borrow::Cow;
@@ -36,14 +36,14 @@ pub struct NFTokenPage<'a> {
     //
     // See NFTokenPage fields:
     // `<https://xrpl.org/nftokenpage.html#nftokenpage-fields>`
+    /// The locator of the next page, if any. Details about this field and how it should be
+    /// used are outlined below.
+    pub next_page_min: Option<Cow<'a, str>>,
     /// The collection of NFToken objects contained in this `NFTokenPage` object.
     /// This specification places an upper bound of 32 `NFToken` objects per page.
     /// Objects are sorted from low to high with the `NFTokenID` used as the sorting parameter.
     #[serde(rename = "NFTokens")]
     pub nftokens: Vec<NFToken<'a>>,
-    /// The locator of the next page, if any. Details about this field and how it should be
-    /// used are outlined below.
-    pub next_page_min: Option<Cow<'a, str>>,
     /// The locator of the previous page, if any. Details about this field and how it should
     /// be used are outlined below.
     pub previous_page_min: Option<Cow<'a, str>>,
@@ -68,8 +68,8 @@ impl<'a> NFTokenPage<'a> {
     pub fn new(
         index: Option<Cow<'a, str>>,
         ledger_index: Option<Cow<'a, str>>,
-        nftokens: Vec<NFToken<'a>>,
         next_page_min: Option<Cow<'a, str>>,
+        nftokens: Vec<NFToken<'a>>,
         previous_page_min: Option<Cow<'a, str>>,
         previous_txn_id: Option<Cow<'a, str>>,
         previous_txn_lgr_seq: Option<u32>,
@@ -100,11 +100,11 @@ mod test_serde {
         let nftoken_page = NFTokenPage::new(
             Some(Cow::from("ForTest")),
             None,
+            Some(Cow::from("598EDFD7CF73460FB8C695d6a9397E9073781BA3B78198904F659AAA252A")),
             vec![NFToken::new(
                 Cow::from("000B013A95F14B0044F78A264E41713C64B5F89242540EE208C3098E00000D65"),
                 Cow::from("697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469")
             )],
-            Some(Cow::from("598EDFD7CF73460FB8C695d6a9397E9073781BA3B78198904F659AAA252A")),
             Some(Cow::from("598EDFD7CF73460FB8C695d6a9397E907378C8A841F7204C793DCBEF5406")),
             Some(Cow::from("95C8761B22894E328646F7A70035E9DFBECC90EDD83E43B7B973F626D21A0822")),
             Some(42891441),

@@ -1,4 +1,4 @@
-use crate::models::transactions::FlagCollection;
+use crate::models::FlagCollection;
 use crate::models::Model;
 use crate::models::{ledger::LedgerEntryType, NoFlags};
 use alloc::borrow::Cow;
@@ -53,10 +53,10 @@ pub struct DirectoryNode<'a> {
     /// (`Offer` `Directories` only) The currency code of the `TakerGets` amount from the offers in this
     /// directory.
     pub taker_gets_currency: Option<Cow<'a, str>>,
+    /// (`Offer` `Directories` only) The currency code of the `TakerPays` amount from the offers in this
     /// (`Offer` `Directories` only) The issuer of the `TakerGets` amount from the offers in this
     /// directory.
     pub taker_gets_issuer: Option<Cow<'a, str>>,
-    /// (`Offer` `Directories` only) The currency code of the `TakerPays` amount from the offers in this
     /// directory.
     pub taker_pays_currency: Option<Cow<'a, str>>,
     /// (`Offer` `Directories` only) The issuer of the `TakerPays` amount from the offers in this

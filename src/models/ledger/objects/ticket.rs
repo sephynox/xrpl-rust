@@ -1,8 +1,7 @@
-use crate::models::transactions::FlagCollection;
+use crate::models::FlagCollection;
 use crate::models::Model;
 use crate::models::{ledger::LedgerEntryType, NoFlags};
 use alloc::borrow::Cow;
-
 
 use serde::{Deserialize, Serialize};
 

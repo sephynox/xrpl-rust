@@ -334,24 +334,3 @@ pub enum XRPLSignerListSetException<'a> {
 
 #[cfg(feature = "std")]
 impl<'a> alloc::error::Error for XRPLSignerListSetException<'a> {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XRPLFlagException<T>
-where
-    T: Debug,
-{
-    #[error("Unable to convert flag (found {found:?}).")]
-    UnableToConvertFlag { found: T },
-}
-
-#[cfg(feature = "std")]
-impl<'a, T: Debug> alloc::error::Error for XRPLFlagException<T> {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum XRPLCommonFieldsException {
-    #[error("Unable to turn flag into u32.")]
-    CannotConvertFlagToU32,
-}
-
-#[cfg(feature = "std")]
-impl<'a> alloc::error::Error for XRPLCommonFieldsException {}

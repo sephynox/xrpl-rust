@@ -54,19 +54,19 @@ pub use ticket_create::*;
 pub use trust_set::*;
 
 use crate::models::amount::XRPAmount;
-use crate::Err;
 use crate::{_serde::txn_flags, serde_with_tag};
 use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::vec::Vec;
 use anyhow::Result;
-use core::convert::TryFrom;
 use derive_new::new;
 use serde::ser::SerializeMap;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use strum::IntoEnumIterator;
 use strum_macros::{AsRefStr, Display};
+
+use super::FlagCollection;
 
 /// Enum containing the different Transaction types.
 #[derive(Debug, Clone, Serialize, Deserialize, Display, PartialEq, Eq)]
@@ -228,87 +228,6 @@ where
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, new)]
-pub struct FlagCollection<T>(pub(crate) Vec<T>)
-where
-    T: IntoEnumIterator;
-
-impl<T> Iterator for FlagCollection<T>
-where
-    T: IntoEnumIterator,
-{
-    type Item = T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.pop()
-    }
-}
-
-impl<T> Default for FlagCollection<T>
-where
-    T: IntoEnumIterator,
-{
-    fn default() -> Self {
-        FlagCollection(Vec::new())
-    }
-}
-
-impl<T> From<Vec<T>> for FlagCollection<T>
-where
-    T: IntoEnumIterator,
-{
-    fn from(flags: Vec<T>) -> Self {
-        FlagCollection(flags)
-    }
-}
-
-impl<T> TryFrom<u32> for FlagCollection<T>
-where
-    T: IntoEnumIterator + Serialize,
-{
-    type Error = anyhow::Error;
-
-    fn try_from(flags: u32) -> Result<Self> {
-        let mut flag_collection = Vec::new();
-        for flag in T::iter() {
-            let flag_as_u32 = flag_to_u32(&flag)?;
-            if flags & flag_as_u32 == flag_as_u32 {
-                flag_collection.push(flag);
-            }
-        }
-        Ok(FlagCollection::new(flag_collection))
-    }
-}
-
-impl<T> TryFrom<FlagCollection<T>> for u32
-where
-    T: IntoEnumIterator + Serialize,
-{
-    type Error = anyhow::Error;
-
-    fn try_from(flag_collection: FlagCollection<T>) -> Result<Self> {
-        let mut flags = 0;
-        for flag in flag_collection {
-            let flag_as_u32 = flag_to_u32(&flag)?;
-            flags |= flag_as_u32;
-        }
-        Ok(flags)
-    }
-}
-
-fn flag_to_u32<T>(flag: &T) -> Result<u32>
-where
-    T: Serialize,
-{
-    match serde_json::to_string(flag) {
-        Ok(flag_as_string) => match flag_as_string.parse::<u32>() {
-            Ok(flag_as_u32) => Ok(flag_as_u32),
-            Err(_error) => Err!(XRPLCommonFieldsException::CannotConvertFlagToU32),
-        },
-        Err(_error) => Err!(XRPLCommonFieldsException::CannotConvertFlagToU32),
     }
 }
 
