@@ -362,14 +362,14 @@ mod test_signer_list_set_error {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use alloc::string::ToString;
     use alloc::vec;
 
     use super::*;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let default_txn = SignerListSet::new(
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
             None,
@@ -387,37 +387,15 @@ mod test_serde {
                 SignerEntry::new("raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n".to_string(), 1),
             ]),
         );
-        let default_json = r#"{"TransactionType":"SignerListSet","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"12","Sequence":null,"LastLedgerSequence":null,"AccountTxnID":null,"SigningPubKey":null,"SourceTag":null,"TicketSequence":null,"TxnSignature":null,"Flags":null,"Memos":null,"Signers":null,"SignerQuorum":3,"SignerEntries":[{"SignerEntry":{"Account":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","SignerWeight":2}},{"SignerEntry":{"Account":"rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v","SignerWeight":1}},{"SignerEntry":{"Account":"raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n","SignerWeight":1}}]}"#;
+        let default_json_str = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"SignerListSet","Fee":"12","Sequence":null,"LastLedgerSequence":null,"AccountTxnID":null,"SigningPubKey":null,"SourceTag":null,"TicketSequence":null,"TxnSignature":null,"Flags":null,"Memos":null,"Signers":null,"SignerQuorum":3,"SignerEntries":[{"SignerEntry":{"Account":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","SignerWeight":2}},{"SignerEntry":{"Account":"rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v","SignerWeight":1}},{"SignerEntry":{"Account":"raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n","SignerWeight":1}}]}"#;
+        // Serialize
+        let default_json_value = serde_json::to_value(default_json_str).unwrap();
+        let serialized_string = serde_json::to_string(&default_txn).unwrap();
+        let serialized_value = serde_json::to_value(&serialized_string).unwrap();
+        assert_eq!(serialized_value, default_json_value);
 
-        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
-        let txn_json = txn_as_string.as_str();
-
-        assert_eq!(txn_json, default_json);
-    }
-
-    #[test]
-    fn test_deserialize() {
-        let default_txn = SignerListSet::new(
-            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
-            None,
-            Some("12".into()),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            3,
-            Some(vec![
-                SignerEntry::new("rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW".to_string(), 2),
-                SignerEntry::new("rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v".to_string(), 1),
-                SignerEntry::new("raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n".to_string(), 1),
-            ]),
-        );
-        let default_json = r#"{"TransactionType":"SignerListSet","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Fee":"12","SignerQuorum":3,"SignerEntries":[{"SignerEntry":{"Account":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","SignerWeight":2}},{"SignerEntry":{"Account":"rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v","SignerWeight":1}},{"SignerEntry":{"Account":"raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n","SignerWeight":1}}]}"#;
-
-        let txn_as_obj: SignerListSet = serde_json::from_str(default_json).unwrap();
-
-        assert_eq!(txn_as_obj, default_txn);
+        // Deserialize
+        let deserialized: SignerListSet = serde_json::from_str(default_json_str).unwrap();
+        assert_eq!(default_txn, deserialized);
     }
 }

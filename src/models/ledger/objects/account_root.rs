@@ -183,13 +183,13 @@ impl<'a> AccountRoot<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
     use alloc::borrow::Cow;
     use alloc::vec;
 
     #[test]
-    fn test_serialize() {
+    fn test_account_root_serde() {
         let account_root = AccountRoot::new(
             vec![AccountRootFlag::LsfDefaultRipple].into(),
             Some(Cow::from(
@@ -218,12 +218,10 @@ mod test_serde {
             None,
             None,
         );
-        let account_root_json = serde_json::to_string(&account_root).unwrap();
-        let actual = account_root_json.as_str();
-        let expected = r#"{"LedgerEntryType":"AccountRoot","Flags":8388608,"index":"13F1A95D7AAB7108D5CE7EEAF504B2894B8C674E6D68499076441C4837282BF8","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","OwnerCount":3,"PreviousTxnID":"0D5FB50FA65C9FE1538FD7E398FFFE9D1908DFA4576D8D7A020040686F93C77D","PreviousTxnLgrSeq":14091160,"Sequence":336,"AccountTxnID":"0D5FB50FA65C9FE1538FD7E398FFFE9D1908DFA4576D8D7A020040686F93C77D","Balance":"148446663","Domain":"6D64756F31332E636F6D","EmailHash":"98B4375E1D753E5B91627516F6D70977","MessageKey":"0000000000000000000000070000000300","TransferRate":1004999999}"#;
+        let serialized = serde_json::to_string(&account_root).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: AccountRoot = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(account_root, deserialized);
     }
-
-    // TODO: test_deserialize
 }

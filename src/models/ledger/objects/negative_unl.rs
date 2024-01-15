@@ -83,13 +83,13 @@ impl<'a> NegativeUNL<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
     use alloc::string::ToString;
     use alloc::vec;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let negative_unl = NegativeUNL::new(
             Some(Cow::from(
                 "2E8A59AA9D3B5B186B0B9E0F62E6C02587CA74A4D778938E957B6357D364B244",
@@ -102,12 +102,10 @@ mod test_serde {
             None,
             None,
         );
-        let negative_unl_json = serde_json::to_string(&negative_unl).unwrap();
-        let actual = negative_unl_json.as_str();
-        let expected = r#"{"LedgerEntryType":"NegativeUNL","Flags":0,"index":"2E8A59AA9D3B5B186B0B9E0F62E6C02587CA74A4D778938E957B6357D364B244","DisabledValidators":[{"DisabledValidator":{"FirstLedgerSequence":1609728,"PublicKey":"ED6629D456285AE3613B285F65BBFF168D695BA3921F309949AFCD2CA7AFEC16FE"}}]}"#;
+        let serialized = serde_json::to_string(&negative_unl).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: NegativeUNL = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(negative_unl, deserialized);
     }
-
-    // TODO: test_deserialize
 }

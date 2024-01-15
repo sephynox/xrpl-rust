@@ -116,13 +116,13 @@ impl<'a> SignerList<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
     use alloc::string::ToString;
     use alloc::vec;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let signer_list = SignerList::new(
             vec![].into(),
             Some(Cow::from(
@@ -140,12 +140,10 @@ mod test_serde {
             0,
             3,
         );
-        let signer_list_json = serde_json::to_string(&signer_list).unwrap();
-        let actual = signer_list_json.as_str();
-        let expected = r#"{"LedgerEntryType":"SignerList","Flags":0,"index":"A9C28A28B85CD533217F5C0A0C7767666B093FA58A0F2D80026FCC4CD932DDC7","OwnerNode":"0000000000000000","PreviousTxnID":"5904C0DC72C58A83AEFED2FFC5386356AA83FCA6A88C89D00646E51E687CDBE4","PreviousTxnLgrSeq":16061435,"SignerEntries":[{"SignerEntry":{"Account":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","SignerWeight":2,"WalletLocator":null}},{"SignerEntry":{"Account":"raKEEVSGnKSD9Zyvxu4z6Pqpm4ABH8FS6n","SignerWeight":1,"WalletLocator":null}},{"SignerEntry":{"Account":"rUpy3eEg8rqjqfUoLeBnZkscbKbFsKXC3v","SignerWeight":1,"WalletLocator":null}}],"SignerListID":0,"SignerQuorum":3}"#;
+        let serialized = serde_json::to_string(&signer_list).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: SignerList = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(signer_list, deserialized);
     }
-
-    // TODO: test_deserialize
 }

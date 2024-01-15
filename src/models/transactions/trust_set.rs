@@ -120,12 +120,12 @@ impl<'a> TrustSet<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
     use alloc::vec;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let default_txn = TrustSet::new(
             "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX".into(),
             None,
@@ -145,39 +145,15 @@ mod test_serde {
             None,
             None,
         );
-        let default_json = r#"{"TransactionType":"TrustSet","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","Sequence":12,"LastLedgerSequence":8007750,"Flags":262144,"LimitAmount":{"currency":"USD","issuer":"rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc","value":"100"}}"#;
+        let default_json_str = r#"{"Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","TransactionType":"TrustSet","Fee":"12","Sequence":12,"LastLedgerSequence":8007750,"Flags":262144,"LimitAmount":{"currency":"USD","issuer":"rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc","value":"100"}}"#;
+        // Serialize
+        let default_json_value = serde_json::to_value(default_json_str).unwrap();
+        let serialized_string = serde_json::to_string(&default_txn).unwrap();
+        let serialized_value = serde_json::to_value(&serialized_string).unwrap();
+        assert_eq!(serialized_value, default_json_value);
 
-        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
-        let txn_json = txn_as_string.as_str();
-
-        assert_eq!(txn_json, default_json);
-    }
-
-    #[test]
-    fn test_deserialize() {
-        let default_txn = TrustSet::new(
-            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX".into(),
-            None,
-            Some("12".into()),
-            Some(vec![TrustSetFlag::TfClearNoRipple].into()),
-            Some(8007750),
-            None,
-            Some(12),
-            None,
-            None,
-            None,
-            IssuedCurrencyAmount::new(
-                "USD".into(),
-                "rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc".into(),
-                "100".into(),
-            ),
-            None,
-            None,
-        );
-        let default_json = r#"{"TransactionType":"TrustSet","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","Flags":262144,"LastLedgerSequence":8007750,"LimitAmount":{"currency":"USD","issuer":"rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc","value":"100"},"Sequence":12}"#;
-
-        let txn_as_obj: TrustSet = serde_json::from_str(default_json).unwrap();
-
-        assert_eq!(txn_as_obj, default_txn);
+        // Deserialize
+        let deserialized: TrustSet = serde_json::from_str(default_json_str).unwrap();
+        assert_eq!(default_txn, deserialized);
     }
 }

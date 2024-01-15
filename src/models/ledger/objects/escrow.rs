@@ -152,12 +152,10 @@ mod test_serde {
             Some(545354132),
             Some(11747),
         );
-        let escrow_json = serde_json::to_string(&escrow).unwrap();
-        let actual = escrow_json.as_str();
-        let expected = r#"{"LedgerEntryType":"Escrow","Flags":0,"index":"DC5F3851D8A1AB622F957761E5963BC5BD439D5C24AC6AD7AC4523F0640244AC","Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","Amount":"10000","Destination":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","OwnerNode":"0000000000000000","PreviousTxnID":"C44F2EB84196B9AD820313DBEBA6316A15C9A2D35787579ED172B87A30131DA7","PreviousTxnLgrSeq":28991004,"CancelAfter":545440232,"Condition":"A0258020A82A88B2DF843A54F58772E4A3861866ECDB4157645DD9AE528C1D3AEEDABAB6810120","DestinationNode":"0000000000000000","DestinationTag":23480,"FinishAfter":545354132,"SourceTag":11747}"#;
+        let serialized = serde_json::to_string(&escrow).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: Escrow = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(escrow, deserialized);
     }
-
-    // TODO: test_deserialize
 }

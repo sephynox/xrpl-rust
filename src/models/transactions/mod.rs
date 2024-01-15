@@ -54,7 +54,10 @@ pub use ticket_create::*;
 pub use trust_set::*;
 
 use crate::models::amount::XRPAmount;
-use crate::{_serde::txn_flags, serde_with_tag};
+use crate::{
+    _serde::{default_none, txn_flags},
+    serde_with_tag,
+};
 use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -153,6 +156,7 @@ where
     pub fee: Option<XRPAmount<'a>>,
     /// Set of bit-flags for this transaction.
     #[serde(with = "txn_flags")]
+    #[serde(default = "default_none")]
     pub flags: Option<FlagCollection<F>>,
     /// Highest ledger index this transaction can appear in.
     /// Specifying this field places a strict upper limit on how long

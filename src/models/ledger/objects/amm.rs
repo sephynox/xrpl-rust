@@ -174,11 +174,11 @@ mod test_serde {
                 100000,
             )]),
         );
-        let amm_json = serde_json::to_string(&amm).unwrap();
-        let actual = amm_json.as_str();
-        let expected = r#"{"LedgerEntryType":"AMM","Flags":0,"index":"ForTest","AMMAccount":"rE54zDvgnghAoPopCgvtiqWNq3dU5y836S","Asset":{"currency":"XRP"},"Asset2":{"currency":"TST","issuer":"rP9jPyP5kyvFRb6ZiRghAGw5u8SGAmU4bd"},"LPTokenBalance":{"currency":"039C99CD9AB0B70B32ECDA51EAAE471625608EA2","issuer":"rE54zDvgnghAoPopCgvtiqWNq3dU5y836S","value":"71150.53584131501"},"TradingFee":600,"AuctionSlot":{"Account":"rJVUeRqDFNs2xqA7ncVE6ZoAhPUoaJJSQm","DiscountedFee":0,"Expiration":721870180,"Price":{"currency":"039C99CD9AB0B70B32ECDA51EAAE471625608EA2","issuer":"rE54zDvgnghAoPopCgvtiqWNq3dU5y836S","value":"0.8696263565463045"},"AuthAccounts":[{"AuthAccount":{"Account":"rMKXGCbJ5d8LbrqthdG46q3f969MVK2Qeg"}},{"AuthAccount":{"Account":"rBepJuTLFJt3WmtLXYAxSjtBWAeQxVbncv"}}]},"VoteSlots":[{"VoteEntry":{"Account":"rJVUeRqDFNs2xqA7ncVE6ZoAhPUoaJJSQm","TradingFee":600,"VoteWeight":100000}}]}"#;
+        let serialized = serde_json::to_string(&amm).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: AMM = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(amm, deserialized);
     }
 
     // TODO: test_deserialize

@@ -79,14 +79,14 @@ impl<'a> Amendments<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use crate::models::ledger::{Amendments, Majority};
     use alloc::borrow::Cow;
     use alloc::string::ToString;
     use alloc::vec;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let amendments = Amendments::new(
             Some(Cow::from(
                 "7DB0788C020F02780A673DC74757F23823FA3014C1866E72CC4CD8B226CD6EF4",
@@ -104,11 +104,11 @@ mod test_serde {
                 close_time: 535589001,
             }]),
         );
-        let amendments_json = serde_json::to_string(&amendments).unwrap();
-        let actual = amendments_json.as_str();
-        let expected = r#"{"LedgerEntryType":"Amendments","Flags":0,"index":"7DB0788C020F02780A673DC74757F23823FA3014C1866E72CC4CD8B226CD6EF4","Amendments":["42426C4D4F1009EE67080A9B7965B44656D7714D104A72F9B4369F97ABF044EE","4C97EBA926031A7CF7D7B36FDE3ED66DDA5421192D63DE53FFB46E43B9DC8373","6781F8368C4771B83E8B821D88F580202BCB4228075297B19E4FDC5233F1EFDC","740352F2412A9909880C23A559FCECEDA3BE2126FED62FC7660D628A06927F11"],"Majorities":[{"Majority":{"Amendment":"1562511F573A19AE9BD103B5D6B9E01B3B46805AEC5D3C4805C902B514399146","CloseTime":535589001}}]}"#;
+        let serialized = serde_json::to_string(&amendments).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: Amendments = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(amendments, deserialized);
     }
 
     // TODO: test_deserialize

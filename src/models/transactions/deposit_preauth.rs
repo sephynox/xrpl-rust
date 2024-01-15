@@ -139,11 +139,11 @@ mod test_deposit_preauth_exception {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let default_txn = DepositPreauth::new(
             "rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8".into(),
             None,
@@ -157,33 +157,15 @@ mod test_serde {
             Some("rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de".into()),
             None,
         );
-        let default_json = r#"{"TransactionType":"DepositPreauth","Account":"rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8","Fee":"10","Sequence":2,"Authorize":"rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de"}"#;
+        let default_json_str = r#"{"Account":"rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8","TransactionType":"DepositPreauth","Fee":"10","Sequence":2,"Authorize":"rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de"}"#;
+        // Serialize
+        let default_json_value = serde_json::to_value(default_json_str).unwrap();
+        let serialized_string = serde_json::to_string(&default_txn).unwrap();
+        let serialized_value = serde_json::to_value(&serialized_string).unwrap();
+        assert_eq!(serialized_value, default_json_value);
 
-        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
-        let txn_json = txn_as_string.as_str();
-
-        assert_eq!(txn_json, default_json);
-    }
-
-    #[test]
-    fn test_deserialize() {
-        let default_txn = DepositPreauth::new(
-            "rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8".into(),
-            None,
-            Some("10".into()),
-            None,
-            None,
-            Some(2),
-            None,
-            None,
-            None,
-            Some("rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de".into()),
-            None,
-        );
-        let default_json = r#"{"TransactionType":"DepositPreauth","Account":"rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8","Authorize":"rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de","Fee":"10","Sequence":2}"#;
-
-        let txn_as_obj: DepositPreauth = serde_json::from_str(default_json).unwrap();
-
-        assert_eq!(txn_as_obj, default_txn);
+        // Deserialize
+        let deserialized: DepositPreauth = serde_json::from_str(default_json_str).unwrap();
+        assert_eq!(default_txn, deserialized);
     }
 }

@@ -137,13 +137,13 @@ impl<'a> RippleState<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
     use crate::models::amount::IssuedCurrencyAmount;
     use alloc::{borrow::Cow, vec};
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let ripple_state = RippleState::new(
             vec![RippleStateFlag::LsfHighReserve, RippleStateFlag::LsfLowAuth].into(),
             Some(Cow::from(
@@ -174,12 +174,10 @@ mod test_serde {
             None,
             None,
         );
-        let ripple_state_json = serde_json::to_string(&ripple_state).unwrap();
-        let actual = ripple_state_json.as_str();
-        let expected = r#"{"LedgerEntryType":"RippleState","Flags":393216,"index":"9CA88CDEDFF9252B3DE183CE35B038F57282BC9503CDFA1923EF9A95DF0D6F7B","Balance":{"currency":"USD","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-10"},"HighLimit":{"currency":"USD","issuer":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","value":"110"},"HighNode":"0000000000000000","LowLimit":{"currency":"USD","issuer":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","value":"0"},"LowNode":"0000000000000000","PreviousTxnID":"E3FE6EA3D48F0C2B639448020EA4F03D4F4F8FFDB243A852A0F59177921B4879","PreviousTxnLgrSeq":14090896}"#;
+        let serialized = serde_json::to_string(&ripple_state).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: RippleState = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(ripple_state, deserialized);
     }
-
-    // TODO: test_deserialize
 }

@@ -170,4 +170,23 @@ mod test_channel_authorize_errors {
             "The field `secret` can not be defined with `seed`, `seed_hex`, `passphrase`. Define exactly one of them. For more information see: "
         );
     }
+
+    #[test]
+    fn test_serde() {
+        let req = ChannelAuthorize::new(
+            None,
+            "5DB01B7FFED6B67E6B0414DED11E051D2EE2B7619CE0EAA6286D67A3A4D5BDB3".into(),
+            "1000000".into(),
+            None,
+            Some("".into()),
+            None,
+            None,
+            Some(CryptoAlgorithm::SECP256K1),
+        );
+        let serialized = serde_json::to_string(&req).unwrap();
+
+        let deserialized: ChannelAuthorize = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(req, deserialized);
+    }
 }

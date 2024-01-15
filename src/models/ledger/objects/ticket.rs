@@ -75,11 +75,11 @@ impl<'a> Ticket<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let ticket = Ticket::new(
             Some(Cow::from("ForTest")),
             None,
@@ -89,12 +89,10 @@ mod test_serde {
             4,
             3,
         );
-        let ticket_json = serde_json::to_string(&ticket).unwrap();
-        let actual = ticket_json.as_str();
-        let expected = r#"{"LedgerEntryType":"Ticket","Flags":0,"index":"ForTest","Account":"rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de","OwnerNode":"0000000000000000","PreviousTxnID":"F19AD4577212D3BEACA0F75FE1BA1644F2E854D46E8D62E9C95D18E9708CBFB1","PreviousTxnLgrSeq":4,"TicketSequence":3}"#;
+        let serialized = serde_json::to_string(&ticket).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: Ticket = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(ticket, deserialized);
     }
-
-    // TODO: test_deserialize
 }

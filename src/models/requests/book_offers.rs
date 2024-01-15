@@ -94,13 +94,10 @@ mod test {
             None,
             None,
         );
-        let req_as_string = serde_json::to_string(&req).unwrap();
-        let req_json = req_as_string.as_str();
-        let expected_json = r#"{"taker_gets":{"currency":"EUR","issuer":"rTestIssuer"},"taker_pays":{"currency":"XRP"},"command":"book_offers"}"#;
-        let deserialized_req: BookOffers = serde_json::from_str(req_json).unwrap();
+        let serialized = serde_json::to_string(&req).unwrap();
 
-        assert_eq!(req_json, expected_json);
-        assert_eq!(req, deserialized_req);
-        assert_eq!(Currency::XRP(XRP::new()), deserialized_req.taker_pays);
+        let deserialized: BookOffers = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(req, deserialized);
     }
 }

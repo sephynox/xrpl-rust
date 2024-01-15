@@ -82,11 +82,11 @@ impl<'a> OfferCancel<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let default_txn = OfferCancel::new(
             "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX".into(),
             None,
@@ -99,32 +99,15 @@ mod test_serde {
             None,
             6,
         );
-        let default_json = r#"{"TransactionType":"OfferCancel","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","Sequence":7,"LastLedgerSequence":7108629,"OfferSequence":6}"#;
+        let default_json_str = r#"{"Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","TransactionType":"OfferCancel","Fee":"12","Sequence":7,"LastLedgerSequence":7108629,"OfferSequence":6}"#;
+        // Serialize
+        let default_json_value = serde_json::to_value(default_json_str).unwrap();
+        let serialized_string = serde_json::to_string(&default_txn).unwrap();
+        let serialized_value = serde_json::to_value(&serialized_string).unwrap();
+        assert_eq!(serialized_value, default_json_value);
 
-        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
-        let txn_json = txn_as_string.as_str();
-
-        assert_eq!(txn_json, default_json);
-    }
-
-    #[test]
-    fn test_deserialize() {
-        let default_txn = OfferCancel::new(
-            "ra5nK24KXen9AHvsdFTKHSANinZseWnPcX".into(),
-            Some("12".into()),
-            None,
-            Some(7108629),
-            None,
-            Some(7),
-            None,
-            None,
-            None,
-            6,
-        );
-        let default_json = r#"{"TransactionType":"OfferCancel","Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","Fee":"12","LastLedgerSequence":7108629,"OfferSequence":6,"Sequence":7}"#;
-
-        let txn_as_obj: OfferCancel = serde_json::from_str(default_json).unwrap();
-
-        assert_eq!(txn_as_obj, default_txn);
+        // Deserialize
+        let deserialized: OfferCancel = serde_json::from_str(default_json_str).unwrap();
+        assert_eq!(default_txn, deserialized);
     }
 }

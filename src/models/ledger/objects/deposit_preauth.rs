@@ -76,11 +76,11 @@ impl<'a> DepositPreauth<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let deposit_preauth = DepositPreauth::new(
             Some(Cow::from(
                 "4A255038CC3ADCC1A9C91509279B59908251728D0DAADB248FFE297D0F7E068C",
@@ -92,12 +92,10 @@ mod test_serde {
             Cow::from("3E8964D5A86B3CD6B9ECB33310D4E073D64C865A5B866200AD2B7E29F8326702"),
             7,
         );
-        let deposit_preauth_json = serde_json::to_string(&deposit_preauth).unwrap();
-        let actual = deposit_preauth_json.as_str();
-        let expected = r#"{"LedgerEntryType":"DepositPreauth","Flags":0,"index":"4A255038CC3ADCC1A9C91509279B59908251728D0DAADB248FFE297D0F7E068C","Account":"rsUiUMpnrgxQp24dJYZDhmV4bE3aBtQyt8","Authorize":"rEhxGqkqPPSxQ3P25J66ft5TwpzV14k2de","OwnerNode":"0000000000000000","PreviousTxnID":"3E8964D5A86B3CD6B9ECB33310D4E073D64C865A5B866200AD2B7E29F8326702","PreviousTxnLgrSeq":7}"#;
+        let serialized = serde_json::to_string(&deposit_preauth).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: DepositPreauth = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(deposit_preauth, deserialized);
     }
-
-    // TODO: test_deserialize
 }

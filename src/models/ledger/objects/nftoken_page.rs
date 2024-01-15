@@ -91,12 +91,12 @@ impl<'a> NFTokenPage<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
     use alloc::vec;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let nftoken_page = NFTokenPage::new(
             Some(Cow::from("ForTest")),
             None,
@@ -109,12 +109,10 @@ mod test_serde {
             Some(Cow::from("95C8761B22894E328646F7A70035E9DFBECC90EDD83E43B7B973F626D21A0822")),
             Some(42891441),
         );
-        let nftoken_page_json = serde_json::to_string(&nftoken_page).unwrap();
-        let actual = nftoken_page_json.as_str();
-        let expected = r#"{"LedgerEntryType":"NFTokenPage","Flags":0,"index":"ForTest","NFTokens":[{"NFTokenID":"000B013A95F14B0044F78A264E41713C64B5F89242540EE208C3098E00000D65","URI":"697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469"}],"NextPageMin":"598EDFD7CF73460FB8C695d6a9397E9073781BA3B78198904F659AAA252A","PreviousPageMin":"598EDFD7CF73460FB8C695d6a9397E907378C8A841F7204C793DCBEF5406","PreviousTxnID":"95C8761B22894E328646F7A70035E9DFBECC90EDD83E43B7B973F626D21A0822","PreviousTxnLgrSeq":42891441}"#;
+        let serialized = serde_json::to_string(&nftoken_page).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: NFTokenPage = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(nftoken_page, deserialized);
     }
-
-    // TODO: test_deserialize
 }

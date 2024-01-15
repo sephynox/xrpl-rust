@@ -109,12 +109,12 @@ impl<'a> DirectoryNode<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
     use alloc::vec;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let directory_node = DirectoryNode::new(
             Some(Cow::from(
                 "1BBEF97EDE88D40CEE2ADE6FEF121166AFE80D99EBADB01A4F069BA8FF484000",
@@ -133,12 +133,10 @@ mod test_serde {
             Some(Cow::from("0000000000000000000000004A50590000000000")),
             Some(Cow::from("5BBC0F22F61D9224A110650CFE21CC0C4BE13098")),
         );
-        let directory_node_json = serde_json::to_string(&directory_node).unwrap();
-        let actual = directory_node_json.as_str();
-        let expected = r#"{"LedgerEntryType":"DirectoryNode","Flags":0,"index":"1BBEF97EDE88D40CEE2ADE6FEF121166AFE80D99EBADB01A4F069BA8FF484000","ExchangeRate":"4F069BA8FF484000","Indexes":["AD7EAE148287EF12D213A251015F86E6D4BD34B3C4A0A1ED9A17198373F908AD"],"RootIndex":"1BBEF97EDE88D40CEE2ADE6FEF121166AFE80D99EBADB01A4F069BA8FF484000","TakerGetsCurrency":"0000000000000000000000000000000000000000","TakerGetsIssuer":"0000000000000000000000000000000000000000","TakerPaysCurrency":"0000000000000000000000004A50590000000000","TakerPaysIssuer":"5BBC0F22F61D9224A110650CFE21CC0C4BE13098"}"#;
+        let serialized = serde_json::to_string(&directory_node).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: DirectoryNode = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(directory_node, deserialized);
     }
-
-    // TODO: test_deserialize
 }

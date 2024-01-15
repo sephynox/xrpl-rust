@@ -123,12 +123,12 @@ impl<'a> PayChannel<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
     use alloc::borrow::Cow;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let pay_channel = PayChannel::new(
             Some(Cow::from(
                 "96F76F27D8A327FC48753167EC04A46AA0E382E6F57F32FD12274144D00F1797",
@@ -149,12 +149,10 @@ mod test_serde {
             Some(536027313),
             Some(0),
         );
-        let pay_channel_json = serde_json::to_string(&pay_channel).unwrap();
-        let actual = pay_channel_json.as_str();
-        let expected = r#"{"LedgerEntryType":"PayChannel","Flags":0,"index":"96F76F27D8A327FC48753167EC04A46AA0E382E6F57F32FD12274144D00F1797","Account":"rBqb89MRQJnMPq8wTwEbtz4kvxrEDfcYvt","Amount":"4325800","Balance":"2323423","Destination":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","OwnerNode":"0000000000000000","PreviousTxnID":"F0AB71E777B2DA54B86231E19B82554EF1F8211F92ECA473121C655BFC5329BF","PreviousTxnLgrSeq":14524914,"PublicKey":"32D2471DB72B27E3310F355BB33E339BF26F8392D5A93D3BC0FC3B566612DA0F0A","SettleDelay":3600,"CancelAfter":536891313,"DestinationTag":1002341,"DestinationNode":"0000000000000000","Expiration":536027313,"SourceTag":0}"#;
+        let serialized = serde_json::to_string(&pay_channel).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: PayChannel = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(pay_channel, deserialized);
     }
-
-    // TODO: test_deserialize
 }

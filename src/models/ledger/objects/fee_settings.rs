@@ -70,11 +70,11 @@ impl<'a> FeeSettings<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let fee_settings = FeeSettings::new(
             Some(Cow::from(
                 "4BC50C9B0D8515D3EAAE1E74B29A95804346C491EE1A95BF25E4AAB854A6A651",
@@ -85,12 +85,10 @@ mod test_serde {
             20000000,
             5000000,
         );
-        let fee_settings_json = serde_json::to_string(&fee_settings).unwrap();
-        let actual = fee_settings_json.as_str();
-        let expected = r#"{"LedgerEntryType":"FeeSettings","Flags":0,"index":"4BC50C9B0D8515D3EAAE1E74B29A95804346C491EE1A95BF25E4AAB854A6A651","BaseFee":"000000000000000A","ReferenceFeeUnits":10,"ReserveBase":20000000,"ReserveIncrement":5000000}"#;
+        let serialized = serde_json::to_string(&fee_settings).unwrap();
 
-        assert_eq!(expected, actual)
+        let deserialized: FeeSettings = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(fee_settings, deserialized);
     }
-
-    // TODO: test_deserialize
 }

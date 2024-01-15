@@ -256,4 +256,32 @@ mod test_ledger_entry_errors {
             "Define one of: `index`, `account_root`, `check`, `directory`, `offer`, `ripple_state`, `escrow`, `payment_channel`, `deposit_preauth`, `ticket`. Define exactly one of them. For more information see: "
         );
     }
+
+    #[test]
+    fn test_serde() {
+        let req = LedgerEntry::new(
+            None,
+            Some("rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into()),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(Offer {
+                account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
+                seq: 359,
+            }),
+            None,
+            None,
+            None,
+        );
+        let serialized = serde_json::to_string(&req).unwrap();
+
+        let deserialized: LedgerEntry = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(req, deserialized);
+    }
 }

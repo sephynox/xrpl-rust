@@ -12,6 +12,10 @@ use strum::IntoEnumIterator;
 
 pub type HashMap<K, V> = hashbrown::HashMap<K, V, BuildHasherDefault<FnvHasher>>;
 
+pub fn default_none<T>() -> Option<T> {
+    None
+}
+
 fn serialize_flag<F, S>(flags: &FlagCollection<F>, s: S) -> Result<S::Ok, S::Error>
 where
     F: Serialize + IntoEnumIterator,

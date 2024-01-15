@@ -115,13 +115,13 @@ impl<'a> NFTokenOffer<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
     use alloc::borrow::Cow;
     use alloc::vec;
 
     #[test]
-    fn test_serialization() {
+    fn test_serde() {
         let nftoken_offer = NFTokenOffer::new(
             vec![NFTokenOfferFlag::LsfSellNFToken].into(),
             Some(Cow::from(
@@ -138,12 +138,10 @@ mod test_serde {
             Some(Cow::from("0")),
             Some(Cow::from("17")),
         );
-        let nftoken_offer_json = serde_json::to_string(&nftoken_offer).unwrap();
-        let actual = nftoken_offer_json.as_str();
-        let expected = r#"{"LedgerEntryType":"NFTokenOffer","Flags":1,"index":"AEBABA4FAC212BF28E0F9A9C3788A47B085557EC5D1429E7A8266FB859C863B3","Amount":"1000000","NFTokenID":"00081B5825A08C22787716FA031B432EBBC1B101BB54875F0002D2A400000000","Owner":"rhRxL3MNvuKEjWjL7TBbZSDacb8PmzAd7m","PreviousTxnID":"BFA9BE27383FA315651E26FDE1FA30815C5A5D0544EE10EC33D3E92532993769","PreviousTxnLgrSeq":75443565,"NFTokenOfferNode":"0","OwnerNode":"17"}"#;
+        let serialized = serde_json::to_string(&nftoken_offer).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: NFTokenOffer = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(nftoken_offer, deserialized);
     }
-
-    // TODO: test_deserialize
 }

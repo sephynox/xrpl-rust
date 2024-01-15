@@ -297,14 +297,14 @@ mod test_nftoken_mint_error {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use alloc::string::ToString;
     use alloc::vec;
 
     use super::*;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let default_txn = NFTokenMint::new(
             "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B".into(),
             None,
@@ -321,36 +321,15 @@ mod test_serde {
             Some(314),
             Some("697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469".into()),
         );
-        let default_json = r#"{"TransactionType":"NFTokenMint","Account":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B","Fee":"10","Flags":8,"Memos":[{"Memo":{"MemoData":"72656E74","MemoFormat":null,"MemoType":"687474703A2F2F6578616D706C652E636F6D2F6D656D6F2F67656E65726963"}}],"NFTokenTaxon":0,"TransferFee":314,"URI":"697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469"}"#;
+        let default_json_str = r#"{"Account":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B","TransactionType":"NFTokenMint","Fee":"10","Flags":8,"Memos":[{"Memo":{"MemoData":"72656E74","MemoFormat":null,"MemoType":"687474703A2F2F6578616D706C652E636F6D2F6D656D6F2F67656E65726963"}}],"NFTokenTaxon":0,"TransferFee":314,"URI":"697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469"}"#;
+        // Serialize
+        let default_json_value = serde_json::to_value(default_json_str).unwrap();
+        let serialized_string = serde_json::to_string(&default_txn).unwrap();
+        let serialized_value = serde_json::to_value(&serialized_string).unwrap();
+        assert_eq!(serialized_value, default_json_value);
 
-        let txn_as_string = serde_json::to_string(&default_txn).unwrap();
-        let txn_json = txn_as_string.as_str();
-
-        assert_eq!(txn_json, default_json);
-    }
-
-    #[test]
-    fn test_deserialize() {
-        let default_txn = NFTokenMint::new(
-            "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B".into(),
-            None,
-            Some("10".into()),
-            Some(vec![NFTokenMintFlag::TfTransferable].into()),
-            None,
-            Some(vec![Memo::new(Some("72656E74".to_string()), None, Some("687474703A2F2F6578616D706C652E636F6D2F6D656D6F2F67656E65726963".to_string()))]),
-            None,
-            None,
-            None,
-            None,
-            0,
-            None,
-            Some(314),
-            Some("697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469".into()),
-        );
-        let default_json = r#"{"TransactionType":"NFTokenMint","Account":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B","TransferFee":314,"NFTokenTaxon":0,"Flags":8,"Fee":"10","URI":"697066733A2F2F62616679626569676479727A74357366703775646D37687537367568377932366E6634646675796C71616266336F636C67747179353566627A6469","Memos":[{"Memo":{"MemoType":"687474703A2F2F6578616D706C652E636F6D2F6D656D6F2F67656E65726963","MemoFormat":null,"MemoData":"72656E74"}}]}"#;
-
-        let txn_as_obj: NFTokenMint = serde_json::from_str(default_json).unwrap();
-
-        assert_eq!(txn_as_obj, default_txn);
+        // Deserialize
+        let deserialized: NFTokenMint = serde_json::from_str(default_json_str).unwrap();
+        assert_eq!(default_txn, deserialized);
     }
 }

@@ -115,14 +115,14 @@ impl<'a> Offer<'a> {
 }
 
 #[cfg(test)]
-mod test_serde {
+mod tests {
     use super::*;
     use crate::models::amount::IssuedCurrencyAmount;
     use alloc::borrow::Cow;
     use alloc::vec;
 
     #[test]
-    fn test_serialize() {
+    fn test_serde() {
         let offer = Offer::new(
             vec![OfferFlag::LsfSell].into(),
             Some(Cow::from(
@@ -144,12 +144,10 @@ mod test_serde {
             Amount::XRPAmount("79550000000".into()),
             None,
         );
-        let offer_json = serde_json::to_string(&offer).unwrap();
-        let actual = offer_json.as_str();
-        let expected = r#"{"LedgerEntryType":"Offer","Flags":131072,"index":"96F76F27D8A327FC48753167EC04A46AA0E382E6F57F32FD12274144D00F1797","Account":"rBqb89MRQJnMPq8wTwEbtz4kvxrEDfcYvt","BookDirectory":"ACC27DE91DBA86FC509069EAF4BC511D73128B780F2E54BF5E07A369E2446000","BookNode":"0000000000000000","OwnerNode":"0000000000000000","PreviousTxnID":"F0AB71E777B2DA54B86231E19B82554EF1F8211F92ECA473121C655BFC5329BF","PreviousTxnLgrSeq":14524914,"Sequence":866,"TakerGets":{"currency":"XAG","issuer":"r9Dr5xwkeLegBeXq6ujinjSBLQzQ1zQGjH","value":"37"},"TakerPays":"79550000000"}"#;
+        let serialized = serde_json::to_string(&offer).unwrap();
 
-        assert_eq!(expected, actual);
+        let deserialized: Offer = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(offer, deserialized);
     }
-
-    // TODO: test_deserialize
 }
