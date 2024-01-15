@@ -99,7 +99,7 @@ mod tests {
             None,
             6,
         );
-        let default_json_str = r#"{"Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","TransactionType":"OfferCancel","Fee":"12","Sequence":7,"LastLedgerSequence":7108629,"OfferSequence":6}"#;
+        let default_json_str = r#"{"Account":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX","TransactionType":"OfferCancel","Fee":"12","LastLedgerSequence":7108629,"Sequence":7,"OfferSequence":6}"#;
         // Serialize
         let default_json_value = serde_json::to_value(default_json_str).unwrap();
         let serialized_string = serde_json::to_string(&default_txn).unwrap();

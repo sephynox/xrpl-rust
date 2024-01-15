@@ -23,7 +23,7 @@ use super::CommonFields;
 /// ```
 /// use xrpl::models::requests::AccountChannels;
 ///
-/// let json = r#"{"account":"rH6ZiHU1PGamME2LvVTxrgvfjQpppWKGmr","marker":12345678,"command":"account_channels"}"#.to_string();
+/// let json = r#"{"command":"account_channels","account":"rH6ZiHU1PGamME2LvVTxrgvfjQpppWKGmr","marker":12345678}"#.to_string();
 /// let model: AccountChannels = serde_json::from_str(&json).expect("");
 /// let revert: Option<String> = match serde_json::to_string(&model) {
 ///     Ok(model) => Some(model),

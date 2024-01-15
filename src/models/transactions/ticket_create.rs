@@ -63,7 +63,7 @@ impl<'a> TicketCreate<'a> {
         Self {
             common_fields: CommonFields {
                 account,
-                transaction_type: TransactionType::SignerListSet,
+                transaction_type: TransactionType::TicketCreate,
                 account_txn_id,
                 fee,
                 flags: None,

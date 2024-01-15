@@ -163,8 +163,8 @@ mod test_escrow_create_errors {
             "rU4EE1FskCPJw5QkLx1iGgdWiJa6HeqYyb".into(),
             Some(13298498),
             None,
-            Some(14359039),
             None,
+            Some(14359039),
         );
 
         assert_eq!(
