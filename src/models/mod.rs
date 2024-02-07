@@ -55,6 +55,7 @@ pub enum AccountObjectType {
     Ticket,
 }
 
+/// Represents the type of flags when the XRPL model has no flags.
 #[derive(
     Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr, EnumIter, Copy,
 )]

@@ -48,34 +48,6 @@ where
             core::any::type_name::<F>()
         ))
     })
-
-    // let mut flags_vec = Vec::new();
-    // for flag in F::iter() {
-    //     let check_flag_string_result: Result<String, serde_json::Error> =
-    //         serde_json::to_string(&flag);
-    //     match check_flag_string_result {
-    //         Ok(check_flag_string) => {
-    //             let check_flag_u32_result = check_flag_string.parse::<u32>();
-    //             match check_flag_u32_result {
-    //                 Ok(check_flag) => {
-    //                     if check_flag & flags_u32 == check_flag {
-    //                         flags_vec.push(flag);
-    //                     } else {
-    //                         continue;
-    //                     }
-    //                 }
-    //                 Err(_) => {
-    //                     return Err(de::Error::custom("SerdeIntermediateStepError: Failed to turn flag into `u32` during deserialization"));
-    //                 }
-    //             };
-    //         }
-    //         Err(_) => {
-    //             return Err(de::Error::custom("SerdeIntermediateStepError: Failed to turn flag into `String` during deserialization"));
-    //         }
-    //     };
-    // }
-
-    // Ok(FlagCollection(flags_vec))
 }
 
 /// A `mod` to be used on transaction `flags` fields. It serializes the `Vec<Flag>` into a `u32`,
