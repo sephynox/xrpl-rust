@@ -1,13 +1,16 @@
 use super::{
     exceptions::XRPLWebsocketException,
-    {WebsocketClosed, WebsocketOpen},
+    Client, WebsocketClient, XRPLResponse, {WebsocketClosed, WebsocketOpen},
 };
 use crate::Err;
 
+use alloc::string::String;
 use anyhow::Result;
 use core::marker::PhantomData;
 use core::{pin::Pin, task::Poll};
 use futures::{Sink, Stream};
+use futures_util::{SinkExt, TryStreamExt};
+use serde::Serialize;
 use tokio::net::TcpStream;
 use tokio_tungstenite::{
     connect_async as tungstenite_connect_async, MaybeTlsStream as TungsteniteMaybeTlsStream,
@@ -22,11 +25,7 @@ pub struct AsyncWebsocketClient<Status = WebsocketClosed> {
     status: PhantomData<Status>,
 }
 
-impl<Status> AsyncWebsocketClient<Status> {
-    pub fn is_open(&self) -> bool {
-        core::any::type_name::<Status>() == core::any::type_name::<WebsocketOpen>()
-    }
-}
+impl<Status> WebsocketClient<Status> for AsyncWebsocketClient<Status> {}
 
 impl<I> Sink<I> for AsyncWebsocketClient<WebsocketOpen>
 where
@@ -81,14 +80,25 @@ where
 }
 
 impl Stream for AsyncWebsocketClient<WebsocketOpen> {
-    type Item = <TungsteniteWebsocketStream<TungsteniteMaybeTlsStream<TcpStream>> as Stream>::Item;
+    type Item = Result<XRPLResponse>;
 
     fn poll_next(
         mut self: Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> Poll<Option<Self::Item>> {
         match Pin::new(&mut self.inner).poll_next(cx) {
-            Poll::Ready(Some(item)) => Poll::Ready(Some(item)),
+            Poll::Ready(Some(item)) => match item {
+                Ok(message) => match message {
+                    TungsteniteMessage::Text(response) => match serde_json::from_str(&response) {
+                        Ok(response) => Poll::Ready(Some(Ok(response))),
+                        Err(error) => Poll::Ready(Some(Err!(error))),
+                    },
+                    _ => Poll::Ready(Some(Err!(
+                        XRPLWebsocketException::<anyhow::Error>::UnexpectedMessageType
+                    ))),
+                },
+                Err(error) => Poll::Ready(Some(Err!(error))),
+            },
             Poll::Ready(None) => Poll::Ready(None),
             Poll::Pending => Poll::Pending,
         }
@@ -108,5 +118,16 @@ impl AsyncWebsocketClient<WebsocketClosed> {
                 ))
             }
         }
+    }
+}
+
+impl Client for AsyncWebsocketClient<WebsocketOpen> {
+    async fn request(&mut self, req: impl Serialize) -> Result<XRPLResponse> {
+        self.send(req).await?;
+        while let Ok(Some(response)) = self.try_next().await {
+            return Ok(response);
+        }
+
+        Err!(XRPLWebsocketException::<anyhow::Error>::NoResponse)
     }
 }

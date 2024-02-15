@@ -1,3 +1,4 @@
+use super::WebsocketClient;
 use super::{
     exceptions::XRPLWebsocketException,
     {WebsocketClosed, WebsocketOpen},
@@ -25,11 +26,7 @@ pub struct AsyncWebsocketClient<Rng: RngCore, Status = WebsocketClosed> {
     status: PhantomData<Status>,
 }
 
-impl<Rng: RngCore, Status> AsyncWebsocketClient<Rng, Status> {
-    pub fn is_open(&self) -> bool {
-        core::any::type_name::<Status>() == core::any::type_name::<WebsocketOpen>()
-    }
-}
+impl<Rng: RngCore, Status> WebsocketClient<Status> for AsyncWebsocketClient<Rng, Status> {}
 
 impl<Rng: RngCore> AsyncWebsocketClient<Rng, WebsocketClosed> {
     /// Open a websocket connection.

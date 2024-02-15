@@ -66,6 +66,10 @@ url = { version = "2.2.2", default-features = false, optional = true }
 futures = { version = "0.3.28", default-features = false, optional = true }
 rand_core = { version = "0.6.4", default-features = false }
 tokio-tungstenite = { version = "0.20.0", optional = true }
+futures-util = { version = "0.3.30", default-features = false, optional = true, features = [
+    "async-await",
+    "async-await-macro",
+] }
 
 [dependencies.embedded-websocket]
 # git version needed to use `framer_async`
@@ -82,7 +86,6 @@ cargo-husky = { version = "1.5.0", default-features = false, features = [
 ] }
 tokio = { version = "1.28.0", features = ["full"] }
 tokio-util = { version = "0.7.7", features = ["codec"] }
-futures-util = "0.3.30"
 bytes = { version = "1.4.0", default-features = false }
 rand = { version = "0.8.4", default-features = false, features = [
     "getrandom",
@@ -102,7 +105,13 @@ requests = ["core", "amounts", "currencies"]
 ledger = ["core", "amounts", "currencies"]
 amounts = ["core"]
 currencies = ["core"]
-tungstenite = ["url", "futures", "tokio/full", "tokio-tungstenite/native-tls"]
+tungstenite = [
+    "url",
+    "futures",
+    "tokio/full",
+    "tokio-tungstenite/native-tls",
+    "futures-util/std",
+]
 embedded-ws = ["url", "futures", "embedded-websocket"]
 core = ["utils"]
 utils = []

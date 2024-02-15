@@ -54,10 +54,7 @@ pub use ticket_create::*;
 pub use trust_set::*;
 
 use crate::models::amount::XRPAmount;
-use crate::{
-    _serde::txn_flags,
-    serde_with_tag,
-};
+use crate::{_serde::txn_flags, serde_with_tag};
 use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -135,7 +132,7 @@ pub struct SignedTransaction<'a, T> {
 #[serde(rename_all = "PascalCase")]
 pub struct CommonFields<'a, F>
 where
-    F: IntoEnumIterator + Serialize + core::fmt::Debug,
+    F: IntoEnumIterator + Serialize + core::fmt::Debug + PartialEq,
 {
     /// The unique address of the account that initiated the transaction.
     pub account: Cow<'a, str>,
@@ -278,6 +275,13 @@ where
     }
 
     fn get_transaction_type(&self) -> TransactionType;
+
+    // fn cast_transaction<C>(&self) -> Self
+    // where
+    //     C: Transaction<T>,
+    // {
+    //     C { ...Self }
+    // }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]
