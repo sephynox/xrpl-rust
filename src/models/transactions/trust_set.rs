@@ -72,13 +72,21 @@ pub struct TrustSet<'a> {
 
 impl<'a> Model for TrustSet<'a> {}
 
-impl<'a> Transaction<TrustSetFlag> for TrustSet<'a> {
+impl<'a> Transaction<'a, TrustSetFlag> for TrustSet<'a> {
     fn has_flag(&self, flag: &TrustSetFlag) -> bool {
         self.common_fields.has_flag(flag)
     }
 
     fn get_transaction_type(&self) -> TransactionType {
         self.common_fields.transaction_type.clone()
+    }
+
+    fn as_common_fields(&'a self) -> &'a CommonFields<'a, TrustSetFlag> {
+        &self.common_fields
+    }
+
+    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, TrustSetFlag> {
+        &mut self.common_fields
     }
 }
 

@@ -25,6 +25,8 @@ pub mod signer_list_set;
 pub mod ticket_create;
 pub mod trust_set;
 
+use core::fmt::Debug;
+
 pub use account_delete::*;
 pub use account_set::*;
 pub use check_cancel::*;
@@ -184,7 +186,7 @@ where
 
 impl<'a, T> CommonFields<'a, T>
 where
-    T: IntoEnumIterator + Serialize + core::fmt::Debug,
+    T: IntoEnumIterator + Serialize + core::fmt::Debug + PartialEq,
 {
     pub fn new(
         account: Cow<'a, str>,
@@ -215,7 +217,7 @@ where
     }
 }
 
-impl<'a, T> Transaction<T> for CommonFields<'a, T>
+impl<'a, T> Transaction<'a, T> for CommonFields<'a, T>
 where
     T: IntoEnumIterator + Serialize + PartialEq + core::fmt::Debug,
 {
@@ -228,6 +230,14 @@ where
 
     fn get_transaction_type(&self) -> TransactionType {
         self.transaction_type.clone()
+    }
+
+    fn as_common_fields(&'a self) -> &'a CommonFields<'a, T> {
+        self
+    }
+
+    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, T> {
+        self
     }
 }
 
@@ -265,9 +275,9 @@ pub struct Signer<'a> {
 }
 
 /// Standard functions for transactions.
-pub trait Transaction<T>
+pub trait Transaction<'a, T>
 where
-    T: IntoEnumIterator + Serialize,
+    T: IntoEnumIterator + Serialize + Debug + PartialEq,
 {
     fn has_flag(&self, flag: &T) -> bool {
         let _txn_flag = flag;
@@ -276,12 +286,9 @@ where
 
     fn get_transaction_type(&self) -> TransactionType;
 
-    // fn cast_transaction<C>(&self) -> Self
-    // where
-    //     C: Transaction<T>,
-    // {
-    //     C { ...Self }
-    // }
+    fn as_common_fields(&'a self) -> &'a CommonFields<'a, T>;
+
+    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, T>;
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]

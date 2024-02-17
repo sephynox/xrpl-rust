@@ -187,18 +187,3 @@ where
         Err(_error) => Err!(XRPLFlagsException::CannotConvertFlagToU32),
     }
 }
-
-// pub trait SignAndSubmitError {
-//     fn _get_field_error(&self) -> Result<(), XRPLSignAndSubmitException>;
-//     fn _get_key_type_error(&self) -> Result<(), XRPLSignAndSubmitException>;
-// }
-//
-// pub trait SignForError {
-//     fn _get_field_error(&self) -> Result<(), XRPLSignForException>;
-//     fn _get_key_type_error(&self) -> Result<(), XRPLSignForException>;
-// }
-//
-// pub trait SignError {
-//     fn _get_field_error(&self) -> Result<(), XRPLSignException>;
-//     fn _get_key_type_error(&self) -> Result<(), XRPLSignException>;
-// }

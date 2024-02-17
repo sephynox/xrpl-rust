@@ -105,13 +105,21 @@ impl<'a: 'static> Model for NFTokenMint<'a> {
     }
 }
 
-impl<'a> Transaction<NFTokenMintFlag> for NFTokenMint<'a> {
+impl<'a> Transaction<'a, NFTokenMintFlag> for NFTokenMint<'a> {
     fn has_flag(&self, flag: &NFTokenMintFlag) -> bool {
         self.common_fields.has_flag(flag)
     }
 
     fn get_transaction_type(&self) -> TransactionType {
         self.common_fields.transaction_type.clone()
+    }
+
+    fn as_common_fields(&'a self) -> &'a CommonFields<'a, NFTokenMintFlag> {
+        &self.common_fields
+    }
+
+    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, NFTokenMintFlag> {
+        &mut self.common_fields
     }
 }
 

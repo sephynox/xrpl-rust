@@ -52,13 +52,21 @@ pub struct EnableAmendment<'a> {
 
 impl<'a> Model for EnableAmendment<'a> {}
 
-impl<'a> Transaction<EnableAmendmentFlag> for EnableAmendment<'a> {
+impl<'a> Transaction<'a, EnableAmendmentFlag> for EnableAmendment<'a> {
     fn has_flag(&self, flag: &EnableAmendmentFlag) -> bool {
         self.common_fields.has_flag(flag)
     }
 
     fn get_transaction_type(&self) -> TransactionType {
         self.common_fields.transaction_type.clone()
+    }
+
+    fn as_common_fields(&'a self) -> &'a CommonFields<'a, EnableAmendmentFlag> {
+        &self.common_fields
+    }
+
+    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, EnableAmendmentFlag> {
+        &mut self.common_fields
     }
 }
 

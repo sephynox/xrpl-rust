@@ -18,7 +18,7 @@ pub async fn get_fee<'a>(
     client: &'a mut impl Client,
     max_fee: Option<u16>,
     fee_type: Option<FeeType>,
-) -> Result<XRPAmount<'a>> {
+) -> Result<(XRPAmount<'a>, &'a mut impl Client)> {
     let fee_request = Fee::new(None);
     match client.request(fee_request).await {
         Ok(response) => {
@@ -27,9 +27,9 @@ pub async fn get_fee<'a>(
             let fee = match_fee_type(fee_type, drops);
 
             if let Some(max_fee) = max_fee {
-                Ok(XRPAmount::from(min(max_fee, fee).to_string()))
+                Ok((XRPAmount::from(min(max_fee, fee).to_string()), client))
             } else {
-                Ok(XRPAmount::from(fee.to_string()))
+                Ok((XRPAmount::from(fee.to_string()), client))
             }
         }
         Err(err) => Err(err),

@@ -141,13 +141,21 @@ impl<'a: 'static> Model for AccountSet<'a> {
     }
 }
 
-impl<'a> Transaction<AccountSetFlag> for AccountSet<'a> {
+impl<'a> Transaction<'a, AccountSetFlag> for AccountSet<'a> {
     fn has_flag(&self, flag: &AccountSetFlag) -> bool {
         self.common_fields.has_flag(flag)
     }
 
     fn get_transaction_type(&self) -> TransactionType {
         self.common_fields.get_transaction_type()
+    }
+
+    fn as_common_fields(&'a self) -> &'a CommonFields<'a, AccountSetFlag> {
+        &self.common_fields
+    }
+
+    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, AccountSetFlag> {
+        &mut self.common_fields
     }
 }
 

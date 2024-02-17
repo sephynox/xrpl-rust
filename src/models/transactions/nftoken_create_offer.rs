@@ -96,13 +96,21 @@ impl<'a: 'static> Model for NFTokenCreateOffer<'a> {
     }
 }
 
-impl<'a> Transaction<NFTokenCreateOfferFlag> for NFTokenCreateOffer<'a> {
+impl<'a> Transaction<'a, NFTokenCreateOfferFlag> for NFTokenCreateOffer<'a> {
     fn has_flag(&self, flag: &NFTokenCreateOfferFlag) -> bool {
         self.common_fields.has_flag(flag)
     }
 
     fn get_transaction_type(&self) -> TransactionType {
         self.common_fields.transaction_type.clone()
+    }
+
+    fn as_common_fields(&'a self) -> &'a CommonFields<'a, NFTokenCreateOfferFlag> {
+        &self.common_fields
+    }
+
+    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, NFTokenCreateOfferFlag> {
+        &mut self.common_fields
     }
 }
 

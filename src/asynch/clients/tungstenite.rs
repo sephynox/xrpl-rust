@@ -4,7 +4,6 @@ use super::{
 };
 use crate::Err;
 
-use alloc::string::String;
 use anyhow::Result;
 use core::marker::PhantomData;
 use core::{pin::Pin, task::Poll};

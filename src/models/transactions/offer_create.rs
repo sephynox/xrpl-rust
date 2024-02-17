@@ -81,13 +81,21 @@ pub struct OfferCreate<'a> {
 
 impl<'a> Model for OfferCreate<'a> {}
 
-impl<'a> Transaction<OfferCreateFlag> for OfferCreate<'a> {
+impl<'a> Transaction<'a, OfferCreateFlag> for OfferCreate<'a> {
     fn has_flag(&self, flag: &OfferCreateFlag) -> bool {
         self.common_fields.has_flag(flag)
     }
 
     fn get_transaction_type(&self) -> TransactionType {
         self.common_fields.transaction_type.clone()
+    }
+
+    fn as_common_fields(&'a self) -> &'a CommonFields<'a, OfferCreateFlag> {
+        &self.common_fields
+    }
+
+    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, OfferCreateFlag> {
+        &mut self.common_fields
     }
 }
 
