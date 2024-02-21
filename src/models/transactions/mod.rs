@@ -106,6 +106,17 @@ pub enum TransactionType {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
 #[serde(rename_all = "PascalCase")]
+pub struct AutofilledTransaction<T> {
+    #[serde(flatten)]
+    pub transaction: T,
+    /// The network ID of the chain this transaction is intended for.
+    /// MUST BE OMITTED for Mainnet and some test networks.
+    /// REQUIRED on chains whose network ID is 1025 or higher.
+    pub netork_id: Option<u32>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
+#[serde(rename_all = "PascalCase")]
 pub struct PreparedTransaction<'a, T> {
     #[serde(flatten)]
     pub transaction: T,

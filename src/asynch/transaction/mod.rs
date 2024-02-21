@@ -13,6 +13,7 @@ use strum::IntoEnumIterator;
 
 use crate::models::amount::XRPAmount;
 use crate::models::requests::ServerState;
+use crate::models::transactions::AutofilledTransaction;
 use crate::models::transactions::EscrowFinish;
 use crate::models::transactions::Transaction;
 use crate::models::transactions::TransactionType;
@@ -28,6 +29,17 @@ use super::ledger::get_fee;
 pub mod exceptions;
 
 const OWNER_RESERVE: &'static str = "2000000"; // 2 XRP
+
+pub async fn autofill<'a, F, T>(
+    transaction: &'a T,
+    client: Option<&'a mut impl Client>,
+    signers_count: Option<u8>,
+) -> Result<(AutofilledTransaction<'a, T>, Option<&'a mut impl Client>)>
+where
+    T: Transaction<'a, F> + Model + 'static,
+    F: IntoEnumIterator + Serialize + core::fmt::Debug + PartialEq + 'a,
+{
+}
 
 async fn check_fee<'a, F, T>(
     transaction: &'a T,

@@ -5,6 +5,12 @@ use embedded_websocket::framer_async::FramerError;
 use thiserror_no_std::Error;
 
 #[derive(Debug, Error)]
+pub enum XRPLClientException {
+    #[error("{0:?}")]
+    Serde(#[from] serde_json::Error),
+}
+
+#[derive(Debug, Error)]
 pub enum XRPLWebsocketException<E: Debug> {
     #[cfg(all(feature = "tungstenite", not(feature = "embedded-ws")))]
     #[error("Unable to connect to websocket")]

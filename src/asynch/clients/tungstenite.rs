@@ -1,9 +1,10 @@
 use super::{
-    exceptions::XRPLWebsocketException,
-    Client, WebsocketClient, XRPLResponse, {WebsocketClosed, WebsocketOpen},
+    exceptions::XRPLWebsocketException, Client, CommonFields, WebsocketClient, WebsocketClosed,
+    WebsocketOpen, XRPLResponse,
 };
 use crate::Err;
 
+use alloc::sync::Arc;
 use anyhow::Result;
 use core::marker::PhantomData;
 use core::{pin::Pin, task::Poll};
@@ -19,14 +20,15 @@ use url::Url;
 
 pub use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
 
-pub struct AsyncWebsocketClient<Status = WebsocketClosed> {
+pub struct AsyncWebsocketClient<'a, Status = WebsocketClosed> {
+    common_fields: Option<CommonFields<'a>>,
     inner: TungsteniteWebsocketStream<TungsteniteMaybeTlsStream<TcpStream>>,
     status: PhantomData<Status>,
 }
 
-impl<Status> WebsocketClient<Status> for AsyncWebsocketClient<Status> {}
+impl<'a, Status> WebsocketClient<Status> for AsyncWebsocketClient<'a, Status> {}
 
-impl<I> Sink<I> for AsyncWebsocketClient<WebsocketOpen>
+impl<'a, I> Sink<I> for AsyncWebsocketClient<'a, WebsocketOpen>
 where
     I: serde::Serialize,
 {
@@ -78,7 +80,7 @@ where
     }
 }
 
-impl Stream for AsyncWebsocketClient<WebsocketOpen> {
+impl<'a> Stream for AsyncWebsocketClient<'a, WebsocketOpen> {
     type Item = Result<XRPLResponse>;
 
     fn poll_next(
@@ -104,10 +106,11 @@ impl Stream for AsyncWebsocketClient<WebsocketOpen> {
     }
 }
 
-impl AsyncWebsocketClient<WebsocketClosed> {
-    pub async fn open(uri: Url) -> Result<AsyncWebsocketClient<WebsocketOpen>> {
+impl<'a> AsyncWebsocketClient<'a, WebsocketClosed> {
+    pub async fn open(uri: Url) -> Result<AsyncWebsocketClient<'a, WebsocketOpen>> {
         match tungstenite_connect_async(uri).await {
             Ok((websocket_stream, _)) => Ok(AsyncWebsocketClient {
+                common_fields: None,
                 inner: websocket_stream,
                 status: PhantomData::<WebsocketOpen>,
             }),
@@ -120,7 +123,7 @@ impl AsyncWebsocketClient<WebsocketClosed> {
     }
 }
 
-impl Client for AsyncWebsocketClient<WebsocketOpen> {
+impl<'a> Client<'a> for AsyncWebsocketClient<'a, WebsocketOpen> {
     async fn request(&mut self, req: impl Serialize) -> Result<XRPLResponse> {
         self.send(req).await?;
         while let Ok(Some(response)) = self.try_next().await {
@@ -128,5 +131,42 @@ impl Client for AsyncWebsocketClient<WebsocketOpen> {
         }
 
         Err!(XRPLWebsocketException::<anyhow::Error>::NoResponse)
+    }
+
+    async fn get_common_fields(self) -> Result<CommonFields<'a>> {
+        todo!()
+    }
+
+    async fn set_common_fields(&mut self, common_fields_response: &XRPLResponse) -> Result<()> {
+        let result = common_fields_response.result.clone();
+
+        let network_id = result
+            .as_ref()
+            .and_then(|result| {
+                result
+                    .get("info")
+                    .and_then(|info| info.get("network_id"))
+                    .and_then(|network_id| network_id.as_str())
+                    .map(|network_id| network_id.into())
+            })
+            .clone();
+
+        let build_version = result
+            .as_ref()
+            .and_then(|result| {
+                result
+                    .get("info")
+                    .and_then(|info| info.get("build_version"))
+                    .and_then(|build_version| build_version.as_str())
+                    .map(|build_version| build_version.into())
+            })
+            .clone();
+
+        self.common_fields = Some(CommonFields {
+            network_id,
+            build_version,
+        });
+
+        Ok(())
     }
 }
