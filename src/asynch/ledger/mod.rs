@@ -2,11 +2,38 @@ use core::cmp::min;
 
 use alloc::string::ToString;
 use anyhow::Result;
-use serde_json::Value;
 
-use crate::models::{amount::XRPAmount, requests::Fee};
+use crate::models::{
+    amount::XRPAmount,
+    requests::{Fee, Ledger},
+    results::{
+        self,
+        fee::{Drops, Fee as FeeResult},
+    },
+};
 
 use super::clients::Client;
+
+pub async fn get_latest_validated_ledger_sequence<'a>(
+    client: &'a mut impl Client<'a>,
+) -> Result<u32> {
+    let ledger_response = client
+        .request::<results::Ledger>(Ledger::new(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("validated".into()),
+            None,
+            None,
+            None,
+        ))
+        .await?;
+
+    Ok(ledger_response.result.ledger_index)
+}
 
 pub enum FeeType {
     Open,
@@ -15,41 +42,30 @@ pub enum FeeType {
 }
 
 pub async fn get_fee<'a>(
-    client: &'a mut impl Client,
+    client: &'a mut impl Client<'a>,
     max_fee: Option<u16>,
     fee_type: Option<FeeType>,
-) -> Result<(XRPAmount<'a>, &'a mut impl Client)> {
+) -> Result<XRPAmount<'a>> {
     let fee_request = Fee::new(None);
-    match client.request(fee_request).await {
+    match client.request::<FeeResult<'a>>(fee_request).await {
         Ok(response) => {
-            let response_value = serde_json::to_value(&response).unwrap();
-            let drops = response_value.get("result").unwrap().get("drops").unwrap();
-            let fee = match_fee_type(fee_type, drops);
+            let drops = response.result.drops;
+            let fee = match_fee_type(fee_type, drops).unwrap();
 
             if let Some(max_fee) = max_fee {
-                Ok((XRPAmount::from(min(max_fee, fee).to_string()), client))
+                Ok(XRPAmount::from(min(max_fee, fee).to_string()))
             } else {
-                Ok((XRPAmount::from(fee.to_string()), client))
+                Ok(XRPAmount::from(fee.to_string()))
             }
         }
         Err(err) => Err(err),
     }
 }
 
-fn match_fee_type(fee_type: Option<FeeType>, drops: &Value) -> u16 {
+fn match_fee_type<'a>(fee_type: Option<FeeType>, drops: Drops<'a>) -> Result<u16> {
     match fee_type {
-        None | Some(FeeType::Open) => drops
-            .get("open_ledger_fee")
-            .unwrap()
-            .to_string()
-            .parse()
-            .unwrap(),
-        Some(FeeType::Minimum) => drops
-            .get("minimum_fee")
-            .unwrap()
-            .to_string()
-            .parse()
-            .unwrap(),
+        None | Some(FeeType::Open) => Ok(drops.open_ledger_fee.0.to_string().parse().unwrap()),
+        Some(FeeType::Minimum) => Ok(drops.minimum_fee.0.to_string().parse().unwrap()),
         Some(FeeType::Dynamic) => unimplemented!("Dynamic fee calculation not yet implemented"),
     }
 }

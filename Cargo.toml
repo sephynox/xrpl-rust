@@ -99,9 +99,10 @@ harness = false
 
 [features]
 default = ["std", "core", "models", "utils", "tungstenite"]
-models = ["core", "transactions", "requests", "ledger"]
+models = ["core", "transactions", "requests", "ledger", "results"]
 transactions = ["core", "amounts", "currencies"]
 requests = ["core", "amounts", "currencies"]
+results = ["core", "amounts", "currencies"]
 ledger = ["core", "amounts", "currencies"]
 amounts = ["core"]
 currencies = ["core"]

@@ -1,16 +1,19 @@
 use super::{
     exceptions::XRPLWebsocketException, Client, CommonFields, WebsocketClient, WebsocketClosed,
-    WebsocketOpen, XRPLResponse,
+    WebsocketOpen,
 };
+use crate::models::requests;
+use crate::models::results::{self, XRPLResponse};
 use crate::Err;
 
-use alloc::sync::Arc;
+use crate::models::results::XRPLResponseFromStream;
 use anyhow::Result;
 use core::marker::PhantomData;
 use core::{pin::Pin, task::Poll};
 use futures::{Sink, Stream};
-use futures_util::{SinkExt, TryStreamExt};
-use serde::Serialize;
+use futures_util::SinkExt;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use tokio::net::TcpStream;
 use tokio_tungstenite::{
     connect_async as tungstenite_connect_async, MaybeTlsStream as TungsteniteMaybeTlsStream,
@@ -81,7 +84,7 @@ where
 }
 
 impl<'a> Stream for AsyncWebsocketClient<'a, WebsocketOpen> {
-    type Item = Result<XRPLResponse>;
+    type Item = Result<Value>;
 
     fn poll_next(
         mut self: Pin<&mut Self>,
@@ -124,47 +127,30 @@ impl<'a> AsyncWebsocketClient<'a, WebsocketClosed> {
 }
 
 impl<'a> Client<'a> for AsyncWebsocketClient<'a, WebsocketOpen> {
-    async fn request(&mut self, req: impl Serialize) -> Result<XRPLResponse> {
+    async fn request<T>(&mut self, req: impl Serialize) -> Result<XRPLResponse<'_, T>>
+    where
+        T: for<'de> Deserialize<'de>,
+    {
         self.send(req).await?;
-        while let Ok(Some(response)) = self.try_next().await {
+        while let Ok(Some(response)) = self.try_next_xrpl_response().await {
             return Ok(response);
         }
 
         Err!(XRPLWebsocketException::<anyhow::Error>::NoResponse)
     }
 
-    async fn get_common_fields(self) -> Result<CommonFields<'a>> {
-        todo!()
+    fn get_common_fields(&self) -> Option<CommonFields<'a>> {
+        self.common_fields.clone()
     }
 
-    async fn set_common_fields(&mut self, common_fields_response: &XRPLResponse) -> Result<()> {
-        let result = common_fields_response.result.clone();
-
-        let network_id = result
-            .as_ref()
-            .and_then(|result| {
-                result
-                    .get("info")
-                    .and_then(|info| info.get("network_id"))
-                    .and_then(|network_id| network_id.as_str())
-                    .map(|network_id| network_id.into())
-            })
-            .clone();
-
-        let build_version = result
-            .as_ref()
-            .and_then(|result| {
-                result
-                    .get("info")
-                    .and_then(|info| info.get("build_version"))
-                    .and_then(|build_version| build_version.as_str())
-                    .map(|build_version| build_version.into())
-            })
-            .clone();
-
+    async fn set_common_fields(&mut self) -> Result<()> {
+        let server_state = self
+            .request::<results::server_state::ServerState>(requests::ServerState::new(None))
+            .await?;
+        let state = server_state.result.state.clone();
         self.common_fields = Some(CommonFields {
-            network_id,
-            build_version,
+            network_id: state.network_id,
+            build_version: Some(state.build_version),
         });
 
         Ok(())

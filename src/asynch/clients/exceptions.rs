@@ -12,7 +12,6 @@ pub enum XRPLClientException {
 
 #[derive(Debug, Error)]
 pub enum XRPLWebsocketException<E: Debug> {
-    #[cfg(all(feature = "tungstenite", not(feature = "embedded-ws")))]
     #[error("Unable to connect to websocket")]
     UnableToConnect(tokio_tungstenite::tungstenite::Error),
     // FramerError
@@ -33,6 +32,10 @@ pub enum XRPLWebsocketException<E: Debug> {
     RxBufferTooSmall(usize),
     #[error("No response")]
     NoResponse,
+    #[error("No result")]
+    NoResult,
+    #[error("No info")]
+    NoInfo,
     #[error("Unexpected message type")]
     UnexpectedMessageType,
 }
@@ -48,6 +51,7 @@ impl<E: Debug> From<FramerError<E>> for XRPLWebsocketException<E> {
             FramerError::WebSocket(e) => XRPLWebsocketException::WebSocket(e),
             FramerError::Disconnected => XRPLWebsocketException::Disconnected,
             FramerError::RxBufferTooSmall(e) => XRPLWebsocketException::RxBufferTooSmall(e),
+            FramerError::UnableToConnect(e) => XRPLWebsocketException::UnableToConnect(e),
         }
     }
 }
