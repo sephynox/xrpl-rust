@@ -150,11 +150,11 @@ impl<'a> Transaction<'a, AccountSetFlag> for AccountSet<'a> {
         self.common_fields.get_transaction_type()
     }
 
-    fn as_common_fields(&'a self) -> &'a CommonFields<'a, AccountSetFlag> {
+    fn get_common_fields(&'a self) -> &'a CommonFields<'a, AccountSetFlag> {
         &self.common_fields
     }
 
-    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, AccountSetFlag> {
+    fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, AccountSetFlag> {
         &mut self.common_fields
     }
 }

@@ -61,11 +61,11 @@ impl<'a> Transaction<'a, EnableAmendmentFlag> for EnableAmendment<'a> {
         self.common_fields.transaction_type.clone()
     }
 
-    fn as_common_fields(&'a self) -> &'a CommonFields<'a, EnableAmendmentFlag> {
+    fn get_common_fields(&'a self) -> &'a CommonFields<'a, EnableAmendmentFlag> {
         &self.common_fields
     }
 
-    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, EnableAmendmentFlag> {
+    fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, EnableAmendmentFlag> {
         &mut self.common_fields
     }
 }

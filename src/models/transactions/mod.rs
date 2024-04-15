@@ -243,11 +243,11 @@ where
         self.transaction_type.clone()
     }
 
-    fn as_common_fields(&'a self) -> &'a CommonFields<'a, T> {
+    fn get_common_fields(&'a self) -> &'a CommonFields<'a, T> {
         self
     }
 
-    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, T> {
+    fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, T> {
         self
     }
 }
@@ -297,9 +297,9 @@ where
 
     fn get_transaction_type(&self) -> TransactionType;
 
-    fn as_common_fields(&'a self) -> &'a CommonFields<'a, T>;
+    fn get_common_fields(&'a self) -> &'a CommonFields<'a, T>;
 
-    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, T>;
+    fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, T>;
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]

@@ -90,11 +90,11 @@ impl<'a> Transaction<'a, OfferCreateFlag> for OfferCreate<'a> {
         self.common_fields.transaction_type.clone()
     }
 
-    fn as_common_fields(&'a self) -> &'a CommonFields<'a, OfferCreateFlag> {
+    fn get_common_fields(&'a self) -> &'a CommonFields<'a, OfferCreateFlag> {
         &self.common_fields
     }
 
-    fn as_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, OfferCreateFlag> {
+    fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, OfferCreateFlag> {
         &mut self.common_fields
     }
 }
