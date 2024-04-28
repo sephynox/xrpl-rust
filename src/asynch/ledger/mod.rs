@@ -14,9 +14,7 @@ use crate::models::{
 
 use super::clients::Client;
 
-pub async fn get_latest_validated_ledger_sequence<'a>(
-    client: &'a mut impl Client<'a>,
-) -> Result<u32> {
+pub async fn get_latest_validated_ledger_sequence<'a>(client: &'a impl Client<'a>) -> Result<u32> {
     let ledger_response = client
         .request::<results::Ledger>(Ledger::new(
             None,
@@ -42,7 +40,7 @@ pub enum FeeType {
 }
 
 pub async fn get_fee<'a>(
-    client: &'a mut impl Client<'a>,
+    client: &'a impl Client<'a>,
     max_fee: Option<u16>,
     fee_type: Option<FeeType>,
 ) -> Result<XRPAmount<'a>> {

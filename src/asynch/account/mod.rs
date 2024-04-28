@@ -10,7 +10,7 @@ use super::clients::Client;
 
 pub async fn get_next_valid_seq_number<'a>(
     address: Cow<'a, str>,
-    client: &'a mut impl Client<'a>,
+    client: &'a impl Client<'a>,
     ledger_index: Option<Cow<'a, str>>,
 ) -> Result<u32> {
     let account_info =
@@ -20,7 +20,7 @@ pub async fn get_next_valid_seq_number<'a>(
 
 pub async fn get_account_root<'a>(
     address: Cow<'a, str>,
-    client: &'a mut impl Client<'a>,
+    client: &'a impl Client<'a>,
     ledger_index: Cow<'a, str>,
 ) -> Result<AccountRoot<'a>> {
     let mut classic_address = address;

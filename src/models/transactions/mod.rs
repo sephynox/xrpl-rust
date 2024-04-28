@@ -55,6 +55,7 @@ pub use signer_list_set::*;
 pub use ticket_create::*;
 pub use trust_set::*;
 
+use crate::alloc::string::ToString;
 use crate::models::amount::XRPAmount;
 use crate::{_serde::txn_flags, serde_with_tag};
 use alloc::borrow::Cow;
@@ -104,38 +105,6 @@ pub enum TransactionType {
     UNLModify,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
-#[serde(rename_all = "PascalCase")]
-pub struct AutofilledTransaction<T> {
-    #[serde(flatten)]
-    pub transaction: T,
-    /// The network ID of the chain this transaction is intended for.
-    /// MUST BE OMITTED for Mainnet and some test networks.
-    /// REQUIRED on chains whose network ID is 1025 or higher.
-    pub netork_id: Option<u32>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
-#[serde(rename_all = "PascalCase")]
-pub struct PreparedTransaction<'a, T> {
-    #[serde(flatten)]
-    pub transaction: T,
-    /// Hex representation of the public key that corresponds to the
-    /// private key used to sign this transaction. If an empty string,
-    /// indicates a multi-signature is present in the Signers field instead.
-    pub signing_pub_key: Cow<'a, str>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
-#[serde(rename_all = "PascalCase")]
-pub struct SignedTransaction<'a, T> {
-    #[serde(flatten)]
-    pub prepared_transaction: PreparedTransaction<'a, T>,
-    /// The signature that verifies this transaction as originating
-    /// from the account it says it is from.
-    pub txn_signature: Cow<'a, str>,
-}
-
 /// The base fields for all transaction models.
 ///
 /// See Transaction Common Fields:
@@ -174,6 +143,10 @@ where
     pub last_ledger_sequence: Option<u32>,
     /// Additional arbitrary information used to identify this transaction.
     pub memos: Option<Vec<Memo>>,
+    /// The network ID of the chain this transaction is intended for.
+    /// MUST BE OMITTED for Mainnet and some test networks.
+    /// REQUIRED on chains whose network ID is 1025 or higher.
+    pub network_id: Option<u32>,
     /// The sequence number of the account sending the transaction.
     /// A transaction is only valid if the Sequence number is exactly
     /// 1 greater than the previous transaction from the same account.
@@ -184,6 +157,10 @@ where
     /// made. Conventionally, a refund should specify the initial
     /// payment's SourceTag as the refund payment's DestinationTag.
     pub signers: Option<Vec<Signer<'a>>>,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
+    pub signing_pub_key: Option<Cow<'a, str>>,
     /// Arbitrary integer used to identify the reason for this
     /// payment, or a sender on whose behalf this transaction
     /// is made. Conventionally, a refund should specify the initial
@@ -193,6 +170,9 @@ where
     /// of a Sequence number. If this is provided, Sequence must
     /// be 0. Cannot be used with AccountTxnID.
     pub ticket_sequence: Option<u32>,
+    /// The signature that verifies this transaction as originating
+    /// from the account it says it is from.
+    pub txn_signature: Option<Cow<'a, str>>,
 }
 
 impl<'a, T> CommonFields<'a, T>
@@ -207,10 +187,13 @@ where
         flags: Option<FlagCollection<T>>,
         last_ledger_sequence: Option<u32>,
         memos: Option<Vec<Memo>>,
+        network_id: Option<u32>,
         sequence: Option<u32>,
         signers: Option<Vec<Signer<'a>>>,
+        signing_pub_key: Option<Cow<'a, str>>,
         source_tag: Option<u32>,
         ticket_sequence: Option<u32>,
+        txn_signature: Option<Cow<'a, str>>,
     ) -> Self {
         CommonFields {
             account,
@@ -220,10 +203,13 @@ where
             flags,
             last_ledger_sequence,
             memos,
+            network_id,
             sequence,
             signers,
+            signing_pub_key,
             source_tag,
             ticket_sequence,
+            txn_signature,
         }
     }
 }
@@ -288,6 +274,7 @@ pub struct Signer<'a> {
 /// Standard functions for transactions.
 pub trait Transaction<'a, T>
 where
+    Self: Serialize,
     T: IntoEnumIterator + Serialize + Debug + PartialEq,
 {
     fn has_flag(&self, flag: &T) -> bool {
@@ -300,6 +287,11 @@ where
     fn get_common_fields(&'a self) -> &'a CommonFields<'a, T>;
 
     fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, T>;
+
+    fn get_field_value(&self, field: &str) -> Option<String> {
+        let transaction = serde_json::to_value(self).unwrap();
+        transaction.get(field).map(|v| v.to_string())
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Display, AsRefStr)]

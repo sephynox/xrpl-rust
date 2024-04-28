@@ -1,5 +1,5 @@
-use core::any::Any;
 use core::convert::TryInto;
+use core::fmt::Debug;
 
 use alloc::borrow::Cow;
 use alloc::string::String;
@@ -14,17 +14,14 @@ use crate::models::amount::XRPAmount;
 use crate::models::exceptions::XRPLModelException;
 use crate::models::requests::ServerState;
 use crate::models::results::server_state::ServerState as ServerStateResult;
-use crate::models::transactions::AutofilledTransaction;
-use crate::models::transactions::EscrowFinish;
 use crate::models::transactions::Transaction;
 use crate::models::transactions::TransactionType;
 use crate::models::Model;
 use crate::Err;
 
-use self::exceptions::XRPLTransactionException;
-
 use super::account::get_next_valid_seq_number;
 use super::clients::Client;
+use super::clients::CommonFields;
 use super::ledger::get_fee;
 use super::ledger::get_latest_validated_ledger_sequence;
 
@@ -36,111 +33,79 @@ const REQUIRED_NETWORKID_VERSION: &'static str = "1.11.0";
 const LEDGER_OFFSET: u8 = 20;
 
 pub async fn autofill<'a, F, T>(
-    transaction: T,
-    client: &'a mut impl Client<'a>,
+    transaction: &'a mut T,
+    client: &'a impl Client<'a>,
     signers_count: Option<u8>,
-) -> Result<AutofilledTransaction<T>>
+) -> Result<()>
 where
-    T: Transaction<'a, F> + Model + 'static,
-    F: IntoEnumIterator + Serialize + core::fmt::Debug + PartialEq + 'a,
+    T: Transaction<'a, F> + Model + Clone + 'static,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq + 'a,
 {
-    let mut autofilled_txn = AutofilledTransaction::new(transaction, None);
-    set_network_id_and_build_version(client).await.unwrap();
-    if autofilled_txn.netork_id.is_none() && txn_needs_network_id(client) {
-        autofilled_txn.netork_id = client.get_common_fields().unwrap().network_id;
+    let txn = transaction.clone();
+    let txn_common_fields = transaction.get_mut_common_fields();
+    let common_fields = client.get_common_fields().await?;
+    if txn_common_fields.network_id.is_none() && txn_needs_network_id(common_fields.clone()) {
+        txn_common_fields.network_id = common_fields.network_id;
     }
-    let txn_common_fields = autofilled_txn.transaction.get_mut_common_fields();
     if txn_common_fields.sequence.is_none() {
         txn_common_fields.sequence =
             Some(get_next_valid_seq_number(txn_common_fields.account.clone(), client, None).await?);
     }
     if txn_common_fields.fee.is_none() {
-        txn_common_fields.fee = Some(
-            calculate_fee_per_transaction_type(
-                &autofilled_txn.transaction,
-                Some(client),
-                signers_count,
-            )
-            .await?,
-        );
+        txn_common_fields.fee =
+            Some(calculate_fee_per_transaction_type(txn, Some(client), signers_count).await?);
     }
     if txn_common_fields.last_ledger_sequence.is_none() {
         let ledger_sequence = get_latest_validated_ledger_sequence(client).await?;
         txn_common_fields.last_ledger_sequence = Some(ledger_sequence + LEDGER_OFFSET as u32);
     }
 
-    Ok(autofilled_txn)
-}
-
-async fn check_fee<'a, F, T>(
-    transaction: &'a T,
-    client: Option<&'a mut impl Client<'a>>,
-    signers_count: Option<u8>,
-) -> Result<()>
-where
-    T: Transaction<'a, F> + Model + 'static,
-    F: IntoEnumIterator + Serialize + core::fmt::Debug + PartialEq + 'a,
-{
-    let fee_to_high = XRPAmount::from("1000");
-    let calculated_fee = calculate_fee_per_transaction_type(transaction, client, signers_count)
-        .await
-        .unwrap();
-    let expected_fee = fee_to_high.max(calculated_fee);
-    let common_fields = transaction.get_common_fields();
-    if let Some(fee) = &common_fields.fee {
-        if fee < &expected_fee {
-            return Err!(XRPLTransactionException::FeeUnusuallyHigh(fee.clone()));
-        }
-    }
-
     Ok(())
 }
 
 async fn calculate_fee_per_transaction_type<'a, T, F>(
-    transaction: &'a T,
-    client: Option<&'a mut impl Client<'a>>,
+    transaction: T,
+    client: Option<&'a impl Client<'a>>,
     signers_count: Option<u8>,
 ) -> Result<XRPAmount<'a>>
 where
     T: Transaction<'a, F> + 'static,
-    F: IntoEnumIterator + Serialize + core::fmt::Debug + PartialEq,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
 {
+    let mut net_fee = XRPAmount::from("10");
+    let mut base_fee;
+
     if let Some(client) = client {
-        let net_fee = get_fee(client, None, None).await?;
-        let mut base_fee = match transaction.get_transaction_type() {
-            TransactionType::EscrowFinish => {
-                calculate_base_fee_for_escrow_finish(transaction, net_fee.clone())
-            }
+        net_fee = get_fee(client, None, None).await?;
+        base_fee = match transaction.get_transaction_type() {
+            TransactionType::EscrowFinish => calculate_base_fee_for_escrow_finish(
+                net_fee.clone(),
+                Some(transaction.get_field_value("fulfillment").unwrap().into()),
+            ),
             // TODO: same for TransactionType::AMMCreate
             TransactionType::AccountDelete => get_owner_reserve_from_response(client).await?,
             _ => net_fee.clone(),
         };
-        if let Some(signers_count) = signers_count {
-            base_fee += net_fee.clone() * (1 + signers_count);
-        }
-
-        Ok(base_fee.ceil())
     } else {
-        let net_fee = XRPAmount::from("10");
-        let mut base_fee = match transaction.get_transaction_type() {
-            TransactionType::EscrowFinish => {
-                calculate_base_fee_for_escrow_finish(transaction, net_fee.clone())
-            }
+        base_fee = match transaction.get_transaction_type() {
+            TransactionType::EscrowFinish => calculate_base_fee_for_escrow_finish(
+                net_fee.clone(),
+                Some(transaction.get_field_value("fulfillment").unwrap().into()),
+            ),
             // TODO: same for TransactionType::AMMCreate
             TransactionType::AccountDelete => XRPAmount::from(OWNER_RESERVE),
             _ => net_fee.clone(),
         };
-        if let Some(signers_count) = signers_count {
-            base_fee += net_fee.clone() * (1 + signers_count);
-        }
-
-        Ok(base_fee.ceil())
     }
+
+    if let Some(signers_count) = signers_count {
+        base_fee += net_fee * (1 + signers_count);
+    }
+
+    Ok(base_fee.ceil())
 }
 
-async fn get_owner_reserve_from_response<'a>(
-    client: &'a mut impl Client<'a>,
-) -> Result<XRPAmount<'a>> {
+async fn get_owner_reserve_from_response<'a>(client: &'a impl Client<'a>) -> Result<XRPAmount<'a>> {
     let owner_reserve_response = client
         .request::<ServerStateResult<'a>>(ServerState::new(None))
         .await?;
@@ -150,25 +115,13 @@ async fn get_owner_reserve_from_response<'a>(
     }
 }
 
-fn calculate_base_fee_for_escrow_finish<'a, T, F>(
-    transaction: &'a T,
+fn calculate_base_fee_for_escrow_finish<'a>(
     net_fee: XRPAmount<'a>,
-) -> XRPAmount<'a>
-where
-    T: Transaction<'a, F> + 'static, // must outlive 'static for downcasting
-    F: IntoEnumIterator + Serialize + core::fmt::Debug + PartialEq,
-{
-    if transaction.get_transaction_type() == TransactionType::EscrowFinish {
-        // cast type to transaction `EscrowFinish`
-        let escrow_finish: Option<&EscrowFinish<'a>> =
-            (transaction as &dyn Any).downcast_ref::<EscrowFinish>();
-        if let Some(escrow_finish) = escrow_finish {
-            if let Some(fulfillment) = escrow_finish.fulfillment.clone() {
-                return calculate_based_on_fulfillment(fulfillment, net_fee);
-            }
-        }
+    fulfillment: Option<Cow<str>>,
+) -> XRPAmount<'a> {
+    if let Some(fulfillment) = fulfillment {
+        return calculate_based_on_fulfillment(fulfillment, net_fee);
     }
-
     net_fee
 }
 
@@ -184,24 +137,12 @@ fn calculate_based_on_fulfillment<'a>(
     XRPAmount::from(base_fee_decimal.ceil())
 }
 
-async fn set_network_id_and_build_version<'a>(client: &'a mut impl Client<'a>) -> Result<()> {
-    if client.get_common_fields().is_none() {
-        client.set_common_fields().await?;
-    }
-
-    Ok(())
-}
-
-fn txn_needs_network_id<'a>(client: &'a mut impl Client<'a>) -> bool {
-    if let Some(common_fields) = client.get_common_fields() {
-        common_fields.network_id.unwrap() > RESTRICTED_NETWORKS as u32
-            && is_not_later_rippled_version(
-                REQUIRED_NETWORKID_VERSION.into(),
-                common_fields.build_version.unwrap().into(),
-            )
-    } else {
-        false
-    }
+fn txn_needs_network_id<'a>(common_fields: CommonFields<'a>) -> bool {
+    common_fields.network_id.unwrap() > RESTRICTED_NETWORKS as u32
+        && is_not_later_rippled_version(
+            REQUIRED_NETWORKID_VERSION.into(),
+            common_fields.build_version.unwrap().into(),
+        )
 }
 
 fn is_not_later_rippled_version(source: String, target: String) -> bool {
