@@ -32,11 +32,9 @@ pub trait WebsocketClient<Status> {
 }
 
 pub trait Client<'a> {
-    async fn request<T>(&mut self, req: impl Serialize) -> Result<XRPLResponse<'_, T>>
+    async fn request<T>(&self, req: impl Serialize) -> Result<XRPLResponse<'a, T>>
     where
         T: for<'de> Deserialize<'de> + Clone;
 
-    fn get_common_fields(&self) -> Option<CommonFields<'a>>;
-
-    async fn set_common_fields(&mut self) -> Result<()>;
+    async fn get_common_fields(&self) -> Result<CommonFields<'a>>;
 }

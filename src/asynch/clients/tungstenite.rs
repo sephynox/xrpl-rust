@@ -6,11 +6,12 @@ use crate::models::requests;
 use crate::models::results::{self, XRPLResponse};
 use crate::Err;
 
-use crate::models::results::XRPLResponseFromStream;
+use alloc::sync::Arc;
 use anyhow::Result;
 use core::marker::PhantomData;
 use core::{pin::Pin, task::Poll};
-use futures::{Sink, Stream};
+use futures::lock::Mutex;
+use futures::{FutureExt, Sink, Stream, StreamExt};
 use futures_util::SinkExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -23,48 +24,65 @@ use url::Url;
 
 pub use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
 
-pub struct AsyncWebsocketClient<'a, Status = WebsocketClosed> {
-    common_fields: Option<CommonFields<'a>>,
-    inner: TungsteniteWebsocketStream<TungsteniteMaybeTlsStream<TcpStream>>,
+pub(crate) enum ContextWaker {
+    Read,
+    Write,
+}
+
+pub type AsyncWebsocketConnection =
+    Arc<Mutex<TungsteniteWebsocketStream<TungsteniteMaybeTlsStream<TcpStream>>>>;
+
+pub struct AsyncWebsocketClient<Status = WebsocketClosed> {
+    inner: AsyncWebsocketConnection,
     status: PhantomData<Status>,
 }
 
-impl<'a, Status> WebsocketClient<Status> for AsyncWebsocketClient<'a, Status> {}
+impl<'a, Status> WebsocketClient<Status> for AsyncWebsocketClient<Status> {}
 
-impl<'a, I> Sink<I> for AsyncWebsocketClient<'a, WebsocketOpen>
+impl<'a, I> Sink<I> for AsyncWebsocketClient<WebsocketOpen>
 where
     I: serde::Serialize,
+    Self: Unpin,
 {
     type Error = anyhow::Error;
 
     fn poll_ready(
-        mut self: core::pin::Pin<&mut Self>,
+        self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Result<()>> {
-        match Pin::new(&mut self.inner).poll_ready(cx) {
+        let mut guard = futures::ready!(self.inner.lock().poll_unpin(cx));
+        match Pin::new(&mut *guard).poll_ready(cx) {
             Poll::Ready(Ok(())) => Poll::Ready(Ok(())),
             Poll::Ready(Err(error)) => Poll::Ready(Err!(error)),
             Poll::Pending => Poll::Pending,
         }
     }
 
-    fn start_send(mut self: core::pin::Pin<&mut Self>, item: I) -> Result<()> {
+    fn start_send(self: core::pin::Pin<&mut Self>, item: I) -> Result<()> {
         match serde_json::to_string(&item) {
             Ok(json) => {
-                match Pin::new(&mut self.inner).start_send(TungsteniteMessage::Text(json)) {
-                    Ok(()) => Ok(()),
-                    Err(error) => Err!(error),
-                }
+                // cannot use ready! macro here because of the return type
+                let _ = self.inner.lock().then(|mut guard| async move {
+                    match Pin::new(&mut *guard)
+                        .send(TungsteniteMessage::Text(json))
+                        .await
+                    {
+                        Ok(_) => Ok(()),
+                        Err(error) => Err!(error),
+                    }
+                });
+                Ok(())
             }
             Err(error) => Err!(error),
         }
     }
 
     fn poll_flush(
-        mut self: core::pin::Pin<&mut Self>,
+        self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Result<()>> {
-        match Pin::new(&mut self.inner).poll_flush(cx) {
+        let mut guard = futures::ready!(self.inner.lock().poll_unpin(cx));
+        match Pin::new(&mut *guard).poll_flush(cx) {
             Poll::Ready(Ok(())) => Poll::Ready(Ok(())),
             Poll::Ready(Err(error)) => Poll::Ready(Err!(error)),
             Poll::Pending => Poll::Pending,
@@ -72,10 +90,11 @@ where
     }
 
     fn poll_close(
-        mut self: core::pin::Pin<&mut Self>,
+        self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> core::task::Poll<Result<()>> {
-        match Pin::new(&mut self.inner).poll_close(cx) {
+        let mut guard = futures::ready!(self.inner.lock().poll_unpin(cx));
+        match Pin::new(&mut *guard).poll_close(cx) {
             Poll::Ready(Ok(())) => Poll::Ready(Ok(())),
             Poll::Ready(Err(error)) => Poll::Ready(Err!(error)),
             Poll::Pending => Poll::Pending,
@@ -83,14 +102,15 @@ where
     }
 }
 
-impl<'a> Stream for AsyncWebsocketClient<'a, WebsocketOpen> {
+impl<'a> Stream for AsyncWebsocketClient<WebsocketOpen> {
     type Item = Result<Value>;
 
     fn poll_next(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
     ) -> Poll<Option<Self::Item>> {
-        match Pin::new(&mut self.inner).poll_next(cx) {
+        let mut guard = futures::ready!(self.inner.lock().poll_unpin(cx));
+        match Pin::new(&mut *guard).poll_next(cx) {
             Poll::Ready(Some(item)) => match item {
                 Ok(message) => match message {
                     TungsteniteMessage::Text(response) => match serde_json::from_str(&response) {
@@ -109,12 +129,11 @@ impl<'a> Stream for AsyncWebsocketClient<'a, WebsocketOpen> {
     }
 }
 
-impl<'a> AsyncWebsocketClient<'a, WebsocketClosed> {
-    pub async fn open(uri: Url) -> Result<AsyncWebsocketClient<'a, WebsocketOpen>> {
+impl<'a> AsyncWebsocketClient<WebsocketClosed> {
+    pub async fn open(uri: Url) -> Result<AsyncWebsocketClient<WebsocketOpen>> {
         match tungstenite_connect_async(uri).await {
             Ok((websocket_stream, _)) => Ok(AsyncWebsocketClient {
-                common_fields: None,
-                inner: websocket_stream,
+                inner: Arc::new(Mutex::new(websocket_stream)),
                 status: PhantomData::<WebsocketOpen>,
             }),
             Err(error) => {
@@ -126,33 +145,37 @@ impl<'a> AsyncWebsocketClient<'a, WebsocketClosed> {
     }
 }
 
-impl<'a> Client<'a> for AsyncWebsocketClient<'a, WebsocketOpen> {
-    async fn request<T>(&mut self, req: impl Serialize) -> Result<XRPLResponse<'_, T>>
+impl<'a> Client<'a> for AsyncWebsocketClient<WebsocketOpen> {
+    async fn request<T>(&self, req: impl Serialize) -> Result<XRPLResponse<'a, T>>
     where
         T: for<'de> Deserialize<'de>,
     {
-        self.send(req).await?;
-        while let Ok(Some(response)) = self.try_next_xrpl_response().await {
-            return Ok(response);
+        let mut this = self.inner.lock().await;
+        let request = serde_json::to_string(&req).unwrap();
+        this.send(TungsteniteMessage::Text(request)).await.unwrap();
+        while let Some(Ok(message)) = this.next().await {
+            match message {
+                TungsteniteMessage::Text(response) => {
+                    let response = serde_json::from_str(&response).unwrap();
+                    return Ok(response);
+                }
+                _ => return Err!(XRPLWebsocketException::<anyhow::Error>::UnexpectedMessageType),
+            }
         }
 
         Err!(XRPLWebsocketException::<anyhow::Error>::NoResponse)
     }
 
-    fn get_common_fields(&self) -> Option<CommonFields<'a>> {
-        self.common_fields.clone()
-    }
-
-    async fn set_common_fields(&mut self) -> Result<()> {
+    async fn get_common_fields(&self) -> Result<CommonFields<'a>> {
         let server_state = self
             .request::<results::server_state::ServerState>(requests::ServerState::new(None))
             .await?;
-        let state = server_state.result.state.clone();
-        self.common_fields = Some(CommonFields {
+        let state = server_state.result.state;
+        let common_fields = CommonFields {
             network_id: state.network_id,
             build_version: Some(state.build_version),
-        });
+        };
 
-        Ok(())
+        Ok(common_fields)
     }
 }
