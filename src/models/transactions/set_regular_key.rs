@@ -83,10 +83,13 @@ impl<'a> SetRegularKey<'a> {
                 flags: None,
                 last_ledger_sequence,
                 memos,
+                network_id: None,
                 sequence,
                 signers,
+                signing_pub_key: None,
                 source_tag,
                 ticket_sequence,
+                txn_signature: None,
             },
             regular_key,
         }
