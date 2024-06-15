@@ -98,3 +98,20 @@ pub async fn test_embedded_websocket_echo() -> Result<()> {
         }
     }
 }
+
+#[cfg(all(feature = "json-rpc-std", not(feature = "json-rpc")))]
+pub async fn test_json_rpc_std() -> Result<()> {
+    use xrpl::{
+        asynch::clients::{AsyncClient, AsyncJsonRpcClient, SingleExecutorMutex},
+        models::requests::Fee,
+        models::results::FeeResult,
+    };
+    let client: AsyncJsonRpcClient<SingleExecutorMutex> =
+        AsyncJsonRpcClient::new("https://s1.ripple.com:51234/".parse().unwrap());
+    let fee_result = client
+        .request::<FeeResult, _>(Fee::new(None))
+        .await
+        .unwrap();
+    assert!(fee_result.result.is_some());
+    Ok(())
+}
