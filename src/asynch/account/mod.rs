@@ -6,11 +6,11 @@ use crate::{
     models::{ledger::AccountRoot, requests::AccountInfo, results},
 };
 
-use super::clients::Client;
+use super::clients::AsyncClient;
 
 pub async fn get_next_valid_seq_number<'a>(
     address: Cow<'a, str>,
-    client: &'a impl Client<'a>,
+    client: &'a impl AsyncClient<'a>,
     ledger_index: Option<Cow<'a, str>>,
 ) -> Result<u32> {
     let account_info =
@@ -20,7 +20,7 @@ pub async fn get_next_valid_seq_number<'a>(
 
 pub async fn get_account_root<'a>(
     address: Cow<'a, str>,
-    client: &'a impl Client<'a>,
+    client: &'a impl AsyncClient<'a>,
     ledger_index: Cow<'a, str>,
 ) -> Result<AccountRoot<'a>> {
     let mut classic_address = address;
@@ -31,7 +31,7 @@ pub async fn get_account_root<'a>(
             .into();
     }
     let account_info = client
-        .request::<results::AccountInfo>(AccountInfo::new(
+        .request::<results::AccountInfo, _>(AccountInfo::new(
             None,
             classic_address,
             None,
@@ -42,5 +42,5 @@ pub async fn get_account_root<'a>(
         ))
         .await?;
 
-    Ok(account_info.result.account_data)
+    Ok(account_info.result.unwrap().account_data)
 }

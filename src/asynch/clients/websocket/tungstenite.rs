@@ -250,17 +250,4 @@ where
             }
         }
     }
-
-    // async fn get_common_fields(&self) -> Result<CommonFields<'a>> {
-    //     let server_state = self
-    //         .request::<results::server_state::ServerState>(requests::ServerState::new(None))
-    //         .await?;
-    //     let state = server_state.result.state;
-    //     let common_fields = CommonFields {
-    //         network_id: state.network_id,
-    //         build_version: Some(state.build_version),
-    //     };
-
-    //     Ok(common_fields)
-    // }
 }

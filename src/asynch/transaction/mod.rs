@@ -13,14 +13,14 @@ use strum::IntoEnumIterator;
 use crate::models::amount::XRPAmount;
 use crate::models::exceptions::XRPLModelException;
 use crate::models::requests::ServerState;
-use crate::models::results::server_state::ServerState as ServerStateResult;
+use crate::models::results::ServerState as ServerStateResult;
 use crate::models::transactions::Transaction;
 use crate::models::transactions::TransactionType;
 use crate::models::Model;
 use crate::Err;
 
 use super::account::get_next_valid_seq_number;
-use super::clients::Client;
+use super::clients::AsyncClient;
 use super::clients::CommonFields;
 use super::ledger::get_fee;
 use super::ledger::get_latest_validated_ledger_sequence;
@@ -34,7 +34,7 @@ const LEDGER_OFFSET: u8 = 20;
 
 pub async fn autofill<'a, F, T>(
     transaction: &'a mut T,
-    client: &'a impl Client<'a>,
+    client: &'a impl AsyncClient<'a>,
     signers_count: Option<u8>,
 ) -> Result<()>
 where
@@ -65,7 +65,7 @@ where
 
 async fn calculate_fee_per_transaction_type<'a, T, F>(
     transaction: T,
-    client: Option<&'a impl Client<'a>>,
+    client: Option<&'a impl AsyncClient<'a>>,
     signers_count: Option<u8>,
 ) -> Result<XRPAmount<'a>>
 where
@@ -105,11 +105,18 @@ where
     Ok(base_fee.ceil())
 }
 
-async fn get_owner_reserve_from_response<'a>(client: &'a impl Client<'a>) -> Result<XRPAmount<'a>> {
+async fn get_owner_reserve_from_response<'a>(
+    client: &'a impl AsyncClient<'a>,
+) -> Result<XRPAmount<'a>> {
     let owner_reserve_response = client
-        .request::<ServerStateResult<'a>>(ServerState::new(None))
+        .request::<ServerStateResult<'a>, _>(ServerState::new(None))
         .await?;
-    match owner_reserve_response.result.state.validated_ledger {
+    match owner_reserve_response
+        .result
+        .unwrap()
+        .state
+        .validated_ledger
+    {
         Some(validated_ledger) => Ok(validated_ledger.reserve_base),
         None => Err!(XRPLModelException::MissingField("validated_ledger")),
     }

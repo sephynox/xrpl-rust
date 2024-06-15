@@ -7,16 +7,17 @@ use crate::models::{
     amount::XRPAmount,
     requests::{Fee, Ledger},
     results::{
-        self,
-        fee::{Drops, Fee as FeeResult},
+        self, {Drops, Fee as FeeResult},
     },
 };
 
-use super::clients::Client;
+use super::clients::AsyncClient;
 
-pub async fn get_latest_validated_ledger_sequence<'a>(client: &'a impl Client<'a>) -> Result<u32> {
+pub async fn get_latest_validated_ledger_sequence<'a>(
+    client: &'a impl AsyncClient<'a>,
+) -> Result<u32> {
     let ledger_response = client
-        .request::<results::Ledger>(Ledger::new(
+        .request::<results::Ledger, _>(Ledger::new(
             None,
             None,
             None,
@@ -30,7 +31,7 @@ pub async fn get_latest_validated_ledger_sequence<'a>(client: &'a impl Client<'a
         ))
         .await?;
 
-    Ok(ledger_response.result.ledger_index)
+    Ok(ledger_response.result.unwrap().ledger_index)
 }
 
 pub enum FeeType {
@@ -40,14 +41,14 @@ pub enum FeeType {
 }
 
 pub async fn get_fee<'a>(
-    client: &'a impl Client<'a>,
+    client: &'a impl AsyncClient<'a>,
     max_fee: Option<u16>,
     fee_type: Option<FeeType>,
 ) -> Result<XRPAmount<'a>> {
     let fee_request = Fee::new(None);
-    match client.request::<FeeResult<'a>>(fee_request).await {
+    match client.request::<FeeResult<'a>, _>(fee_request).await {
         Ok(response) => {
-            let drops = response.result.drops;
+            let drops = response.result.unwrap().drops;
             let fee = match_fee_type(fee_type, drops).unwrap();
 
             if let Some(max_fee) = max_fee {

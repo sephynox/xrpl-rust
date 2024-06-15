@@ -3,11 +3,20 @@ mod client;
 mod json_rpc;
 mod websocket;
 
+use alloc::borrow::Cow;
 use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex, NoopRawMutex};
+
+pub use async_client::*;
+pub(crate) use client::*;
+pub use json_rpc::*;
+use serde::{Deserialize, Serialize};
+pub use websocket::*;
 
 pub type MultiExecutorMutex = CriticalSectionRawMutex;
 pub type SingleExecutorMutex = NoopRawMutex;
 
-pub use async_client::*;
-pub use json_rpc::*;
-pub use websocket::*;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CommonFields<'a> {
+    pub build_version: Option<Cow<'a, str>>,
+    pub network_id: Option<u32>,
+}
