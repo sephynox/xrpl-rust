@@ -1,100 +1,75 @@
-use anyhow::anyhow;
 use anyhow::Result;
 
 #[cfg(all(feature = "tungstenite", not(feature = "embedded-ws")))]
-pub async fn test_websocket_tungstenite_echo() -> Result<()> {
-    use super::common::connect_to_wss_tungstinite_echo;
-    use futures_util::{SinkExt, TryStreamExt};
-    use xrpl::asynch::clients::TungsteniteMessage;
-    use xrpl::models::requests::AccountInfo;
+pub async fn test_websocket_tungstenite_test_net() -> Result<()> {
+    use crate::common::connect_to_wss_tungstinite_test_net;
+    use xrpl::{
+        asynch::clients::XRPLWebsocketIO, models::requests::Fee, models::results::FeeResult,
+    };
 
-    let mut websocket = connect_to_wss_tungstinite_echo().await?;
-    let account_info = AccountInfo::new(
-        None,
-        "rJumr5e1HwiuV543H7bqixhtFreChWTaHH".into(),
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let mut websocket = connect_to_wss_tungstinite_test_net().await?;
+    let fee = Fee::new(None);
 
-    websocket.send(&account_info).await?;
-    while let Ok(Some(TungsteniteMessage::Text(response))) = websocket.try_next().await {
-        let account_info_echo = serde_json::from_str::<AccountInfo>(response.as_str());
-        match account_info_echo {
-            Ok(account_info_echo) => {
-                assert_eq!(account_info, account_info_echo);
-                return Ok(());
-            }
-            Err(err) => {
-                return Err(anyhow!("Error parsing response: {:?}", err));
-            }
-        };
-    }
-
+    websocket.xrpl_send(fee).await.unwrap();
+    let message = websocket
+        .xrpl_receive::<FeeResult<'_>, Fee<'_>>()
+        .await
+        .unwrap();
+    assert!(message.unwrap().result.is_some());
     Ok(())
 }
 
-#[cfg(all(feature = "embedded-ws", not(feature = "tungstenite")))]
+#[cfg(all(feature = "tungstenite", not(feature = "embedded-ws")))]
+pub async fn test_websocket_tungstenite_request() -> Result<()> {
+    use crate::common::connect_to_wss_tungstinite_test_net;
+    use xrpl::{asynch::clients::AsyncClient, models::requests::Fee, models::results::FeeResult};
+
+    let websocket = connect_to_wss_tungstinite_test_net().await?;
+    let fee = Fee::new(None);
+
+    let message = websocket.request::<FeeResult<'_>, _>(fee).await.unwrap();
+    assert!(message.result.is_some());
+    Ok(())
+}
+
+#[cfg(all(feature = "embedded-ws", feature = "std", not(feature = "tungstenite")))]
 pub async fn test_embedded_websocket_echo() -> Result<()> {
-    use super::common::{codec::Codec, connect_to_ws_embedded_websocket_tokio_echo};
+    use crate::common::connect_to_ws_embedded_websocket_tokio_echo;
     use tokio_util::codec::Framed;
-    use xrpl::asynch::clients::EmbeddedWebsocketReadMessageType;
-    use xrpl::models::requests::AccountInfo;
+    use xrpl::asynch::clients::codec::Codec;
+    use xrpl::asynch::clients::XRPLWebsocketIO;
+    use xrpl::models::requests::Fee;
+    use xrpl::models::results::FeeResult;
 
     let tcp_stream = tokio::net::TcpStream::connect("ws.vi-server.org:80")
         .await
-        .map_err(|_| anyhow!("Error connecting to websocket"))?;
-    let mut framed = Framed::new(tcp_stream, Codec::new());
-    let mut buffer = [0u8; 4096];
-    let mut websocket =
-        connect_to_ws_embedded_websocket_tokio_echo(&mut framed, &mut buffer).await?;
-    let account_info = AccountInfo::new(
-        None,
-        "rJumr5e1HwiuV543H7bqixhtFreChWTaHH".into(),
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
-    websocket
-        .send(&mut framed, &mut buffer, false, &account_info)
-        .await?;
+        .unwrap();
+    let framed = Framed::new(tcp_stream, Codec);
+    let mut websocket = connect_to_ws_embedded_websocket_tokio_echo(framed).await?;
+    let fee = Fee::new(None);
+    websocket.xrpl_send(fee).await?;
+    let _ = websocket
+        .xrpl_receive::<FeeResult<'_>, Fee<'_>>()
+        .await
+        .unwrap();
+    Ok(())
+}
 
-    let mut ping_counter = 0;
-    loop {
-        match websocket.try_next(&mut framed, &mut buffer).await? {
-            Some(message) => match message {
-                EmbeddedWebsocketReadMessageType::Ping(_) => {
-                    ping_counter += 1;
-                    if ping_counter > 1 {
-                        return Err(anyhow!("Expected only one ping"));
-                    }
-                }
-                EmbeddedWebsocketReadMessageType::Text(text) => {
-                    match serde_json::from_str::<AccountInfo>(text) {
-                        Ok(account_info_echo) => {
-                            assert_eq!(account_info, account_info_echo);
-                            return Ok(());
-                        }
-                        Err(err) => {
-                            return Err(anyhow!("Error parsing response: {:?}", err));
-                        }
-                    }
-                }
-                EmbeddedWebsocketReadMessageType::Binary(_) => {
-                    panic!("Expected text message found binary")
-                }
-                EmbeddedWebsocketReadMessageType::Pong(_) => {
-                    panic!("Expected text message found pong")
-                }
-                EmbeddedWebsocketReadMessageType::Close(_) => {
-                    panic!("Expected text message found close")
-                }
-            },
-            None => return Err(anyhow!("No message received")),
-        }
-    }
+#[cfg(all(feature = "embedded-ws", feature = "std", not(feature = "tungstenite")))]
+pub async fn test_embedded_websocket_request() -> Result<()> {
+    use crate::common::connect_to_ws_embedded_websocket_tokio_echo;
+    use tokio_util::codec::Framed;
+    use xrpl::asynch::clients::codec::Codec;
+    use xrpl::asynch::clients::AsyncClient;
+    use xrpl::models::requests::Fee;
+    use xrpl::models::results::FeeResult;
+
+    let tcp_stream = tokio::net::TcpStream::connect("ws.vi-server.org:80")
+        .await
+        .unwrap();
+    let framed = Framed::new(tcp_stream, Codec);
+    let websocket = connect_to_ws_embedded_websocket_tokio_echo(framed).await?;
+    let fee = Fee::new(None);
+    let _res = websocket.request::<FeeResult, _>(fee).await?;
+    Ok(())
 }

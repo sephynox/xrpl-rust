@@ -1,6 +1,8 @@
 use core::fmt::Debug;
 use core::str::Utf8Error;
 #[cfg(all(feature = "embedded-ws", not(feature = "tungstenite")))]
+use embedded_io_async::{Error as EmbeddedIoError, ErrorKind};
+#[cfg(all(feature = "embedded-ws", not(feature = "tungstenite")))]
 use embedded_websocket::framer_async::FramerError;
 use thiserror_no_std::Error;
 
@@ -30,14 +32,17 @@ pub enum XRPLWebsocketException<E: Debug> {
     Disconnected,
     #[error("Read buffer is too small (size: {0:?})")]
     RxBufferTooSmall(usize),
-    #[error("No response")]
-    NoResponse,
-    #[error("No result")]
-    NoResult,
-    #[error("No info")]
-    NoInfo,
     #[error("Unexpected message type")]
     UnexpectedMessageType,
+    #[cfg(all(feature = "embedded-ws", not(feature = "tungstenite")))]
+    #[error("Embedded I/O error: {0:?}")]
+    EmbeddedIoError(ErrorKind),
+    #[error("Missing request channel sender.")]
+    MissingRequestSender,
+    #[error("Missing request channel receiver.")]
+    MissingRequestReceiver,
+    #[error("Invalid message.")]
+    InvalidMessage,
 }
 
 #[cfg(all(feature = "embedded-ws", not(feature = "tungstenite")))]
@@ -52,6 +57,16 @@ impl<E: Debug> From<FramerError<E>> for XRPLWebsocketException<E> {
             FramerError::Disconnected => XRPLWebsocketException::Disconnected,
             FramerError::RxBufferTooSmall(e) => XRPLWebsocketException::RxBufferTooSmall(e),
             FramerError::UnableToConnect(e) => XRPLWebsocketException::UnableToConnect(e),
+        }
+    }
+}
+
+#[cfg(all(feature = "embedded-ws", not(feature = "tungstenite")))]
+impl<E: Debug> EmbeddedIoError for XRPLWebsocketException<E> {
+    fn kind(&self) -> ErrorKind {
+        match self {
+            XRPLWebsocketException::EmbeddedIoError(e) => e.kind(),
+            _ => ErrorKind::Other,
         }
     }
 }
