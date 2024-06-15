@@ -135,7 +135,6 @@ where
     pub fee: Option<XRPAmount<'a>>,
     /// Set of bit-flags for this transaction.
     #[serde(with = "txn_flags")]
-    #[serde(default = "optional_flag_collection_default")]
     pub flags: Option<FlagCollection<F>>,
     /// Highest ledger index this transaction can appear in.
     /// Specifying this field places a strict upper limit on how long
@@ -237,13 +236,6 @@ where
     fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, T> {
         self
     }
-}
-
-fn optional_flag_collection_default<T>() -> Option<FlagCollection<T>>
-where
-    T: IntoEnumIterator + Serialize + core::fmt::Debug,
-{
-    None
 }
 
 serde_with_tag! {
