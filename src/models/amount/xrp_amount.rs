@@ -14,10 +14,21 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 /// Represents an amount of XRP in Drops.
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Default)]
 pub struct XRPAmount<'a>(pub Cow<'a, str>);
 
 impl<'a> Model for XRPAmount<'a> {}
+
+// implement Deserializing from Cow<str>, &str, String, Decimal, f64, u32, and Value
+impl<'de, 'a> Deserialize<'de> for XRPAmount<'a> {
+    fn deserialize<D>(deserializer: D) -> Result<XRPAmount<'a>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let amount_string = Value::deserialize(deserializer)?;
+        Ok(XRPAmount::try_from(amount_string).map_err(serde::de::Error::custom)?)
+    }
+}
 
 impl<'a> From<Cow<'a, str>> for XRPAmount<'a> {
     fn from(value: Cow<'a, str>) -> Self {
@@ -45,6 +56,12 @@ impl<'a> From<Decimal> for XRPAmount<'a> {
 
 impl<'a> From<f64> for XRPAmount<'a> {
     fn from(value: f64) -> Self {
+        Self(value.to_string().into())
+    }
+}
+
+impl<'a> From<u32> for XRPAmount<'a> {
+    fn from(value: u32) -> Self {
         Self(value.to_string().into())
     }
 }

@@ -38,7 +38,7 @@ pub async fn autofill<'a, F, T>(
     signers_count: Option<u8>,
 ) -> Result<()>
 where
-    T: Transaction<'a, F> + Model + Clone + 'static,
+    T: Transaction<'a, F> + Model + Clone,
     F: IntoEnumIterator + Serialize + Debug + PartialEq + 'a,
 {
     let txn = transaction.clone();
@@ -69,7 +69,7 @@ async fn calculate_fee_per_transaction_type<'a, T, F>(
     signers_count: Option<u8>,
 ) -> Result<XRPAmount<'a>>
 where
-    T: Transaction<'a, F> + 'static,
+    T: Transaction<'a, F>,
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
 {
     let mut net_fee = XRPAmount::from("10");
@@ -117,7 +117,7 @@ async fn get_owner_reserve_from_response<'a>(
         .state
         .validated_ledger
     {
-        Some(validated_ledger) => Ok(validated_ledger.reserve_base),
+        Some(validated_ledger) => Ok(validated_ledger.reserve_base.into()),
         None => Err!(XRPLModelException::MissingField("validated_ledger")),
     }
 }
@@ -207,5 +207,59 @@ fn is_not_later_rippled_version(source: String, target: String) -> bool {
                 false
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test_autofill {
+    use alloc::println;
+    use anyhow::Result;
+
+    use super::autofill;
+    use crate::{
+        asynch::clients::{AsyncWebsocketClient, SingleExecutorMutex},
+        models::{
+            amount::{IssuedCurrencyAmount, XRPAmount},
+            transactions::OfferCreate,
+        },
+        wallet::Wallet,
+    };
+
+    #[tokio::test]
+    async fn test_autofill_txn() -> Result<()> {
+        let wallet = Wallet::create(None).unwrap();
+        let mut txn = OfferCreate::new(
+            wallet.classic_address.clone().into(),
+            None,
+            None,
+            None,
+            Some(72779837),
+            None,
+            Some(1),
+            None,
+            None,
+            None,
+            XRPAmount::from("1000000").into(),
+            IssuedCurrencyAmount::new(
+                "USD".into(),
+                "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq".into(),
+                "0.3".into(),
+            )
+            .into(),
+            None,
+            None,
+        );
+        let client = AsyncWebsocketClient::<SingleExecutorMutex, _>::open(
+            "wss://testnet.xrpl-labs.com/".parse().unwrap(),
+        )
+        .await
+        .unwrap();
+        {
+            let txn1 = &mut txn;
+            autofill(txn1, &client, None).await.unwrap();
+        }
+        println!("{:?}", txn);
+
+        Ok(())
     }
 }

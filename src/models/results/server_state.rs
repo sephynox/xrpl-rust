@@ -17,7 +17,7 @@ pub struct State<'a> {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidatedLedger<'a> {
-    pub base_fee_xrp: XRPAmount<'a>,
+    pub base_fee: XRPAmount<'a>,
     pub close_time: u32,
     pub hash: Cow<'a, str>,
     pub reserve_base: XRPAmount<'a>,
