@@ -84,7 +84,7 @@ pub async fn test_json_rpc_std() -> Result<()> {
         models::results::Fee as FeeResult,
     };
     let client: AsyncJsonRpcClient<SingleExecutorMutex> =
-        AsyncJsonRpcClient::new("https://testnet.xrpl-labs.com".parse().unwrap());
+        AsyncJsonRpcClient::new("https://s1.ripple.com:51234/".parse().unwrap());
     let fee_result = client
         .request::<FeeResult, _>(Fee::new(None))
         .await

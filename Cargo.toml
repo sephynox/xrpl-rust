@@ -105,8 +105,8 @@ results = ["core", "amounts", "currencies"]
 ledger = ["core", "amounts", "currencies"]
 amounts = ["core"]
 currencies = ["core"]
-json-rpc = ["reqwless", "embedded-nal-async"]
-json-rpc-std = ["reqwest"]
+json-rpc = ["url", "reqwless", "embedded-nal-async"]
+json-rpc-std = ["url", "reqwest"]
 tungstenite = [
     "url",
     "futures",

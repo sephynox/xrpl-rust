@@ -59,7 +59,7 @@ pub async fn get_fee<'a>(
     }
 }
 
-fn match_fee_type<'a>(fee_type: Option<FeeType>, drops: Drops<'a>) -> Result<u32> {
+fn match_fee_type(fee_type: Option<FeeType>, drops: Drops<'_>) -> Result<u32> {
     match fee_type {
         None | Some(FeeType::Open) => Ok(drops.open_ledger_fee.0.to_string().parse().unwrap()),
         Some(FeeType::Minimum) => Ok(drops.minimum_fee.0.to_string().parse().unwrap()),

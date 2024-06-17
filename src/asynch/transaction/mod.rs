@@ -24,9 +24,9 @@ use strum::IntoEnumIterator;
 
 pub mod exceptions;
 
-const OWNER_RESERVE: &'static str = "2000000"; // 2 XRP
+const OWNER_RESERVE: &str = "2000000"; // 2 XRP
 const RESTRICTED_NETWORKS: u16 = 1024;
-const REQUIRED_NETWORKID_VERSION: &'static str = "1.11.0";
+const REQUIRED_NETWORKID_VERSION: &str = "1.11.0";
 const LEDGER_OFFSET: u8 = 20;
 
 pub async fn autofill<'a, 'b, F, T>(
@@ -112,7 +112,7 @@ async fn get_owner_reserve_from_response(client: &impl AsyncClient) -> Result<XR
         .state
         .validated_ledger
     {
-        Some(validated_ledger) => Ok(validated_ledger.reserve_base.into()),
+        Some(validated_ledger) => Ok(validated_ledger.reserve_base),
         None => Err!(XRPLModelException::MissingField("validated_ledger")),
     }
 }
@@ -188,8 +188,8 @@ fn is_not_later_rippled_version(source: String, target: String) -> bool {
             } else if source_patch.len() != target_patch.len() {
                 source_patch.len() < target_patch.len()
             } else if source_patch.len() == 2 {
-                if source_patch[1].chars().nth(0).unwrap()
-                    != target_patch[1].chars().nth(0).unwrap()
+                if source_patch[1].chars().next().unwrap()
+                    != target_patch[1].chars().next().unwrap()
                 {
                     source_patch[1] < target_patch[1]
                 } else if source_patch[1].starts_with('b') {
@@ -204,6 +204,7 @@ fn is_not_later_rippled_version(source: String, target: String) -> bool {
     }
 }
 
+#[cfg(all(feature = "tungstenite", feature = "std", not(feature = "embedded-ws")))]
 #[cfg(test)]
 mod test_autofill {
     use super::autofill;

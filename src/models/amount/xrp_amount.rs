@@ -26,7 +26,7 @@ impl<'de, 'a> Deserialize<'de> for XRPAmount<'a> {
         D: serde::Deserializer<'de>,
     {
         let amount_string = Value::deserialize(deserializer)?;
-        Ok(XRPAmount::try_from(amount_string).map_err(serde::de::Error::custom)?)
+        XRPAmount::try_from(amount_string).map_err(serde::de::Error::custom)
     }
 }
 
@@ -167,7 +167,7 @@ impl<'a> Mul<u8> for XRPAmount<'a> {
 
     fn mul(self, other: u8) -> Self {
         let self_decimal: Decimal = self.try_into().unwrap();
-        let other_decimal: Decimal = other.try_into().unwrap();
+        let other_decimal: Decimal = other.into();
         let result_decimal = self_decimal * other_decimal;
         result_decimal.into()
     }

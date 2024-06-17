@@ -12,7 +12,9 @@ use embedded_io_async::{ErrorType, Read as EmbeddedIoRead, Write as EmbeddedIoWr
 use futures::{Sink, SinkExt, Stream, StreamExt};
 use serde::{Deserialize, Serialize};
 
+#[cfg(any(feature = "embedded-ws", feature = "tungstenite"))]
 mod websocket_base;
+#[cfg(any(feature = "embedded-ws", feature = "tungstenite"))]
 use websocket_base::MessageHandler;
 
 #[cfg(all(feature = "embedded-ws", feature = "std", not(feature = "tungstenite")))]

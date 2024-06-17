@@ -29,7 +29,7 @@ fn request_to_json_rpc(request: &impl Serialize) -> Result<String> {
     }
 }
 
-#[cfg(feature = "json-rpc-std")]
+#[cfg(all(feature = "json-rpc-std", not(feature = "json-rpc")))]
 mod std_client {
     use super::*;
     use reqwest::Client as HttpClient;
@@ -96,7 +96,7 @@ mod std_client {
     }
 }
 
-#[cfg(feature = "json-rpc")]
+#[cfg(all(feature = "json-rpc", not(feature = "json-rpc-std")))]
 mod no_std_client {
     use super::*;
     use embedded_nal_async::{Dns, TcpConnect};
@@ -138,19 +138,20 @@ mod no_std_client {
         }
     }
 
-    impl<'a, const BUF: usize, T, D, M> Client<'a> for AsyncJsonRpcClient<'a, BUF, T, D, M>
+    impl<const BUF: usize, T, D, M> Client for AsyncJsonRpcClient<'_, BUF, T, D, M>
     where
         M: RawMutex,
-        T: TcpConnect + 'a,
-        D: Dns + 'a,
+        T: TcpConnect,
+        D: Dns,
     {
         async fn request_impl<
+            'a,
             Res: Serialize + for<'de> Deserialize<'de>,
             Req: Serialize + for<'de> Deserialize<'de> + Request<'a>,
         >(
-            &'a self,
+            &self,
             request: Req,
-        ) -> Result<XRPLResponse<'_, Res, Req>> {
+        ) -> Result<XRPLResponse<'a, Res, Req>> {
             let request_json_rpc = request_to_json_rpc(&request)?;
             let request_buf = request_json_rpc.as_bytes();
             let mut rx_buffer = [0; BUF];
