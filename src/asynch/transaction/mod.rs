@@ -1,15 +1,8 @@
-use core::convert::TryInto;
-use core::fmt::Debug;
-
-use alloc::borrow::Cow;
-use alloc::string::String;
-use alloc::string::ToString;
-use alloc::vec::Vec;
-use anyhow::Result;
-use rust_decimal::Decimal;
-use serde::Serialize;
-use strum::IntoEnumIterator;
-
+use super::account::get_next_valid_seq_number;
+use super::clients::AsyncClient;
+use super::clients::CommonFields;
+use super::ledger::get_fee;
+use super::ledger::get_latest_validated_ledger_sequence;
 use crate::models::amount::XRPAmount;
 use crate::models::exceptions::XRPLModelException;
 use crate::models::requests::ServerState;
@@ -18,12 +11,16 @@ use crate::models::transactions::Transaction;
 use crate::models::transactions::TransactionType;
 use crate::models::Model;
 use crate::Err;
-
-use super::account::get_next_valid_seq_number;
-use super::clients::AsyncClient;
-use super::clients::CommonFields;
-use super::ledger::get_fee;
-use super::ledger::get_latest_validated_ledger_sequence;
+use alloc::borrow::Cow;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
+use anyhow::Result;
+use core::convert::TryInto;
+use core::fmt::Debug;
+use rust_decimal::Decimal;
+use serde::Serialize;
+use strum::IntoEnumIterator;
 
 pub mod exceptions;
 
@@ -32,14 +29,15 @@ const RESTRICTED_NETWORKS: u16 = 1024;
 const REQUIRED_NETWORKID_VERSION: &'static str = "1.11.0";
 const LEDGER_OFFSET: u8 = 20;
 
-pub async fn autofill<'a, F, T>(
-    transaction: &'a mut T,
-    client: &'a impl AsyncClient<'a>,
+pub async fn autofill<'a, 'b, F, T>(
+    transaction: &mut T,
+    client: &'a impl AsyncClient,
     signers_count: Option<u8>,
 ) -> Result<()>
 where
-    T: Transaction<'a, F> + Model + Clone,
-    F: IntoEnumIterator + Serialize + Debug + PartialEq + 'a,
+    'a: 'b,
+    T: Transaction<'b, F> + Model + Clone,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
 {
     let txn = transaction.clone();
     let txn_common_fields = transaction.get_mut_common_fields();
@@ -63,18 +61,18 @@ where
     Ok(())
 }
 
-async fn calculate_fee_per_transaction_type<'a, T, F>(
+pub async fn calculate_fee_per_transaction_type<'a, 'b, T, F>(
     transaction: T,
-    client: Option<&'a impl AsyncClient<'a>>,
+    client: Option<&'a impl AsyncClient>,
     signers_count: Option<u8>,
-) -> Result<XRPAmount<'a>>
+) -> Result<XRPAmount<'_>>
 where
-    T: Transaction<'a, F>,
+    'a: 'b,
+    T: Transaction<'b, F>,
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
 {
     let mut net_fee = XRPAmount::from("10");
     let mut base_fee;
-
     if let Some(client) = client {
         net_fee = get_fee(client, None, None).await?;
         base_fee = match transaction.get_transaction_type() {
@@ -97,7 +95,6 @@ where
             _ => net_fee.clone(),
         };
     }
-
     if let Some(signers_count) = signers_count {
         base_fee += net_fee * (1 + signers_count);
     }
@@ -105,11 +102,9 @@ where
     Ok(base_fee.ceil())
 }
 
-async fn get_owner_reserve_from_response<'a>(
-    client: &'a impl AsyncClient<'a>,
-) -> Result<XRPAmount<'a>> {
+async fn get_owner_reserve_from_response(client: &impl AsyncClient) -> Result<XRPAmount<'_>> {
     let owner_reserve_response = client
-        .request::<ServerStateResult<'a>, _>(ServerState::new(None))
+        .request::<ServerStateResult<'_>, _>(ServerState::new(None))
         .await?;
     match owner_reserve_response
         .result
@@ -141,10 +136,11 @@ fn calculate_based_on_fulfillment<'a>(
     let base_fee_string =
         (net_fee_f64 * (33.0 + (fulfillment_bytes.len() as f64 / 16.0))).to_string();
     let base_fee_decimal: Decimal = base_fee_string.parse().unwrap();
+
     XRPAmount::from(base_fee_decimal.ceil())
 }
 
-fn txn_needs_network_id<'a>(common_fields: CommonFields<'a>) -> bool {
+fn txn_needs_network_id(common_fields: CommonFields<'_>) -> bool {
     common_fields.network_id.unwrap() > RESTRICTED_NETWORKS as u32
         && is_not_later_rippled_version(
             REQUIRED_NETWORKID_VERSION.into(),
@@ -172,7 +168,6 @@ fn is_not_later_rippled_version(source: String, target: String) -> bool {
             target_decomp[0].parse::<u8>().unwrap(),
             target_decomp[1].parse::<u8>().unwrap(),
         );
-
         if source_major != target_major {
             source_major < target_major
         } else if source_minor != target_minor {
@@ -188,7 +183,6 @@ fn is_not_later_rippled_version(source: String, target: String) -> bool {
                 .collect::<Vec<String>>();
             let source_patch_version = source_patch[0].parse::<u8>().unwrap();
             let target_patch_version = target_patch[0].parse::<u8>().unwrap();
-
             if source_patch_version != target_patch_version {
                 source_patch_version < target_patch_version
             } else if source_patch.len() != target_patch.len() {
@@ -212,30 +206,26 @@ fn is_not_later_rippled_version(source: String, target: String) -> bool {
 
 #[cfg(test)]
 mod test_autofill {
-    use alloc::println;
-    use anyhow::Result;
-
     use super::autofill;
     use crate::{
         asynch::clients::{AsyncWebsocketClient, SingleExecutorMutex},
         models::{
             amount::{IssuedCurrencyAmount, XRPAmount},
-            transactions::OfferCreate,
+            transactions::{OfferCreate, Transaction},
         },
-        wallet::Wallet,
     };
+    use anyhow::Result;
 
     #[tokio::test]
     async fn test_autofill_txn() -> Result<()> {
-        let wallet = Wallet::create(None).unwrap();
         let mut txn = OfferCreate::new(
-            wallet.classic_address.clone().into(),
+            "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq".into(),
             None,
             None,
             None,
-            Some(72779837),
             None,
-            Some(1),
+            None,
+            None,
             None,
             None,
             None,
@@ -254,11 +244,12 @@ mod test_autofill {
         )
         .await
         .unwrap();
-        {
-            let txn1 = &mut txn;
-            autofill(txn1, &client, None).await.unwrap();
-        }
-        println!("{:?}", txn);
+        autofill(&mut txn, &client, None).await?;
+
+        assert!(txn.get_common_fields().network_id.is_none());
+        assert!(txn.get_common_fields().sequence.is_some());
+        assert!(txn.get_common_fields().fee.is_some());
+        assert!(txn.get_common_fields().last_ledger_sequence.is_some());
 
         Ok(())
     }

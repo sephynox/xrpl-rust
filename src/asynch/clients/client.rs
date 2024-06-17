@@ -11,22 +11,24 @@ use serde::{Deserialize, Serialize};
 use super::CommonFields;
 
 #[allow(async_fn_in_trait)]
-pub trait Client<'a> {
+pub trait Client {
     async fn request_impl<
+        'a,
         Res: Serialize + for<'de> Deserialize<'de>,
         Req: Serialize + for<'de> Deserialize<'de> + Request<'a>,
     >(
-        &'a self,
+        &self,
         request: Req,
-    ) -> Result<XRPLResponse<'_, Res, Req>>;
+    ) -> Result<XRPLResponse<'a, Res, Req>>;
 
     fn set_request_id<
+        'a,
         Res: Serialize + for<'de> Deserialize<'de>,
         Req: Serialize + for<'de> Deserialize<'de> + Request<'a>,
     >(
-        &'a self,
+        &self,
         request: &mut Req,
-    ) -> Cow<'_, str> {
+    ) -> Cow<'a, str> {
         let common_fields = request.get_common_fields();
         let request_id: Cow<'_, str> = match common_fields.id.clone() {
             Some(id) => id,
@@ -44,7 +46,7 @@ pub trait Client<'a> {
         request_id
     }
 
-    async fn get_common_fields(&'a self) -> Result<CommonFields<'a>> {
+    async fn get_common_fields(&self) -> Result<CommonFields<'_>> {
         let server_state = self
             .request_impl::<ServerStateResult, _>(ServerState::new(None))
             .await?;

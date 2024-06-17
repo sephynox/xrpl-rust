@@ -72,6 +72,7 @@ impl<'a> TryFrom<Value> for XRPAmount<'a> {
     fn try_from(value: Value) -> Result<Self, Self::Error> {
         let amount_string =
             serde_json::to_string(&value).map_err(XRPLAmountException::FromSerdeError)?;
+        let amount_string = amount_string.clone().replace("\"", "");
         Ok(Self(amount_string.into()))
     }
 }

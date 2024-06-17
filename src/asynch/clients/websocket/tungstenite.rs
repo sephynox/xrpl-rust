@@ -179,17 +179,18 @@ where
     }
 }
 
-impl<'a, M> Client<'a> for AsyncWebsocketClient<M, WebsocketOpen>
+impl<M> Client for AsyncWebsocketClient<M, WebsocketOpen>
 where
     M: RawMutex,
 {
     async fn request_impl<
+        'a,
         Res: Serialize + for<'de> Deserialize<'de>,
         Req: Serialize + for<'de> Deserialize<'de> + Request<'a>,
     >(
-        &'a self,
+        &self,
         mut request: Req,
-    ) -> Result<XRPLResponse<'_, Res, Req>> {
+    ) -> Result<XRPLResponse<'a, Res, Req>> {
         // setup request future
         let request_id = self.set_request_id::<Res, Req>(&mut request);
         let mut websocket_base = self.websocket_base.lock().await;

@@ -67,17 +67,18 @@ mod std_client {
         }
     }
 
-    impl<'a, M> Client<'a> for AsyncJsonRpcClient<M>
+    impl<M> Client for AsyncJsonRpcClient<M>
     where
         M: RawMutex,
     {
         async fn request_impl<
+            'a,
             Res: Serialize + for<'de> Deserialize<'de>,
             Req: Serialize + for<'de> Deserialize<'de> + Request<'a>,
         >(
-            &'a self,
+            &self,
             request: Req,
-        ) -> Result<XRPLResponse<'_, Res, Req>> {
+        ) -> Result<XRPLResponse<'a, Res, Req>> {
             let client = self.client.lock().await;
             match client
                 .post(self.url.as_ref())

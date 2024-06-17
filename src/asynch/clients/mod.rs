@@ -7,7 +7,6 @@ use alloc::borrow::Cow;
 use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex, NoopRawMutex};
 
 pub use async_client::*;
-pub(crate) use client::*;
 pub use json_rpc::*;
 use serde::{Deserialize, Serialize};
 pub use websocket::*;

@@ -105,11 +105,11 @@ impl<'a> Transaction<'a, NFTokenCreateOfferFlag> for NFTokenCreateOffer<'a> {
         self.common_fields.transaction_type.clone()
     }
 
-    fn get_common_fields(&'a self) -> &'a CommonFields<'a, NFTokenCreateOfferFlag> {
+    fn get_common_fields(&self) -> &CommonFields<'_, NFTokenCreateOfferFlag> {
         &self.common_fields
     }
 
-    fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, NFTokenCreateOfferFlag> {
+    fn get_mut_common_fields(&mut self) -> &mut CommonFields<'a, NFTokenCreateOfferFlag> {
         &mut self.common_fields
     }
 }

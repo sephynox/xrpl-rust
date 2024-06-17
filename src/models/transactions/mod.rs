@@ -230,11 +230,11 @@ where
         self.transaction_type.clone()
     }
 
-    fn get_common_fields(&'a self) -> &'a CommonFields<'a, T> {
+    fn get_common_fields(&self) -> &CommonFields<'_, T> {
         self
     }
 
-    fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, T> {
+    fn get_mut_common_fields(&mut self) -> &mut CommonFields<'a, T> {
         self
     }
 }
@@ -292,9 +292,9 @@ where
 
     fn get_transaction_type(&self) -> TransactionType;
 
-    fn get_common_fields(&'a self) -> &'a CommonFields<'a, T>;
+    fn get_common_fields(&self) -> &CommonFields<'_, T>;
 
-    fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, T>;
+    fn get_mut_common_fields(&mut self) -> &mut CommonFields<'a, T>;
 
     fn get_field_value(&self, field: &str) -> Option<String> {
         let transaction = serde_json::to_value(self).unwrap();

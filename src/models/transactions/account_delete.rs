@@ -44,24 +44,24 @@ pub struct AccountDelete<'a> {
     pub destination_tag: Option<u32>,
 }
 
-impl<'a> Model for AccountDelete<'a> {}
+impl Model for AccountDelete<'_> {}
 
 impl<'a> Transaction<'a, NoFlags> for AccountDelete<'a> {
     fn get_transaction_type(&self) -> TransactionType {
         self.common_fields.get_transaction_type()
     }
 
-    fn get_common_fields(&'a self) -> &'a CommonFields<'a, NoFlags> {
+    fn get_common_fields(&self) -> &CommonFields<'_, NoFlags> {
         &self.common_fields
     }
 
-    fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, NoFlags> {
+    fn get_mut_common_fields(&mut self) -> &mut CommonFields<'a, NoFlags> {
         &mut self.common_fields
     }
 }
 
-impl<'a> AccountDelete<'a> {
-    pub fn new(
+impl AccountDelete<'_> {
+    pub fn new<'a>(
         account: Cow<'a, str>,
         account_txn_id: Option<Cow<'a, str>>,
         fee: Option<XRPAmount<'a>>,
@@ -73,8 +73,8 @@ impl<'a> AccountDelete<'a> {
         ticket_sequence: Option<u32>,
         destination: Cow<'a, str>,
         destination_tag: Option<u32>,
-    ) -> Self {
-        Self {
+    ) -> AccountDelete<'a> {
+        AccountDelete {
             common_fields: CommonFields {
                 account,
                 transaction_type: TransactionType::AccountDelete,

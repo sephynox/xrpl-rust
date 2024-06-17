@@ -99,11 +99,11 @@ impl<'a> Transaction<'a, PaymentChannelClaimFlag> for PaymentChannelClaim<'a> {
         self.common_fields.transaction_type.clone()
     }
 
-    fn get_common_fields(&'a self) -> &'a CommonFields<'a, PaymentChannelClaimFlag> {
+    fn get_common_fields(&self) -> &CommonFields<'_, PaymentChannelClaimFlag> {
         &self.common_fields
     }
 
-    fn get_mut_common_fields(&'a mut self) -> &'a mut CommonFields<'a, PaymentChannelClaimFlag> {
+    fn get_mut_common_fields(&mut self) -> &mut CommonFields<'a, PaymentChannelClaimFlag> {
         &mut self.common_fields
     }
 }

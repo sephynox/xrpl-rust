@@ -19,7 +19,7 @@ pub struct LedgerInner<'a> {
     pub close_time_resolution: u32,
     pub closed: bool,
     pub ledger_hash: Cow<'a, str>,
-    pub ledger_index: u32,
+    pub ledger_index: Cow<'a, str>,
     pub parent_close_time: u32,
     pub parent_hash: Cow<'a, str>,
     pub total_coins: Cow<'a, str>,
