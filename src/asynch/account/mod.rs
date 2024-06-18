@@ -9,10 +9,10 @@ use crate::{
 
 use super::clients::AsyncClient;
 
-pub async fn get_next_valid_seq_number<'a>(
-    address: Cow<'a, str>,
-    client: &'a impl AsyncClient,
-    ledger_index: Option<Cow<'a, str>>,
+pub async fn get_next_valid_seq_number(
+    address: Cow<'_, str>,
+    client: &impl AsyncClient,
+    ledger_index: Option<Cow<'_, str>>,
 ) -> Result<u32> {
     let account_info =
         get_account_root(address, client, ledger_index.unwrap_or("current".into())).await?;
@@ -20,9 +20,9 @@ pub async fn get_next_valid_seq_number<'a>(
 }
 
 pub async fn get_account_root<'a>(
-    address: Cow<'a, str>,
-    client: &'a impl AsyncClient,
-    ledger_index: Cow<'a, str>,
+    address: Cow<'_, str>,
+    client: &impl AsyncClient,
+    ledger_index: Cow<'_, str>,
 ) -> Result<AccountRoot<'a>> {
     let mut classic_address = address;
     if is_valid_xaddress(&classic_address) {

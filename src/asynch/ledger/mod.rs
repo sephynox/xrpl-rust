@@ -13,7 +13,7 @@ use crate::models::{
 
 use super::clients::AsyncClient;
 
-pub async fn get_latest_validated_ledger_sequence<'a>(client: &'a impl AsyncClient) -> Result<u32> {
+pub async fn get_latest_validated_ledger_sequence(client: &impl AsyncClient) -> Result<u32> {
     let ledger_response = client
         .request::<results::Ledger, _>(Ledger::new(
             None,
@@ -38,13 +38,13 @@ pub enum FeeType {
     Dynamic,
 }
 
-pub async fn get_fee<'a>(
-    client: &'a impl AsyncClient,
+pub async fn get_fee(
+    client: &impl AsyncClient,
     max_fee: Option<u32>,
     fee_type: Option<FeeType>,
-) -> Result<XRPAmount<'a>> {
+) -> Result<XRPAmount<'_>> {
     let fee_request = Fee::new(None);
-    match client.request::<FeeResult<'a>, _>(fee_request).await {
+    match client.request::<FeeResult<'_>, _>(fee_request).await {
         Ok(response) => {
             let drops = response.try_into_result()?.drops;
             let fee = match_fee_type(fee_type, drops)?;
