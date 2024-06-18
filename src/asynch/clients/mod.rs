@@ -5,10 +5,10 @@ mod websocket;
 
 use alloc::borrow::Cow;
 use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex, NoopRawMutex};
+use serde::{Deserialize, Serialize};
 
 pub use async_client::*;
 pub use json_rpc::*;
-use serde::{Deserialize, Serialize};
 pub use websocket::*;
 
 pub type MultiExecutorMutex = CriticalSectionRawMutex;
