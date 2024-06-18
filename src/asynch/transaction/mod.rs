@@ -18,6 +18,7 @@ use alloc::vec::Vec;
 use anyhow::Result;
 use core::convert::TryInto;
 use core::fmt::Debug;
+use exceptions::XRPLTransactionException;
 use rust_decimal::Decimal;
 use serde::Serialize;
 use strum::IntoEnumIterator;
@@ -42,7 +43,7 @@ where
     let txn = transaction.clone();
     let txn_common_fields = transaction.get_mut_common_fields();
     let common_fields = client.get_common_fields().await?;
-    if txn_common_fields.network_id.is_none() && txn_needs_network_id(common_fields.clone()) {
+    if txn_common_fields.network_id.is_none() && txn_needs_network_id(common_fields.clone())? {
         txn_common_fields.network_id = common_fields.network_id;
     }
     if txn_common_fields.sequence.is_none() {
@@ -72,14 +73,16 @@ where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
 {
     let mut net_fee = XRPAmount::from("10");
-    let mut base_fee;
+    let base_fee;
     if let Some(client) = client {
         net_fee = get_fee(client, None, None).await?;
         base_fee = match transaction.get_transaction_type() {
             TransactionType::EscrowFinish => calculate_base_fee_for_escrow_finish(
                 net_fee.clone(),
-                Some(transaction.get_field_value("fulfillment").unwrap().into()),
-            ),
+                transaction
+                    .get_field_value("fulfillment")?
+                    .map(|fulfillment| fulfillment.into()),
+            )?,
             // TODO: same for TransactionType::AMMCreate
             TransactionType::AccountDelete => get_owner_reserve_from_response(client).await?,
             _ => net_fee.clone(),
@@ -88,18 +91,23 @@ where
         base_fee = match transaction.get_transaction_type() {
             TransactionType::EscrowFinish => calculate_base_fee_for_escrow_finish(
                 net_fee.clone(),
-                Some(transaction.get_field_value("fulfillment").unwrap().into()),
-            ),
+                transaction
+                    .get_field_value("fulfillment")?
+                    .map(|fulfillment| fulfillment.into()),
+            )?,
             // TODO: same for TransactionType::AMMCreate
             TransactionType::AccountDelete => XRPAmount::from(OWNER_RESERVE),
             _ => net_fee.clone(),
         };
     }
+    let mut base_fee_decimal: Decimal = base_fee.try_into()?;
     if let Some(signers_count) = signers_count {
-        base_fee += net_fee * (1 + signers_count);
+        let net_fee_decimal: Decimal = net_fee.try_into()?;
+        let signer_count_fee_decimal: Decimal = (1 + signers_count).into();
+        base_fee_decimal += &(net_fee_decimal * signer_count_fee_decimal);
     }
 
-    Ok(base_fee.ceil())
+    Ok(base_fee_decimal.ceil().into())
 }
 
 async fn get_owner_reserve_from_response(client: &impl AsyncClient) -> Result<XRPAmount<'_>> {
@@ -107,8 +115,7 @@ async fn get_owner_reserve_from_response(client: &impl AsyncClient) -> Result<XR
         .request::<ServerStateResult<'_>, _>(ServerState::new(None))
         .await?;
     match owner_reserve_response
-        .result
-        .unwrap()
+        .try_into_result()?
         .state
         .validated_ledger
     {
@@ -120,37 +127,53 @@ async fn get_owner_reserve_from_response(client: &impl AsyncClient) -> Result<XR
 fn calculate_base_fee_for_escrow_finish<'a>(
     net_fee: XRPAmount<'a>,
     fulfillment: Option<Cow<str>>,
-) -> XRPAmount<'a> {
+) -> Result<XRPAmount<'a>> {
     if let Some(fulfillment) = fulfillment {
-        return calculate_based_on_fulfillment(fulfillment, net_fee);
+        calculate_based_on_fulfillment(fulfillment, net_fee)
+    } else {
+        Ok(net_fee)
     }
-    net_fee
 }
 
 fn calculate_based_on_fulfillment<'a>(
     fulfillment: Cow<str>,
-    net_fee: XRPAmount<'a>,
-) -> XRPAmount<'a> {
+    net_fee: XRPAmount<'_>,
+) -> Result<XRPAmount<'a>> {
     let fulfillment_bytes: Vec<u8> = fulfillment.chars().map(|c| c as u8).collect();
-    let net_fee_f64: f64 = net_fee.try_into().unwrap();
+    let net_fee_f64: f64 = net_fee.try_into()?;
     let base_fee_string =
         (net_fee_f64 * (33.0 + (fulfillment_bytes.len() as f64 / 16.0))).to_string();
-    let base_fee_decimal: Decimal = base_fee_string.parse().unwrap();
+    let base_fee: XRPAmount = base_fee_string.into();
+    let base_fee_decimal: Decimal = base_fee.try_into()?;
 
-    XRPAmount::from(base_fee_decimal.ceil())
+    Ok(base_fee_decimal.ceil().into())
 }
 
-fn txn_needs_network_id(common_fields: CommonFields<'_>) -> bool {
-    common_fields.network_id.unwrap() > RESTRICTED_NETWORKS as u32
-        && is_not_later_rippled_version(
-            REQUIRED_NETWORKID_VERSION.into(),
-            common_fields.build_version.unwrap().into(),
-        )
+fn txn_needs_network_id(common_fields: CommonFields<'_>) -> Result<bool> {
+    let is_higher_restricted_networks = if let Some(network_id) = common_fields.network_id {
+        network_id > RESTRICTED_NETWORKS as u32
+    } else {
+        false
+    };
+    if let Some(build_version) = common_fields.build_version {
+        match is_not_later_rippled_version(REQUIRED_NETWORKID_VERSION.into(), build_version.into())
+        {
+            Ok(is_not_later_rippled_version) => {
+                Ok(is_higher_restricted_networks && is_not_later_rippled_version)
+            }
+            Err(e) => Err!(e),
+        }
+    } else {
+        Ok(false)
+    }
 }
 
-fn is_not_later_rippled_version(source: String, target: String) -> bool {
+fn is_not_later_rippled_version<'a>(
+    source: String,
+    target: String,
+) -> Result<bool, XRPLTransactionException<'a>> {
     if source == target {
-        true
+        Ok(true)
     } else {
         let source_decomp = source
             .split('.')
@@ -161,17 +184,25 @@ fn is_not_later_rippled_version(source: String, target: String) -> bool {
             .map(|i| i.to_string())
             .collect::<Vec<String>>();
         let (source_major, source_minor) = (
-            source_decomp[0].parse::<u8>().unwrap(),
-            source_decomp[1].parse::<u8>().unwrap(),
+            source_decomp[0]
+                .parse::<u8>()
+                .map_err(XRPLTransactionException::ParseRippledVersionError)?,
+            source_decomp[1]
+                .parse::<u8>()
+                .map_err(XRPLTransactionException::ParseRippledVersionError)?,
         );
         let (target_major, target_minor) = (
-            target_decomp[0].parse::<u8>().unwrap(),
-            target_decomp[1].parse::<u8>().unwrap(),
+            target_decomp[0]
+                .parse::<u8>()
+                .map_err(XRPLTransactionException::ParseRippledVersionError)?,
+            target_decomp[1]
+                .parse::<u8>()
+                .map_err(XRPLTransactionException::ParseRippledVersionError)?,
         );
         if source_major != target_major {
-            source_major < target_major
+            Ok(source_major < target_major)
         } else if source_minor != target_minor {
-            source_minor < target_minor
+            Ok(source_minor < target_minor)
         } else {
             let source_patch = source_decomp[2]
                 .split('-')
@@ -181,24 +212,30 @@ fn is_not_later_rippled_version(source: String, target: String) -> bool {
                 .split('-')
                 .map(|i| i.to_string())
                 .collect::<Vec<String>>();
-            let source_patch_version = source_patch[0].parse::<u8>().unwrap();
-            let target_patch_version = target_patch[0].parse::<u8>().unwrap();
+            let source_patch_version = source_patch[0]
+                .parse::<u8>()
+                .map_err(XRPLTransactionException::ParseRippledVersionError)?;
+            let target_patch_version = target_patch[0]
+                .parse::<u8>()
+                .map_err(XRPLTransactionException::ParseRippledVersionError)?;
             if source_patch_version != target_patch_version {
-                source_patch_version < target_patch_version
+                Ok(source_patch_version < target_patch_version)
             } else if source_patch.len() != target_patch.len() {
-                source_patch.len() < target_patch.len()
+                Ok(source_patch.len() < target_patch.len())
             } else if source_patch.len() == 2 {
-                if source_patch[1].chars().next().unwrap()
-                    != target_patch[1].chars().next().unwrap()
-                {
-                    source_patch[1] < target_patch[1]
+                if source_patch[1].chars().next().ok_or(
+                    XRPLTransactionException::InvalidRippledVersion("source patch version".into()),
+                )? != target_patch[1].chars().next().ok_or(
+                    XRPLTransactionException::InvalidRippledVersion("target patch version".into()),
+                )? {
+                    Ok(source_patch[1] < target_patch[1])
                 } else if source_patch[1].starts_with('b') {
-                    &source_patch[1][1..] < &target_patch[1][1..]
+                    Ok(&source_patch[1][1..] < &target_patch[1][1..])
                 } else {
-                    &source_patch[1][2..] < &target_patch[1][2..]
+                    Ok(&source_patch[1][2..] < &target_patch[1][2..])
                 }
             } else {
-                false
+                Ok(false)
             }
         }
     }

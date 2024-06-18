@@ -50,7 +50,7 @@ pub trait Client {
         let server_state = self
             .request_impl::<ServerStateResult, _>(ServerState::new(None))
             .await?;
-        let state = server_state.result.unwrap().state;
+        let state = server_state.try_into_result()?.state;
         let common_fields = CommonFields {
             network_id: state.network_id,
             build_version: Some(state.build_version),

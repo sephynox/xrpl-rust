@@ -1,4 +1,4 @@
-use core::cmp::min;
+use core::{cmp::min, convert::TryInto};
 
 use alloc::string::ToString;
 use anyhow::Result;
@@ -29,7 +29,7 @@ pub async fn get_latest_validated_ledger_sequence<'a>(client: &'a impl AsyncClie
         ))
         .await?;
 
-    Ok(ledger_response.result.unwrap().ledger_index)
+    Ok(ledger_response.try_into_result()?.ledger_index)
 }
 
 pub enum FeeType {
@@ -46,8 +46,8 @@ pub async fn get_fee<'a>(
     let fee_request = Fee::new(None);
     match client.request::<FeeResult<'a>, _>(fee_request).await {
         Ok(response) => {
-            let drops = response.result.unwrap().drops;
-            let fee = match_fee_type(fee_type, drops).unwrap();
+            let drops = response.try_into_result()?.drops;
+            let fee = match_fee_type(fee_type, drops)?;
 
             if let Some(max_fee) = max_fee {
                 Ok(XRPAmount::from(min(max_fee, fee).to_string()))
@@ -61,8 +61,8 @@ pub async fn get_fee<'a>(
 
 fn match_fee_type(fee_type: Option<FeeType>, drops: Drops<'_>) -> Result<u32> {
     match fee_type {
-        None | Some(FeeType::Open) => Ok(drops.open_ledger_fee.0.to_string().parse().unwrap()),
-        Some(FeeType::Minimum) => Ok(drops.minimum_fee.0.to_string().parse().unwrap()),
+        None | Some(FeeType::Open) => Ok(drops.open_ledger_fee.try_into()?),
+        Some(FeeType::Minimum) => Ok(drops.minimum_fee.try_into()?),
         Some(FeeType::Dynamic) => unimplemented!("Dynamic fee calculation not yet implemented"),
     }
 }

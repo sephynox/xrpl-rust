@@ -1,16 +1,20 @@
 mod account_info;
+mod exceptions;
 mod fee;
 mod ledger;
 mod server_state;
 
 pub use account_info::*;
+pub use exceptions::*;
 pub use fee::*;
 pub use ledger::*;
 pub use server_state::*;
 
-use alloc::{borrow::Cow, string::ToString, vec::Vec};
+use alloc::{borrow::Cow, format, string::ToString, vec::Vec};
 use anyhow::Result;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
+use crate::Err;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -56,6 +60,34 @@ where
         if map.is_empty() {
             return Err(serde::de::Error::custom("Empty response"));
         }
+        let request = match map.remove("request") {
+            Some(request) => match serde_json::from_value(request) {
+                Ok(request) => request,
+                Err(error) => return Err(serde::de::Error::custom(error.to_string())),
+            },
+            None => None,
+        };
+        let result = match map.remove("result") {
+            Some(result) => match serde_json::from_value(result) {
+                Ok(result) => result,
+                Err(error) => return Err(serde::de::Error::custom(error.to_string())),
+            },
+            None => None,
+        };
+        let status = match map.remove("status") {
+            Some(status) => match serde_json::from_value(status) {
+                Ok(status) => status,
+                Err(error) => return Err(serde::de::Error::custom(error.to_string())),
+            },
+            None => None,
+        };
+        let r#type = match map.remove("type") {
+            Some(r#type) => match serde_json::from_value(r#type) {
+                Ok(r#type) => r#type,
+                Err(error) => return Err(serde::de::Error::custom(error.to_string())),
+            },
+            None => None,
+        };
         Ok(XRPLResponse {
             id: map.remove("id").map(|item| match item.as_str() {
                 Some(item_str) => Cow::Owned(item_str.to_string()),
@@ -74,18 +106,10 @@ where
                 None => Cow::Borrowed(""),
             }),
             forwarded: map.remove("forwarded").and_then(|v| v.as_bool()),
-            request: map
-                .remove("request")
-                .map(|v| serde_json::from_value(v).unwrap()),
-            result: map
-                .remove("result")
-                .map(|v| serde_json::from_value(v).unwrap()),
-            status: map
-                .remove("status")
-                .map(|v| serde_json::from_value(v).unwrap()),
-            r#type: map
-                .remove("type")
-                .map(|v| serde_json::from_value(v).unwrap()),
+            request,
+            result,
+            status,
+            r#type,
             warning: map.remove("warning").map(|item| match item.as_str() {
                 Some(item_str) => Cow::Owned(item_str.to_string()),
                 None => Cow::Borrowed(""),
@@ -97,9 +121,26 @@ where
     }
 }
 
-impl<'a, Res, Req> XRPLResponse<'a, Res, Req> {
+impl<Res, Req> XRPLResponse<'_, Res, Req> {
     pub fn is_success(&self) -> bool {
         self.status == Some(ResponseStatus::Success)
+    }
+
+    pub fn try_into_result(self) -> Result<Res> {
+        match self.result {
+            Some(result) => Ok(result),
+            None => {
+                if let Some(error) = self.error {
+                    Err!(XRPLResultException::ResponseError(format!(
+                        "{}: {}",
+                        error,
+                        self.error_message.unwrap_or_default()
+                    )))
+                } else {
+                    Err!(XRPLResultException::ExpectedResultOrError)
+                }
+            }
+        }
     }
 }
 

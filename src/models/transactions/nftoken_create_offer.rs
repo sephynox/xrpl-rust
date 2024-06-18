@@ -13,7 +13,6 @@ use crate::models::{
     transactions::{Memo, Signer, Transaction, TransactionType},
 };
 
-use crate::models::amount::exceptions::XRPLAmountException;
 use crate::models::amount::{Amount, XRPAmount};
 use crate::models::transactions::XRPLNFTokenCreateOfferException;
 use crate::Err;
@@ -116,22 +115,14 @@ impl<'a> Transaction<'a, NFTokenCreateOfferFlag> for NFTokenCreateOffer<'a> {
 
 impl<'a> NFTokenCreateOfferError for NFTokenCreateOffer<'a> {
     fn _get_amount_error(&self) -> Result<()> {
-        let amount_into_decimal: Result<Decimal, XRPLAmountException> =
-            self.amount.clone().try_into();
-        match amount_into_decimal {
-            Ok(amount) => {
-                if !self.has_flag(&NFTokenCreateOfferFlag::TfSellOffer) && amount.is_zero() {
-                    Err!(XRPLNFTokenCreateOfferException::ValueZero {
-                        field: "amount".into(),
-                        resource: "".into(),
-                    })
-                } else {
-                    Ok(())
-                }
-            }
-            Err(decimal_error) => {
-                Err!(decimal_error)
-            }
+        let amount: Decimal = self.amount.clone().try_into()?;
+        if !self.has_flag(&NFTokenCreateOfferFlag::TfSellOffer) && amount.is_zero() {
+            Err!(XRPLNFTokenCreateOfferException::ValueZero {
+                field: "amount".into(),
+                resource: "".into(),
+            })
+        } else {
+            Ok(())
         }
     }
 

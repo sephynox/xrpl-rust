@@ -6,8 +6,10 @@ use thiserror_no_std::Error;
 pub enum XRPLAmountException {
     #[error("Unable to convert amount `value` into `Decimal`.")]
     ToDecimalError(#[from] rust_decimal::Error),
-    #[error("Unable to convert amount `value` into `f64`.")]
+    #[error("Unable to convert amount float.")]
     ToFloatError(#[from] ParseFloatError),
+    #[error("Unable to convert amount integer.")]
+    ToIntError(#[from] core::num::ParseIntError),
     #[error("{0:?}")]
     FromSerdeError(#[from] serde_json::Error),
 }

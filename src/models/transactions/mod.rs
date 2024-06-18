@@ -57,6 +57,7 @@ pub use trust_set::*;
 
 use crate::alloc::string::ToString;
 use crate::models::amount::XRPAmount;
+use crate::Err;
 use crate::{_serde::txn_flags, serde_with_tag};
 use alloc::borrow::Cow;
 use alloc::string::String;
@@ -296,9 +297,11 @@ where
 
     fn get_mut_common_fields(&mut self) -> &mut CommonFields<'a, T>;
 
-    fn get_field_value(&self, field: &str) -> Option<String> {
-        let transaction = serde_json::to_value(self).unwrap();
-        transaction.get(field).map(|v| v.to_string())
+    fn get_field_value(&self, field: &str) -> Result<Option<String>> {
+        match serde_json::to_value(self) {
+            Ok(value) => Ok(value.get(field).map(|v| v.to_string())),
+            Err(e) => Err!(e),
+        }
     }
 }
 

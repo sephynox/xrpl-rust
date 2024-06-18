@@ -4,6 +4,7 @@ use anyhow::Result;
 use crate::{
     core::addresscodec::{is_valid_xaddress, xaddress_to_classic_address},
     models::{ledger::AccountRoot, requests::AccountInfo, results},
+    Err,
 };
 
 use super::clients::AsyncClient;
@@ -25,10 +26,10 @@ pub async fn get_account_root<'a>(
 ) -> Result<AccountRoot<'a>> {
     let mut classic_address = address;
     if is_valid_xaddress(&classic_address) {
-        classic_address = xaddress_to_classic_address(&classic_address)
-            .unwrap()
-            .0
-            .into();
+        classic_address = match xaddress_to_classic_address(&classic_address) {
+            Ok(addr) => addr.0.into(),
+            Err(e) => return Err!(e),
+        };
     }
     let account_info = client
         .request::<results::AccountInfo, _>(AccountInfo::new(
@@ -42,5 +43,5 @@ pub async fn get_account_root<'a>(
         ))
         .await?;
 
-    Ok(account_info.result.unwrap().account_data)
+    Ok(account_info.try_into_result()?.account_data)
 }
