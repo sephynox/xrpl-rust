@@ -1,3 +1,8 @@
-#[cfg(any(feature = "tungstenite", feature = "embedded-ws"))]
+#[cfg(any(
+    feature = "tungstenite",
+    feature = "embedded-ws",
+    feature = "json-rpc-std",
+    feature = "json-rpc"
+))]
 pub mod clients;
 pub mod transaction;
