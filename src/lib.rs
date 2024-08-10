@@ -30,7 +30,14 @@ pub mod constants;
 #[cfg(feature = "core")]
 pub mod core;
 pub mod macros;
-#[cfg(feature = "models")]
+#[cfg(any(
+    feature = "amounts",
+    feature = "currencies",
+    feature = "ledger",
+    feature = "requests",
+    feature = "results",
+    feature = "transactions"
+))]
 pub mod models;
 #[cfg(feature = "utils")]
 pub mod utils;

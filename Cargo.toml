@@ -95,12 +95,23 @@ name = "benchmarks"
 harness = false
 
 [features]
-default = ["std", "core", "models", "utils", "websocket-std"]
+default = ["std", "core", "models", "utils", "helpers", "websocket-std"]
 models = ["core", "transactions", "requests", "ledger", "results"]
 transactions = ["core", "amounts", "currencies"]
 requests = ["core", "amounts", "currencies"]
 results = ["core", "amounts", "currencies"]
 ledger = ["core", "amounts", "currencies"]
+helpers = ["account-helpers", "ledger-helpers", "transaction-helpers"]
+account-helpers = ["amounts", "currencies", "requests", "results"]
+ledger-helpers = ["amounts", "currencies", "requests", "results"]
+transaction-helpers = [
+    "amounts",
+    "currencies",
+    "requests",
+    "results",
+    "transactions",
+    "ledger",
+]
 amounts = ["core"]
 currencies = ["core"]
 json-rpc = ["url", "reqwless", "embedded-nal-async"]
