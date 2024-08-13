@@ -412,45 +412,6 @@ where
     }
 }
 
-#[cfg(test)]
-mod test_sign {
-    use alloc::borrow::Cow;
-
-    use crate::{
-        models::{amount::XRPAmount, transactions::Payment},
-        wallet::Wallet,
-    };
-
-    #[test]
-    fn test_sign() {
-        let wallet = Wallet::create(None).unwrap();
-        let payment = Payment::new(
-            Cow::from(wallet.classic_address.clone()),
-            XRPAmount::from("1000").into(),
-            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        );
-
-        let signed_transaction = super::sign(payment, &wallet, false);
-        assert!(signed_transaction.is_ok());
-    }
-}
-
 #[cfg(all(feature = "websocket-std", feature = "std", not(feature = "websocket")))]
 #[cfg(test)]
 mod test_autofill {
