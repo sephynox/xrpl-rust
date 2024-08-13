@@ -1,14 +1,18 @@
+use core::fmt::Debug;
+
 use anyhow::Result;
 use serde::{de::DeserializeOwned, Serialize};
+use strum::IntoEnumIterator;
 
 use crate::{
     models::transactions::{Transaction, XRPLTransactionFieldException},
     Err,
 };
 
-pub fn get_transaction_field_value<T, R>(transaction: &T, field_name: &str) -> Result<R>
+pub fn get_transaction_field_value<'a, F, T, R>(transaction: &T, field_name: &str) -> Result<R>
 where
-    T: Transaction + Serialize,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize,
     R: DeserializeOwned,
 {
     match serde_json::to_value(transaction) {
@@ -25,13 +29,14 @@ where
     }
 }
 
-pub fn set_transaction_field_value<T, V>(
+pub fn set_transaction_field_value<'a, F, T, V>(
     transaction: &T,
     field_name: &str,
     field_value: V,
 ) -> Result<T>
 where
-    T: Transaction + Serialize + DeserializeOwned,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize + DeserializeOwned,
     V: Serialize,
 {
     match serde_json::to_value(transaction) {
@@ -49,9 +54,10 @@ where
     }
 }
 
-pub fn validate_transaction_has_field<T>(transaction: &T, field_name: &str) -> Result<()>
+pub fn validate_transaction_has_field<'a, T, F>(transaction: &T, field_name: &str) -> Result<()>
 where
-    T: Transaction + Serialize,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize,
 {
     match serde_json::to_value(transaction) {
         Ok(transaction_json) => match transaction_json.get(field_name) {

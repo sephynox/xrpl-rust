@@ -1,16 +1,32 @@
-use super::account::get_next_valid_seq_number;
-use super::clients::AsyncClient;
-use super::clients::CommonFields;
-use super::ledger::get_fee;
-use super::ledger::get_latest_validated_ledger_sequence;
-use crate::models::amount::XRPAmount;
-use crate::models::exceptions::XRPLModelException;
-use crate::models::requests::ServerState;
-use crate::models::results::ServerState as ServerStateResult;
-use crate::models::transactions::Transaction;
-use crate::models::transactions::TransactionType;
-use crate::models::Model;
-use crate::Err;
+pub mod exceptions;
+
+use crate::{
+    asynch::{
+        account::get_next_valid_seq_number,
+        clients::{AsyncClient, CommonFields},
+        ledger::{get_fee, get_latest_validated_ledger_sequence},
+        transaction::exceptions::XRPLSignTransactionException,
+    },
+    core::{
+        addresscodec::{is_valid_xaddress, xaddress_to_classic_address},
+        binarycodec::encode_for_signing,
+        keypairs::sign as keypairs_sign,
+    },
+    models::{
+        amount::XRPAmount,
+        exceptions::XRPLModelException,
+        requests::ServerState,
+        results::ServerState as ServerStateResult,
+        transactions::{Transaction, TransactionType, XRPLTransactionFieldException},
+        Model,
+    },
+    utils::transactions::{
+        get_transaction_field_value, set_transaction_field_value, validate_transaction_has_field,
+    },
+    wallet::Wallet,
+    Err,
+};
+
 use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::string::ToString;
@@ -18,12 +34,13 @@ use alloc::vec::Vec;
 use anyhow::Result;
 use core::convert::TryInto;
 use core::fmt::Debug;
+use derive_new::new;
 use exceptions::XRPLTransactionException;
 use rust_decimal::Decimal;
 use serde::Serialize;
+use serde::{de::DeserializeOwned, Deserialize};
+use serde_with::skip_serializing_none;
 use strum::IntoEnumIterator;
-
-pub mod exceptions;
 
 const OWNER_RESERVE: &str = "2000000"; // 2 XRP
 const RESTRICTED_NETWORKS: u16 = 1024;
@@ -239,27 +256,6 @@ fn is_not_later_rippled_version<'a>(
     }
 }
 
-use alloc::{borrow::Cow, string::String};
-use anyhow::Result;
-use derive_new::new;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use serde_with::skip_serializing_none;
-
-use crate::{
-    asynch::transaction::exceptions::XRPLSignTransactionException,
-    core::{
-        addresscodec::{is_valid_xaddress, xaddress_to_classic_address},
-        binarycodec::encode_for_signing,
-        keypairs::sign as keypairs_sign,
-    },
-    models::transactions::{Transaction, XRPLTransactionFieldException},
-    utils::transactions::{
-        get_transaction_field_value, set_transaction_field_value, validate_transaction_has_field,
-    },
-    wallet::Wallet,
-    Err,
-};
-
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
 #[serde(rename_all = "PascalCase")]
@@ -284,13 +280,14 @@ enum AccountFieldType {
     Destination,
 }
 
-pub fn sign<T>(
+pub fn sign<'a, T, F>(
     transaction: T,
     wallet: &Wallet,
     _multisign: bool,
 ) -> Result<SignedTransaction<'_, T>>
 where
-    T: Transaction + Serialize + DeserializeOwned + 'static + Clone,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
 {
     let prepared_transaction = prepare_transaction(transaction, wallet)?;
     let serialized_for_signing = encode_for_signing(&prepared_transaction)?;
@@ -301,9 +298,13 @@ where
     Ok(signed_transaction)
 }
 
-fn prepare_transaction<T>(transaction: T, wallet: &Wallet) -> Result<PreparedTransaction<'_, T>>
+fn prepare_transaction<'a, T, F>(
+    transaction: T,
+    wallet: &Wallet,
+) -> Result<PreparedTransaction<'_, T>>
 where
-    T: Transaction + Serialize + DeserializeOwned + Clone,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
 {
     let mut prepared_transaction =
         PreparedTransaction::new(transaction, Cow::from(wallet.classic_address.clone()));
@@ -333,12 +334,13 @@ where
     Ok(prepared_transaction)
 }
 
-fn validate_account_xaddress<T>(
+fn validate_account_xaddress<'a, T, F>(
     mut prepared_transaction: PreparedTransaction<'_, T>,
     account_field: AccountFieldType,
 ) -> Result<PreparedTransaction<'_, T>>
 where
-    T: Transaction + Serialize + DeserializeOwned + Clone,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
 {
     let (account_field_name, tag_field_name) = match serde_json::to_string(&account_field) {
         Ok(name) => {
@@ -353,7 +355,7 @@ where
         }
         Err(error) => return Err!(error),
     };
-    let account_address = get_transaction_field_value::<_, String>(
+    let account_address = get_transaction_field_value::<F, _, String>(
         &prepared_transaction.transaction,
         &account_field_name,
     )?;
@@ -393,11 +395,12 @@ where
     }
 }
 
-fn convert_to_classic_address<T>(transaction: &T, field_name: &str) -> Result<T>
+fn convert_to_classic_address<'a, T, F>(transaction: &T, field_name: &str) -> Result<T>
 where
-    T: Transaction + Serialize + DeserializeOwned + Clone,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
 {
-    let address = get_transaction_field_value::<_, String>(transaction, field_name)?;
+    let address = get_transaction_field_value::<F, _, String>(transaction, field_name)?;
     if is_valid_xaddress(&address) {
         let classic_address = match xaddress_to_classic_address(&address) {
             Ok(t) => t.0,
@@ -502,70 +505,29 @@ mod test_autofill {
 
 #[cfg(all(feature = "websocket-std", feature = "std", not(feature = "websocket")))]
 #[cfg(test)]
-mod test_autofill {
-    use super::autofill;
-    use crate::{
-        asynch::clients::{AsyncWebsocketClient, SingleExecutorMutex},
-        models::{
-            amount::{IssuedCurrencyAmount, XRPAmount},
-            transactions::{OfferCreate, Transaction},
-        },
-    };
-    use anyhow::Result;
-
-    #[tokio::test]
-    async fn test_autofill_txn() -> Result<()> {
-        let mut txn = OfferCreate::new(
-            "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq".into(),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            XRPAmount::from("1000000").into(),
-            IssuedCurrencyAmount::new(
-                "USD".into(),
-                "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq".into(),
-                "0.3".into(),
-            )
-            .into(),
-            None,
-            None,
-        );
-        let client = AsyncWebsocketClient::<SingleExecutorMutex, _>::open(
-            "wss://testnet.xrpl-labs.com/".parse().unwrap(),
-        )
-        .await
-        .unwrap();
-        autofill(&mut txn, &client, None).await?;
-
-        assert!(txn.get_common_fields().network_id.is_none());
-        assert!(txn.get_common_fields().sequence.is_some());
-        assert!(txn.get_common_fields().fee.is_some());
-        assert!(txn.get_common_fields().last_ledger_sequence.is_some());
-
-        Ok(())
-    }
-}
-
-#[cfg(test)]
 mod test_sign {
     use alloc::borrow::Cow;
 
     use crate::{
+        asynch::transaction::sign,
         models::{amount::XRPAmount, transactions::Payment},
         wallet::Wallet,
     };
 
-    #[test]
-    fn test_sign() {
-        let wallet = Wallet::create(None).unwrap();
+    #[tokio::test]
+    async fn test_sign() {
+        let wallet = Wallet::new("sEd7hh1kMK7RrW9qFo6YmTWL6varSMY", 0).unwrap();
         let payment = Payment::new(
             Cow::from(wallet.classic_address.clone()),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
             XRPAmount::from("1000").into(),
             "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
             None,
@@ -573,20 +535,8 @@ mod test_sign {
             None,
             None,
             None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
         );
-
-        let signed_transaction = super::sign(payment, &wallet, false);
+        let signed_transaction = sign(payment, &wallet, false);
         assert!(signed_transaction.is_ok());
     }
 }

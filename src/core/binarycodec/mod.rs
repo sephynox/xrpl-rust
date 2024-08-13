@@ -1,10 +1,13 @@
 //! Functions for encoding objects into the XRP Ledger's
 //! canonical binary format and decoding them.
 
+use core::fmt::Debug;
+
 use alloc::{string::String, vec::Vec};
 use anyhow::Result;
 use hex::ToHex;
 use serde::{de::DeserializeOwned, Serialize};
+use strum::IntoEnumIterator;
 
 use crate::{asynch::transaction::PreparedTransaction, models::transactions::Transaction};
 
@@ -18,9 +21,12 @@ pub mod utils;
 
 const TRANSACTION_SIGNATURE_PREFIX: &'static str = "53545800";
 
-pub fn encode_for_signing<T>(prepared_transaction: &PreparedTransaction<'_, T>) -> Result<String>
+pub fn encode_for_signing<'a, T, F>(
+    prepared_transaction: &PreparedTransaction<'_, T>,
+) -> Result<String>
 where
-    T: Transaction + Serialize + DeserializeOwned + Clone,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
 {
     serialize_json(
         prepared_transaction,
@@ -34,14 +40,15 @@ where
     )
 }
 
-fn serialize_json<T>(
+fn serialize_json<'a, T, F>(
     prepared_transaction: &PreparedTransaction<'_, T>,
     prefix: Option<&[u8]>,
     suffix: Option<&[u8]>,
     signing_only: bool,
 ) -> Result<String>
 where
-    T: Transaction + Serialize + DeserializeOwned + Clone,
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
 {
     let mut buffer = Vec::new();
     if let Some(p) = prefix {
