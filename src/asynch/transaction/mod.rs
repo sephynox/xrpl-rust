@@ -298,6 +298,46 @@ where
     Ok(signed_transaction)
 }
 
+pub async fn autofill_and_sign<'a, T, F>(
+    transaction: &mut T,
+    client: &'a impl AsyncClient,
+    wallet: &'a Wallet,
+    check_fee: Option<bool>,
+) -> Result<SignedTransaction<'a, T>>
+where
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone,
+{
+    if check_fee.unwrap_or(true) {
+        check_txn_fee(transaction, client).await?;
+    }
+    autofill(transaction, client, None).await?;
+    let signed_transaction = sign(transaction.clone(), wallet, false)?;
+
+    Ok(signed_transaction)
+}
+
+async fn check_txn_fee<'a, T, F>(transaction: &mut T, client: &'a impl AsyncClient) -> Result<()>
+where
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone,
+{
+    // max of xrp_to_drops(0.1) and calculate_fee_per_transaction_type
+    let expected_fee = XRPAmount::from("100000")
+        .max(calculate_fee_per_transaction_type(transaction.clone(), Some(client), None).await?);
+    let transaction_fee = transaction
+        .get_common_fields()
+        .fee
+        .clone()
+        .unwrap_or(XRPAmount::from("0"));
+    if transaction_fee > expected_fee {
+        return Err!(XRPLSignTransactionException::FeeTooHigh(
+            transaction_fee.try_into()?
+        ));
+    }
+    Ok(())
+}
+
 fn prepare_transaction<'a, T, F>(
     transaction: T,
     wallet: &Wallet,
