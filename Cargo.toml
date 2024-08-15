@@ -94,7 +94,7 @@ name = "benchmarks"
 harness = false
 
 [features]
-default = ["std", "utils", "wallet", "models", "websocket"]
+default = ["std", "utils", "wallet", "models", "websocket-std"]
 models = ["transactions", "ledger", "requests", "results"]
 transactions = ["amounts", "currencies"]
 requests = ["amounts", "currencies"]
