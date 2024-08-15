@@ -31,19 +31,20 @@ pub mod constants;
 pub mod core;
 pub mod macros;
 #[cfg(any(
-    feature = "amounts",
     feature = "currencies",
-    feature = "ledger",
+    feature = "amounts",
     feature = "requests",
     feature = "results",
-    feature = "transactions"
+    feature = "ledger",
+    feature = "transactions",
 ))]
 pub mod models;
 #[cfg(feature = "utils")]
 pub mod utils;
+#[cfg(feature = "wallet")]
 pub mod wallet;
 
-pub extern crate indexmap;
+// pub extern crate indexmap;
 pub extern crate serde_json;
 
 mod _anyhow;
