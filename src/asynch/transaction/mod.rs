@@ -486,14 +486,11 @@ mod test_autofill {
 #[cfg(all(feature = "websocket-std", feature = "std", not(feature = "websocket")))]
 #[cfg(test)]
 mod test_sign {
-    use alloc::{borrow::Cow, vec};
+    use alloc::borrow::Cow;
 
     use crate::{
-        asynch::{
-            clients::{AsyncWebsocketClient, SingleExecutorMutex, WebsocketOpen},
-            transaction::{sign, submit},
-        },
-        models::transactions::AccountSet,
+        asynch::transaction::sign,
+        models::transactions::{AccountSet, Transaction},
         wallet::Wallet,
     };
 
@@ -504,10 +501,10 @@ mod test_sign {
             Cow::from(wallet.classic_address.clone()),
             None,
             Some("10".into()),
-            Some(vec![].into()),
             None,
             None,
-            Some(227233),
+            None,
+            Some(227234),
             None,
             None,
             None,
@@ -521,9 +518,11 @@ mod test_sign {
             None,
         );
         sign(&mut payment, &wallet, false).unwrap();
-        let uri = "wss://testnet.xrpl-labs.com/".parse().unwrap();
-        let client: AsyncWebsocketClient<SingleExecutorMutex, WebsocketOpen> =
-            AsyncWebsocketClient::open(uri).await.unwrap();
-        submit(&payment, &client).await.unwrap();
+        let expected_signature: Cow<str> =
+            "B310792432B0242C2542C2B46CA234C87F4AE3FFC33226797AF72A92D9295ED20BD05A85D0\
+            C13760B653AE9B8C0D74B9BBD310B09524F63B41D1776E7F2BB609"
+                .into();
+        let actual_signature = payment.get_common_fields().txn_signature.as_ref().unwrap();
+        assert_eq!(expected_signature, *actual_signature);
     }
 }
