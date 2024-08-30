@@ -30,23 +30,26 @@ where
 }
 
 pub fn set_transaction_field_value<'a, F, T, V>(
-    transaction: &T,
+    transaction: &mut T,
     field_name: &str,
     field_value: V,
-) -> Result<T>
+) -> Result<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Serialize + DeserializeOwned,
     V: Serialize,
 {
-    match serde_json::to_value(transaction) {
+    match serde_json::to_value(&mut *transaction) {
         Ok(mut transaction_json) => {
             transaction_json[field_name] = match serde_json::to_value(field_value) {
                 Ok(json_value) => json_value,
                 Err(error) => return Err!(error),
             };
             match serde_json::from_value::<T>(transaction_json) {
-                Ok(val) => Ok(val),
+                Ok(val) => {
+                    *transaction = val;
+                    Ok(())
+                }
                 Err(error) => Err!(error),
             }
         }

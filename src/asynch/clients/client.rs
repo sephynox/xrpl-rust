@@ -10,6 +10,7 @@ use anyhow::Result;
 #[allow(async_fn_in_trait)]
 pub trait Client {
     async fn request_impl<'a: 'b, 'b>(&self, request: XRPLRequest<'a>) -> Result<XRPLResponse<'b>>;
+
     fn set_request_id<'a: 'b, 'b>(&self, request: &mut XRPLRequest<'a>) -> Cow<'b, str> {
         let common_fields = request.get_common_fields();
         let request_id: Cow<'_, str> = match common_fields.id.clone() {

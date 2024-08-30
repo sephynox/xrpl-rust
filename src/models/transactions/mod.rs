@@ -264,7 +264,7 @@ fn optional_flag_collection_default<T>() -> Option<FlagCollection<T>>
 where
     T: IntoEnumIterator + Serialize + core::fmt::Debug,
 {
-    None
+    Some(FlagCollection(Vec::new()))
 }
 
 serde_with_tag! {

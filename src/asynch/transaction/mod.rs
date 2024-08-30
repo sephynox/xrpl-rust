@@ -9,14 +9,14 @@ use crate::{
     },
     core::{
         addresscodec::{is_valid_xaddress, xaddress_to_classic_address},
-        binarycodec::encode_for_signing,
+        binarycodec::{encode, encode_for_signing},
         keypairs::sign as keypairs_sign,
     },
     models::{
         amount::XRPAmount,
         exceptions::XRPLModelException,
-        requests::ServerState,
-        results::ServerState as ServerStateResult,
+        requests::{ServerState, Submit},
+        results::{ServerState as ServerStateResult, Submit as SubmitResult},
         transactions::{Transaction, TransactionType, XRPLTransactionFieldException},
         Model,
     },
@@ -27,19 +27,17 @@ use crate::{
     Err,
 };
 
-use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec::Vec;
+use alloc::{borrow::Cow, dbg};
 use anyhow::Result;
 use core::convert::TryInto;
 use core::fmt::Debug;
-use derive_new::new;
 use exceptions::XRPLTransactionException;
 use rust_decimal::Decimal;
 use serde::Serialize;
 use serde::{de::DeserializeOwned, Deserialize};
-use serde_with::skip_serializing_none;
 use strum::IntoEnumIterator;
 
 const OWNER_RESERVE: &str = "2000000"; // 2 XRP
@@ -47,14 +45,13 @@ const RESTRICTED_NETWORKS: u16 = 1024;
 const REQUIRED_NETWORKID_VERSION: &str = "1.11.0";
 const LEDGER_OFFSET: u8 = 20;
 
-pub async fn autofill<'a, 'b, F, T>(
+pub async fn autofill<'a, F, T>(
     transaction: &mut T,
     client: &'a impl AsyncClient,
     signers_count: Option<u8>,
 ) -> Result<()>
 where
-    'a: 'b,
-    T: Transaction<'b, F> + Model + Clone,
+    T: Transaction<'a, F> + Model + Clone,
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
 {
     let txn = transaction.clone();
@@ -79,14 +76,13 @@ where
     Ok(())
 }
 
-pub async fn calculate_fee_per_transaction_type<'a, 'b, T, F>(
+pub async fn calculate_fee_per_transaction_type<'a, T, F>(
     transaction: T,
     client: Option<&'a impl AsyncClient>,
     signers_count: Option<u8>,
 ) -> Result<XRPAmount<'_>>
 where
-    'a: 'b,
-    T: Transaction<'b, F>,
+    T: Transaction<'a, F>,
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
 {
     let mut net_fee = XRPAmount::from("10");
@@ -256,46 +252,28 @@ fn is_not_later_rippled_version<'a>(
     }
 }
 
-#[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
-#[serde(rename_all = "PascalCase")]
-pub struct PreparedTransaction<'a, T> {
-    #[serde(flatten)]
-    transaction: T,
-    signing_pub_key: Cow<'a, str>,
-}
-
-#[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
-#[serde(rename_all = "PascalCase")]
-pub struct SignedTransaction<'a, T> {
-    #[serde(flatten)]
-    prepared_transaction: PreparedTransaction<'a, T>,
-    signature: Cow<'a, str>,
-}
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 enum AccountFieldType {
     Account,
     Destination,
 }
 
-pub fn sign<'a, T, F>(
-    transaction: T,
-    wallet: &Wallet,
-    _multisign: bool,
-) -> Result<SignedTransaction<'_, T>>
+pub fn sign_and_submit() {
+    todo!()
+}
+
+pub fn sign<'a, T, F>(transaction: &mut T, wallet: &Wallet, _multisign: bool) -> Result<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
-    T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
+    T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone + Debug,
 {
-    let prepared_transaction = prepare_transaction(transaction, wallet)?;
-    let serialized_for_signing = encode_for_signing(&prepared_transaction)?;
+    prepare_transaction(transaction, wallet)?;
+    let serialized_for_signing = encode_for_signing(transaction)?;
     let serialized_bytes = hex::decode(serialized_for_signing).unwrap(); // TODO: handle unwrap
     let signature = keypairs_sign(&serialized_bytes, &wallet.private_key).unwrap(); // TODO: handle unwrap
-    let signed_transaction = SignedTransaction::new(prepared_transaction, signature.into());
+    transaction.get_mut_common_fields().txn_signature = Some(signature.into());
 
-    Ok(signed_transaction)
+    Ok(())
 }
 
 pub async fn autofill_and_sign<'a, T, F>(
@@ -303,18 +281,39 @@ pub async fn autofill_and_sign<'a, T, F>(
     client: &'a impl AsyncClient,
     wallet: &'a Wallet,
     check_fee: Option<bool>,
-) -> Result<SignedTransaction<'a, T>>
+) -> Result<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
-    T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone,
+    T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone + Debug,
 {
     if check_fee.unwrap_or(true) {
         check_txn_fee(transaction, client).await?;
     }
     autofill(transaction, client, None).await?;
-    let signed_transaction = sign(transaction.clone(), wallet, false)?;
+    sign(transaction, wallet, false)?;
 
-    Ok(signed_transaction)
+    Ok(())
+}
+
+pub async fn submit<'a, T, F, C>(transaction: &T, client: &C) -> Result<SubmitResult<'a>>
+where
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone + Debug,
+    C: AsyncClient,
+{
+    let txn_blob = encode(transaction)?;
+    let req = Submit::new(None, txn_blob.into(), None);
+    let res = client.request(req.into()).await?;
+    dbg!(&res);
+    // todo!()
+    // res.try_into_result::<SubmitResult<'_>>()
+    match res.try_into_result::<SubmitResult<'_>>() {
+        Ok(value) => {
+            let submit_result = SubmitResult::from(value);
+            Ok(submit_result)
+        }
+        Err(e) => Err!(e),
+    }
 }
 
 async fn check_txn_fee<'a, T, F>(transaction: &mut T, client: &'a impl AsyncClient) -> Result<()>
@@ -338,46 +337,34 @@ where
     Ok(())
 }
 
-fn prepare_transaction<'a, T, F>(
-    transaction: T,
-    wallet: &Wallet,
-) -> Result<PreparedTransaction<'_, T>>
+fn prepare_transaction<'a, T, F>(transaction: &mut T, wallet: &Wallet) -> Result<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
 {
-    let mut prepared_transaction =
-        PreparedTransaction::new(transaction, Cow::from(wallet.classic_address.clone()));
+    let commond_fields = transaction.get_mut_common_fields();
+    commond_fields.signing_pub_key = Some(wallet.public_key.clone().into());
 
-    prepared_transaction =
-        validate_account_xaddress(prepared_transaction, AccountFieldType::Account)?;
-    if validate_transaction_has_field(&prepared_transaction.transaction, "Destination").is_ok() {
-        prepared_transaction =
-            validate_account_xaddress(prepared_transaction, AccountFieldType::Destination)?;
+    validate_account_xaddress(transaction, AccountFieldType::Account)?;
+    if validate_transaction_has_field(transaction, "Destination").is_ok() {
+        validate_account_xaddress(transaction, AccountFieldType::Destination)?;
     }
 
-    prepared_transaction.transaction =
-        convert_to_classic_address(&prepared_transaction.transaction, "Unauthorize")
-            .unwrap_or(prepared_transaction.transaction);
-    prepared_transaction.transaction =
-        convert_to_classic_address(&prepared_transaction.transaction, "Authorize")
-            .unwrap_or(prepared_transaction.transaction);
+    let _ = convert_to_classic_address(transaction, "Unauthorize");
+    let _ = convert_to_classic_address(transaction, "Authorize");
     // EscrowCancel, EscrowFinish
-    prepared_transaction.transaction =
-        convert_to_classic_address(&prepared_transaction.transaction, "Owner")
-            .unwrap_or(prepared_transaction.transaction);
+    let _ = convert_to_classic_address(transaction, "Owner");
     // SetRegularKey
-    prepared_transaction.transaction =
-        convert_to_classic_address(&prepared_transaction.transaction, "RegularKey")
-            .unwrap_or(prepared_transaction.transaction);
 
-    Ok(prepared_transaction)
+    let _ = convert_to_classic_address(transaction, "RegularKey");
+
+    Ok(())
 }
 
 fn validate_account_xaddress<'a, T, F>(
-    mut prepared_transaction: PreparedTransaction<'_, T>,
+    prepared_transaction: &mut T,
     account_field: AccountFieldType,
-) -> Result<PreparedTransaction<'_, T>>
+) -> Result<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
@@ -395,47 +382,39 @@ where
         }
         Err(error) => return Err!(error),
     };
-    let account_address = get_transaction_field_value::<F, _, String>(
-        &prepared_transaction.transaction,
-        &account_field_name,
-    )?;
+    let account_address = match account_field {
+        AccountFieldType::Account => prepared_transaction.get_common_fields().account.clone(),
+        AccountFieldType::Destination => {
+            get_transaction_field_value(prepared_transaction, "Destination")?
+        }
+    };
 
-    if is_valid_xaddress(account_address.as_str()) {
-        let (address, tag, _) = match xaddress_to_classic_address(account_address.as_str()) {
+    if is_valid_xaddress(&account_address) {
+        let (address, tag, _) = match xaddress_to_classic_address(&account_address) {
             Ok(t) => t,
             Err(error) => return Err!(error),
         };
-        validate_transaction_has_field(&prepared_transaction.transaction, &account_field_name)?;
-        prepared_transaction.transaction = set_transaction_field_value(
-            &prepared_transaction.transaction,
-            &account_field_name,
-            address,
-        )?;
+        validate_transaction_has_field(prepared_transaction, &account_field_name)?;
+        set_transaction_field_value(prepared_transaction, &account_field_name, address)?;
 
-        if validate_transaction_has_field(&prepared_transaction.transaction, &tag_field_name)
-            .is_ok()
-            && get_transaction_field_value(&prepared_transaction.transaction, &tag_field_name)
-                .unwrap_or(Some(0))
+        if validate_transaction_has_field(prepared_transaction, &tag_field_name).is_ok()
+            && get_transaction_field_value(prepared_transaction, &tag_field_name).unwrap_or(Some(0))
                 != tag
         {
             Err!(XRPLSignTransactionException::TagFieldMismatch(
                 &tag_field_name
             ))
         } else {
-            prepared_transaction.transaction = set_transaction_field_value(
-                &prepared_transaction.transaction,
-                &tag_field_name,
-                tag,
-            )?;
+            set_transaction_field_value(prepared_transaction, &tag_field_name, tag)?;
 
-            Ok(prepared_transaction)
+            Ok(())
         }
     } else {
-        Ok(prepared_transaction)
+        Ok(())
     }
 }
 
-fn convert_to_classic_address<'a, T, F>(transaction: &T, field_name: &str) -> Result<T>
+fn convert_to_classic_address<'a, T, F>(transaction: &mut T, field_name: &str) -> Result<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
@@ -448,7 +427,7 @@ where
         };
         set_transaction_field_value(transaction, field_name, classic_address)
     } else {
-        Ok(transaction.clone())
+        Ok(())
     }
 }
 
@@ -468,7 +447,7 @@ mod test_autofill {
     #[tokio::test]
     async fn test_autofill_txn() -> Result<()> {
         let mut txn = OfferCreate::new(
-            "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq".into(),
+            "r9mhdWo1NXVZr2pDnCtC1xwxE85kFtSzYR".into(),
             None,
             None,
             None,
@@ -507,37 +486,44 @@ mod test_autofill {
 #[cfg(all(feature = "websocket-std", feature = "std", not(feature = "websocket")))]
 #[cfg(test)]
 mod test_sign {
-    use alloc::borrow::Cow;
+    use alloc::{borrow::Cow, vec};
 
     use crate::{
-        asynch::transaction::sign,
-        models::{amount::XRPAmount, transactions::Payment},
+        asynch::{
+            clients::{AsyncWebsocketClient, SingleExecutorMutex, WebsocketOpen},
+            transaction::{sign, submit},
+        },
+        models::transactions::AccountSet,
         wallet::Wallet,
     };
 
     #[tokio::test]
     async fn test_sign() {
-        let wallet = Wallet::new("sEd7hh1kMK7RrW9qFo6YmTWL6varSMY", 0).unwrap();
-        let payment = Payment::new(
+        let wallet = Wallet::new("sEdT7wHTCLzDG7ueaw4hroSTBvH7Mk5", 0).unwrap();
+        let mut payment = AccountSet::new(
             Cow::from(wallet.classic_address.clone()),
             None,
+            Some("10".into()),
+            Some(vec![].into()),
+            None,
+            None,
+            Some(227233),
             None,
             None,
             None,
             None,
+            Some("6578616d706c652e636f6d".into()), // "example.com"
             None,
-            None,
-            None,
-            None,
-            XRPAmount::from("1000").into(),
-            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
             None,
             None,
             None,
             None,
             None,
         );
-        let signed_transaction = sign(payment, &wallet, false);
-        assert!(signed_transaction.is_ok());
+        sign(&mut payment, &wallet, false).unwrap();
+        let uri = "wss://testnet.xrpl-labs.com/".parse().unwrap();
+        let client: AsyncWebsocketClient<SingleExecutorMutex, WebsocketOpen> =
+            AsyncWebsocketClient::open(uri).await.unwrap();
+        submit(&payment, &client).await.unwrap();
     }
 }
