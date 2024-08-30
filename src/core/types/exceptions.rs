@@ -18,6 +18,7 @@ pub enum XRPLTypeException {
     XRPLRangeError(XRPRangeException),
     DecimalError(rust_decimal::Error),
     JSONParseError(JSONParseException),
+    UnknownXRPLType,
 }
 
 #[derive(Debug, Clone, PartialEq, Error)]

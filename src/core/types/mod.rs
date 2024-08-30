@@ -14,6 +14,7 @@ pub mod vector256;
 use core::convert::TryFrom;
 use core::convert::TryInto;
 use core::fmt::Debug;
+use core::fmt::Display;
 use core::iter::FromIterator;
 
 pub use self::account_id::AccountId;
@@ -82,38 +83,34 @@ pub enum XRPLTypes {
 }
 
 impl XRPLTypes {
-    pub fn from_value(name: &str, value: Value) -> XRPLTypes {
+    pub fn from_value(name: &str, value: Value) -> Result<XRPLTypes> {
         if let Some(value) = value.as_str() {
             match name {
-                "AccountID" => XRPLTypes::AccountID(value.try_into().unwrap()),
-                "Amount" => XRPLTypes::Amount(value.try_into().unwrap()),
-                "Blob" => XRPLTypes::Blob(value.try_into().unwrap()),
-                "Currency" => XRPLTypes::Currency(value.try_into().unwrap()),
-                "Hash128" => XRPLTypes::Hash128(value.try_into().unwrap()),
-                "Hash160" => XRPLTypes::Hash160(value.try_into().unwrap()),
-                "Hash256" => XRPLTypes::Hash256(value.try_into().unwrap()),
-                _ => XRPLTypes::Unknown,
+                "AccountID" => Ok(XRPLTypes::AccountID(Self::type_from_str(value)?)),
+                "Amount" => Ok(XRPLTypes::Amount(Self::type_from_str(value)?)),
+                "Blob" => Ok(XRPLTypes::Blob(Self::type_from_str(value)?)),
+                "Currency" => Ok(XRPLTypes::Currency(Self::type_from_str(value)?)),
+                "Hash128" => Ok(XRPLTypes::Hash128(Self::type_from_str(value)?)),
+                "Hash160" => Ok(XRPLTypes::Hash160(Self::type_from_str(value)?)),
+                "Hash256" => Ok(XRPLTypes::Hash256(Self::type_from_str(value)?)),
+                _ => Err!(exceptions::XRPLTypeException::UnknownXRPLType),
             }
         } else if let Some(value) = value.as_u64() {
             match name {
-                "UInt8" => XRPLTypes::UInt8(value as u8),
-                "UInt16" => XRPLTypes::UInt16(value as u16),
-                "UInt32" => XRPLTypes::UInt32(value as u32),
-                "UInt64" => XRPLTypes::UInt64(value as u64),
-                _ => XRPLTypes::Unknown,
+                "UInt8" => Ok(XRPLTypes::UInt8(value as u8)),
+                "UInt16" => Ok(XRPLTypes::UInt16(value as u16)),
+                "UInt32" => Ok(XRPLTypes::UInt32(value as u32)),
+                "UInt64" => Ok(XRPLTypes::UInt64(value as u64)),
+                _ => Err!(exceptions::XRPLTypeException::UnknownXRPLType),
             }
         } else if let Some(value) = value.as_object() {
             match name {
-                "Amount" => XRPLTypes::Amount(
-                    IssuedCurrency::try_from(Value::Object(value.to_owned()))
-                        .unwrap()
-                        .try_into()
-                        .unwrap(),
-                ),
-                "STObject" => XRPLTypes::STObject(
-                    STObject::try_from_value(Value::Object(value.to_owned()), false).unwrap(),
-                ),
-                _ => XRPLTypes::Unknown,
+                "Amount" => Ok(XRPLTypes::Amount(Self::amount_from_map(value.to_owned())?)),
+                "STObject" => Ok(XRPLTypes::STObject(STObject::try_from_value(
+                    Value::Object(value.to_owned()),
+                    false,
+                )?)),
+                _ => Err!(exceptions::XRPLTypeException::UnknownXRPLType),
             }
         } else if let Some(value) = value.as_array() {
             todo!()
@@ -128,7 +125,32 @@ impl XRPLTypes {
             // _ => XRPLTypes::Unknown,
             // }
         } else {
-            XRPLTypes::Unknown
+            Err!(exceptions::XRPLTypeException::UnknownXRPLType)
+        }
+    }
+
+    fn type_from_str<'a, T>(value: &'a str) -> Result<T>
+    where
+        T: TryFrom<&'a str>,
+        <T as TryFrom<&'a str>>::Error: Display,
+    {
+        match value.try_into() {
+            Ok(value) => Ok(value),
+            Err(error) => Err!(error),
+        }
+    }
+
+    fn amount_from_map<T>(value: Map<String, Value>) -> Result<T>
+    where
+        T: TryFrom<IssuedCurrency>,
+        <T as TryFrom<IssuedCurrency>>::Error: Display,
+    {
+        match IssuedCurrency::try_from(Value::Object(value)) {
+            Ok(value) => match value.try_into() {
+                Ok(value) => Ok(value),
+                Err(error) => Err!(error),
+            },
+            Err(error) => Err!(error),
         }
     }
 }
@@ -313,9 +335,17 @@ impl STObject {
         let mut is_unl_modify = false;
 
         for field_instance in &sorted_keys {
-            let associated_value = value_xaddress_handled.get(&field_instance.name).unwrap();
-            let associated_value =
-                XRPLTypes::from_value(&field_instance.associated_type, associated_value.to_owned());
+            let associated_value = match value_xaddress_handled.get(&field_instance.name) {
+                Some(value) => value,
+                None => Err(anyhow::anyhow!(
+                    "Error prossessing field: {}",
+                    field_instance.name
+                ))?,
+            };
+            let associated_value = XRPLTypes::from_value(
+                &field_instance.associated_type,
+                associated_value.to_owned(),
+            )?;
             let associated_value: SerializedType = associated_value.into();
             // dbg!(&field_instance, &associated_value);
             if field_instance.name == "TransactionType"
@@ -339,7 +369,11 @@ impl XRPLType for STObject {
     type Error = anyhow::Error;
 
     fn new(buffer: Option<&[u8]>) -> Result<Self, Self::Error> {
-        Ok(STObject(SerializedType(buffer.unwrap().to_vec())))
+        if let Some(data) = buffer {
+            Ok(STObject(SerializedType(data.to_vec())))
+        } else {
+            Ok(STObject(SerializedType(vec![])))
+        }
     }
 }
 
