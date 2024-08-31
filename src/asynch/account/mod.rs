@@ -1,9 +1,14 @@
-use alloc::borrow::Cow;
+use alloc::{borrow::Cow, dbg};
 use anyhow::Result;
 
 use crate::{
     core::addresscodec::{is_valid_xaddress, xaddress_to_classic_address},
-    models::{amount::XRPAmount, ledger::AccountRoot, requests::AccountInfo, results},
+    models::{
+        amount::XRPAmount,
+        ledger::AccountRoot,
+        requests::{AccountInfo, AccountTx},
+        results,
+    },
     Err,
 };
 
@@ -33,7 +38,7 @@ pub async fn get_next_valid_seq_number(
     Ok(account_info.sequence)
 }
 
-pub async fn get_balance<'a: 'b, 'b, C>(
+pub async fn get_xrp_balance<'a: 'b, 'b, C>(
     address: Cow<'a, str>,
     client: &C,
     ledger_index: Option<Cow<'a, str>>,
@@ -82,4 +87,33 @@ where
     Ok(account_info
         .try_into_result::<results::AccountInfo<'_>>()?
         .account_data)
+}
+
+pub async fn get_latest_transaction<'a: 'b, 'b, C>(
+    mut address: Cow<'a, str>,
+    client: &C,
+) -> Result<results::AccountTx<'b>>
+where
+    C: AsyncClient,
+{
+    if is_valid_xaddress(&address) {
+        address = match xaddress_to_classic_address(&address) {
+            Ok((address, _, _)) => address.into(),
+            Err(e) => return Err!(e),
+        };
+    }
+    let account_tx = AccountTx::new(
+        None,
+        address,
+        None,
+        Some("validated".into()),
+        None,
+        None,
+        None,
+        None,
+        Some(1),
+        None,
+    );
+    let response = client.request(account_tx.into()).await?;
+    response.try_into_result::<results::AccountTx<'_>>()
 }
