@@ -290,8 +290,14 @@ where
 {
     prepare_transaction(transaction, wallet)?;
     let serialized_for_signing = encode_for_signing(transaction)?;
-    let serialized_bytes = hex::decode(serialized_for_signing).unwrap(); // TODO: handle unwrap
-    let signature = keypairs_sign(&serialized_bytes, &wallet.private_key).unwrap(); // TODO: handle unwrap
+    let serialized_bytes = match hex::decode(serialized_for_signing) {
+        Ok(bytes) => bytes,
+        Err(e) => return Err!(e),
+    };
+    let signature = match keypairs_sign(&serialized_bytes, &wallet.private_key) {
+        Ok(signature) => signature,
+        Err(e) => return Err!(e),
+    };
     transaction.get_mut_common_fields().txn_signature = Some(signature.into());
 
     Ok(())

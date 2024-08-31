@@ -2,7 +2,7 @@
 //! canonical binary format and decoding them.
 
 use super::types::STObject;
-use crate::models::transactions::Transaction;
+use crate::{models::transactions::Transaction, Err};
 
 use alloc::{string::String, vec::Vec};
 use anyhow::Result;
@@ -55,8 +55,13 @@ where
     if let Some(p) = prefix {
         buffer.extend(p);
     }
-    let json_value = serde_json::to_value(prepared_transaction).unwrap();
-    let st_object = STObject::try_from_value(json_value, signing_only).unwrap();
+    let json_value = match serde_json::to_value(prepared_transaction) {
+        Ok(v) => v,
+        Err(e) => {
+            return Err!(e);
+        }
+    };
+    let st_object = STObject::try_from_value(json_value, signing_only)?;
 
     buffer.extend(st_object.as_ref());
     if let Some(s) = suffix {
