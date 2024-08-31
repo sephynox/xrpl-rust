@@ -25,6 +25,5 @@ pub trait Client {
                 unimplemented!("get_random_id is not yet implemented for no_std. Please provide an `id` in the request.");
             }
         };
-        // common_fields.id = Some(request_id.clone());
     }
 }
