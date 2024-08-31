@@ -116,6 +116,7 @@ helpers = ["account-helpers", "ledger-helpers", "transaction-helpers"]
 account-helpers = ["amounts", "currencies", "requests", "results"]
 ledger-helpers = ["amounts", "currencies", "requests", "results"]
 transaction-helpers = [
+    "wallet",
     "amounts",
     "currencies",
     "requests",
