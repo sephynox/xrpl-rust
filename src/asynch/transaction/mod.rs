@@ -260,8 +260,27 @@ enum AccountFieldType {
     Destination,
 }
 
-pub fn sign_and_submit() {
-    todo!()
+pub async fn sign_and_submit<'a, 'b, T, F, C>(
+    transaction: &mut T,
+    client: &'b C,
+    wallet: &Wallet,
+    autofill: bool,
+    check_fee: bool,
+) -> Result<SubmitResult<'a>>
+where
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone + Debug,
+    C: AsyncClient,
+{
+    if autofill {
+        autofill_and_sign(transaction, client, wallet, check_fee).await?;
+    } else {
+        if check_fee {
+            check_txn_fee(transaction, client).await?;
+        }
+        sign(transaction, wallet, false)?;
+    }
+    submit(transaction, client).await
 }
 
 pub fn sign<'a, T, F>(transaction: &mut T, wallet: &Wallet, _multisign: bool) -> Result<()>
@@ -282,14 +301,14 @@ pub async fn autofill_and_sign<'a, 'b, T, F, C>(
     transaction: &mut T,
     client: &'b C,
     wallet: &Wallet,
-    check_fee: Option<bool>,
+    check_fee: bool,
 ) -> Result<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone + Debug,
     C: AsyncClient,
 {
-    if check_fee.unwrap_or(true) {
+    if check_fee {
         check_txn_fee(transaction, client).await?;
     }
     autofill(transaction, client, None).await?;
@@ -561,7 +580,7 @@ mod test_sign {
         )
         .await
         .unwrap();
-        autofill_and_sign(&mut payment, &client, &wallet, None)
+        autofill_and_sign(&mut payment, &client, &wallet, true)
             .await
             .unwrap();
         assert!(payment.get_common_fields().sequence.is_some());
