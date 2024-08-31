@@ -1,12 +1,12 @@
 //! Functions for encoding objects into the XRP Ledger's
 //! canonical binary format and decoding them.
 
-use super::types::STObject;
+use super::types::{AccountId, STObject};
 use crate::{models::transactions::Transaction, Err};
 
-use alloc::{string::String, vec::Vec};
+use alloc::{borrow::Cow, string::String, vec::Vec};
 use anyhow::Result;
-use core::fmt::Debug;
+use core::{convert::TryFrom, fmt::Debug};
 use hex::ToHex;
 use serde::{de::DeserializeOwned, Serialize};
 use strum::IntoEnumIterator;
@@ -19,6 +19,7 @@ pub mod utils;
 pub use binary_wrappers::*;
 
 const TRANSACTION_SIGNATURE_PREFIX: i32 = 0x53545800;
+const TRANSACTION_MULTISIG_PREFIX: i32 = 0x534D5400;
 
 pub fn encode<'a, T, F>(signed_transaction: &T) -> Result<String>
 where
@@ -37,6 +38,24 @@ where
         prepared_transaction,
         Some(TRANSACTION_SIGNATURE_PREFIX.to_be_bytes().as_ref()),
         None,
+        true,
+    )
+}
+
+pub fn encode_for_multisigning<'a, T, F>(
+    prepared_transaction: &T,
+    signing_account: Cow<'a, str>,
+) -> Result<String>
+where
+    F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone + Debug,
+{
+    let signing_account_id = AccountId::try_from(signing_account.as_ref()).unwrap();
+
+    serialize_json(
+        prepared_transaction,
+        Some(TRANSACTION_MULTISIG_PREFIX.to_be_bytes().as_ref()),
+        Some(signing_account_id.as_ref()),
         true,
     )
 }

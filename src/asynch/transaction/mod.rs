@@ -9,7 +9,7 @@ use crate::{
     },
     core::{
         addresscodec::{is_valid_xaddress, xaddress_to_classic_address},
-        binarycodec::{encode, encode_for_signing},
+        binarycodec::{encode, encode_for_multisigning, encode_for_signing},
         keypairs::sign as keypairs_sign,
     },
     models::{
@@ -17,7 +17,7 @@ use crate::{
         exceptions::XRPLModelException,
         requests::{ServerState, Submit},
         results::{ServerState as ServerStateResult, Submit as SubmitResult},
-        transactions::{Transaction, TransactionType, XRPLTransactionFieldException},
+        transactions::{Signer, Transaction, TransactionType, XRPLTransactionFieldException},
         Model,
     },
     utils::transactions::{
@@ -27,10 +27,10 @@ use crate::{
     Err,
 };
 
-use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec::Vec;
+use alloc::{borrow::Cow, vec};
 use anyhow::Result;
 use core::convert::TryInto;
 use core::fmt::Debug;
@@ -283,24 +283,39 @@ where
     submit(transaction, client).await
 }
 
-pub fn sign<'a, T, F>(transaction: &mut T, wallet: &Wallet, _multisign: bool) -> Result<()>
+pub fn sign<'a, T, F>(transaction: &mut T, wallet: &Wallet, multisign: bool) -> Result<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone + Debug,
 {
-    prepare_transaction(transaction, wallet)?;
-    let serialized_for_signing = encode_for_signing(transaction)?;
-    let serialized_bytes = match hex::decode(serialized_for_signing) {
-        Ok(bytes) => bytes,
-        Err(e) => return Err!(e),
-    };
-    let signature = match keypairs_sign(&serialized_bytes, &wallet.private_key) {
-        Ok(signature) => signature,
-        Err(e) => return Err!(e),
-    };
-    transaction.get_mut_common_fields().txn_signature = Some(signature.into());
+    if multisign {
+        let serialized_for_signing =
+            encode_for_multisigning(transaction, wallet.classic_address.clone().into())?;
+        let serialized_bytes = hex::decode(serialized_for_signing).unwrap();
+        let signature = keypairs_sign(&serialized_bytes, &wallet.private_key).unwrap();
+        let signer = Signer::new(
+            wallet.classic_address.clone().into(),
+            signature.into(),
+            wallet.public_key.clone().into(),
+        );
+        transaction.get_mut_common_fields().signers = Some(vec![signer]);
 
-    Ok(())
+        Ok(())
+    } else {
+        prepare_transaction(transaction, wallet)?;
+        let serialized_for_signing = encode_for_signing(transaction)?;
+        let serialized_bytes = match hex::decode(serialized_for_signing) {
+            Ok(bytes) => bytes,
+            Err(e) => return Err!(e),
+        };
+        let signature = match keypairs_sign(&serialized_bytes, &wallet.private_key) {
+            Ok(signature) => signature,
+            Err(e) => return Err!(e),
+        };
+        transaction.get_mut_common_fields().txn_signature = Some(signature.into());
+
+        Ok(())
+    }
 }
 
 pub async fn autofill_and_sign<'a, 'b, T, F, C>(
@@ -526,7 +541,7 @@ mod test_sign {
     #[test]
     fn test_sign() {
         let wallet = Wallet::new("sEdT7wHTCLzDG7ueaw4hroSTBvH7Mk5", 0).unwrap();
-        let mut payment = AccountSet::new(
+        let mut tx = AccountSet::new(
             Cow::from(wallet.classic_address.clone()),
             None,
             Some("10".into()),
@@ -546,19 +561,19 @@ mod test_sign {
             None,
             None,
         );
-        sign(&mut payment, &wallet, false).unwrap();
+        sign(&mut tx, &wallet, false).unwrap();
         let expected_signature: Cow<str> =
             "B310792432B0242C2542C2B46CA234C87F4AE3FFC33226797AF72A92D9295ED20BD05A85D0\
             C13760B653AE9B8C0D74B9BBD310B09524F63B41D1776E7F2BB609"
                 .into();
-        let actual_signature = payment.get_common_fields().txn_signature.as_ref().unwrap();
+        let actual_signature = tx.get_common_fields().txn_signature.as_ref().unwrap();
         assert_eq!(expected_signature, *actual_signature);
     }
 
     #[tokio::test]
     async fn test_autofill_and_sign() {
         let wallet = Wallet::new("sEdT7wHTCLzDG7ueaw4hroSTBvH7Mk5", 0).unwrap();
-        let mut payment = AccountSet::new(
+        let mut tx = AccountSet::new(
             Cow::from(wallet.classic_address.clone()),
             None,
             None,
@@ -583,10 +598,10 @@ mod test_sign {
         )
         .await
         .unwrap();
-        autofill_and_sign(&mut payment, &client, &wallet, true)
+        autofill_and_sign(&mut tx, &client, &wallet, true)
             .await
             .unwrap();
-        assert!(payment.get_common_fields().sequence.is_some());
-        assert!(payment.get_common_fields().txn_signature.is_some());
+        assert!(tx.get_common_fields().sequence.is_some());
+        assert!(tx.get_common_fields().txn_signature.is_some());
     }
 }

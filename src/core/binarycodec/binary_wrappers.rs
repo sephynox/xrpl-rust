@@ -358,7 +358,7 @@ pub trait Serialization {
     /// serializer.write_length_encoded(&mut test_bytes);
     /// assert_eq!(expected, serializer);
     /// ```
-    fn write_length_encoded(&mut self, value: &[u8]) -> &Self;
+    fn write_length_encoded(&mut self, value: &[u8], encode_value: bool) -> &Self;
 
     /// Write field and value to the buffer.
     ///
@@ -394,7 +394,12 @@ pub trait Serialization {
     /// serializer.write_field_and_value(field_instance, &test_bytes);
     /// assert_eq!(expected, serializer);
     /// ```
-    fn write_field_and_value(&mut self, field: FieldInstance, value: &[u8]) -> &Self;
+    fn write_field_and_value(
+        &mut self,
+        field: FieldInstance,
+        value: &[u8],
+        is_unl_modify_workaround: bool,
+    ) -> &Self;
 }
 
 impl Serialization for BinarySerializer {
@@ -403,21 +408,31 @@ impl Serialization for BinarySerializer {
         self
     }
 
-    fn write_length_encoded(&mut self, value: &[u8]) -> &Self {
-        let length_prefix = _encode_variable_length_prefix(&value.len());
-
+    fn write_length_encoded(&mut self, value: &[u8], encode_value: bool) -> &Self {
+        let mut byte_object: Vec<u8> = Vec::new();
+        if encode_value {
+            // write value to byte_object
+            byte_object.extend_from_slice(value);
+        }
         // TODO Handle unwrap better
-        self.extend_from_slice(&length_prefix.unwrap());
-        self.extend_from_slice(value);
+        let length_prefix = _encode_variable_length_prefix(&byte_object.len()).unwrap();
+
+        self.extend_from_slice(&length_prefix);
+        self.extend_from_slice(&byte_object);
 
         self
     }
 
-    fn write_field_and_value(&mut self, field: FieldInstance, value: &[u8]) -> &Self {
+    fn write_field_and_value(
+        &mut self,
+        field: FieldInstance,
+        value: &[u8],
+        is_unl_modify_workaround: bool,
+    ) -> &Self {
         self.extend_from_slice(&field.header.to_bytes());
 
         if field.is_vl_encoded {
-            self.write_length_encoded(value);
+            self.write_length_encoded(value, !is_unl_modify_workaround);
         } else {
             self.extend_from_slice(value);
         }
@@ -771,7 +786,7 @@ mod test {
         let test_bytes: Vec<u8> = [0, 17, 34].to_vec();
         let mut serializer: BinarySerializer = BinarySerializer::new();
 
-        serializer.write_field_and_value(field_instance, &test_bytes);
+        serializer.write_field_and_value(field_instance, &test_bytes, false);
         assert_eq!(expected, serializer);
     }
 
@@ -784,7 +799,7 @@ mod test {
             let blob = (0..case).map(|_| "A2").collect::<String>();
             let mut binary_serializer: BinarySerializer = BinarySerializer::new();
 
-            binary_serializer.write_length_encoded(&hex::decode(blob).expect(""));
+            binary_serializer.write_length_encoded(&hex::decode(blob).expect(""), true);
 
             let mut binary_parser: BinaryParser = BinaryParser::from(binary_serializer.as_ref());
             let decoded_length = binary_parser.read_length_prefix();
