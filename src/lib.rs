@@ -39,6 +39,7 @@ pub mod macros;
     feature = "transactions"
 ))]
 pub mod models;
+#[cfg(feature = "transactions")]
 pub mod transaction;
 #[cfg(feature = "utils")]
 pub mod utils;
