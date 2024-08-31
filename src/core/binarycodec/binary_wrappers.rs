@@ -355,7 +355,7 @@ pub trait Serialization {
     /// let mut test_bytes: Vec<u8> = [0, 17, 34].to_vec();
     /// let mut serializer: BinarySerializer = BinarySerializer::new();
     ///
-    /// serializer.write_length_encoded(&mut test_bytes);
+    /// serializer.write_length_encoded(&mut test_bytes, true);
     /// assert_eq!(expected, serializer);
     /// ```
     fn write_length_encoded(&mut self, value: &[u8], encode_value: bool) -> &Self;
@@ -391,7 +391,7 @@ pub trait Serialization {
     /// let test_bytes: Vec<u8> = [0, 17, 34].to_vec();
     /// let mut serializer: BinarySerializer = BinarySerializer::new();
     ///
-    /// serializer.write_field_and_value(field_instance, &test_bytes);
+    /// serializer.write_field_and_value(field_instance, &test_bytes, false);
     /// assert_eq!(expected, serializer);
     /// ```
     fn write_field_and_value(
