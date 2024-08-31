@@ -40,8 +40,6 @@ use serde::Serialize;
 use serde::{de::DeserializeOwned, Deserialize};
 use strum::IntoEnumIterator;
 
-pub mod exceptions;
-
 const OWNER_RESERVE: &str = "2000000"; // 2 XRP
 const RESTRICTED_NETWORKS: u16 = 1024;
 const REQUIRED_NETWORKID_VERSION: &str = "1.11.0";
