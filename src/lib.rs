@@ -31,14 +31,16 @@ pub mod constants;
 pub mod core;
 pub mod macros;
 #[cfg(any(
-    feature = "currencies",
     feature = "amounts",
+    feature = "currencies",
+    feature = "ledger",
     feature = "requests",
     feature = "results",
-    feature = "ledger",
-    feature = "transactions",
+    feature = "transactions"
 ))]
 pub mod models;
+#[cfg(feature = "transaction-helpers")]
+pub mod transaction;
 #[cfg(feature = "utils")]
 pub mod utils;
 #[cfg(feature = "wallet")]
