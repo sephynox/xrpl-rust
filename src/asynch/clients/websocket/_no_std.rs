@@ -247,7 +247,8 @@ where
         mut request: XRPLRequest<'a>,
     ) -> Result<XRPLResponse<'b>> {
         // setup request future
-        let request_id = self.set_request_id(&mut request);
+        self.set_request_id(&mut request);
+        let request_id = request.get_common_fields().id.as_ref().unwrap();
         let mut websocket_base = self.websocket_base.lock().await;
         websocket_base
             .setup_request_future(request_id.to_string())
