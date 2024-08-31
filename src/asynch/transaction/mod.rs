@@ -326,9 +326,6 @@ where
     let txn_blob = encode(transaction)?;
     let req = Submit::new(None, txn_blob.into(), None);
     let res = client.request(req.into()).await?;
-    dbg!(&res);
-    // todo!()
-    // res.try_into_result::<SubmitResult<'_>>()
     match res.try_into_result::<SubmitResult<'_>>() {
         Ok(value) => {
             let submit_result = SubmitResult::from(value);

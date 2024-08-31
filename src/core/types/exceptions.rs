@@ -22,6 +22,14 @@ pub enum XRPLTypeException {
 }
 
 #[derive(Debug, Clone, PartialEq, Error)]
+pub enum XRPLSerializeArrayException {
+    #[error("Expected `Value` to be an array.")]
+    ExpectedArray,
+    #[error("Expected `Value` to be an array of objects.")]
+    ExpectedObjectArray,
+}
+
+#[derive(Debug, Clone, PartialEq, Error)]
 pub enum XRPLSerializeMapException<'a> {
     #[error("Expected `Value` to be an object.")]
     ExpectedObject,

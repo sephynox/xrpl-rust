@@ -59,6 +59,7 @@ const DESTINATION_TAG: &str = "DestinationTag";
 const UNL_MODIFY_TX_TYPE: &str = "0066";
 const ST_OBJECT: &str = "STObject";
 const OBJECT_END_MARKER_BYTES: [u8; 1] = [0xE1];
+const ARRAY_END_MARKER: [u8; 1] = [0xF1];
 
 #[derive(Debug)]
 pub enum XRPLTypes {
@@ -113,17 +114,12 @@ impl XRPLTypes {
                 _ => Err!(exceptions::XRPLTypeException::UnknownXRPLType),
             }
         } else if let Some(value) = value.as_array() {
-            todo!()
-            // match name {
-            // "STArray" => XRPLTypes::STArray(STArray(SerializedType::from(
-            //     value
-            //         .iter()
-            //         .map(|v| v.to_string())
-            //         .collect::<Vec<String>>()
-            //         .join(""),
-            // ))),
-            // _ => XRPLTypes::Unknown,
-            // }
+            match name {
+                "STArray" => Ok(XRPLTypes::STArray(STArray::try_from_value(Value::Array(
+                    value.to_owned(),
+                ))?)),
+                _ => Err!(exceptions::XRPLTypeException::UnknownXRPLType),
+            }
         } else {
             Err!(exceptions::XRPLTypeException::UnknownXRPLType)
         }
@@ -190,6 +186,74 @@ pub struct SerializedType(Vec<u8>);
 /// `<https://xrpl.org/serialization.html#array-fields>`
 #[derive(Debug)]
 pub struct STArray(SerializedType);
+
+impl STArray {
+    /// Create a SerializedArray from a serde_json::Value.
+    ///
+    /// ```
+    /// use xrpl::core::types::STArray;
+    /// use serde_json::Value;
+    /// use hex::ToHex;
+    ///
+    /// let array_end_marker = [0xF1];
+    /// let memo = r#"{
+    ///     "Memo": {
+    ///         "MemoType": "687474703A2F2F6578616D706C652E636F6D2F6D656D6F2F67656E65726963",
+    ///         "MemoData": "72656E74"
+    ///     }
+    /// }"#;
+    /// let memo_hex = "EA7C1F687474703A2F2F6578616D706C652E636F6D2F6D656D6F2F67656E657269637D0472656E74E1";
+    /// let expected_json = Value::Array(vec![serde_json::from_str(memo).unwrap(), serde_json::from_str(memo).unwrap()]);
+    /// let expected_hex = memo_hex.to_owned() + memo_hex + &array_end_marker.to_vec().encode_hex_upper::<String>();
+    /// let st_array = STArray::try_from_value(expected_json).unwrap();
+    /// let actual_hex = hex::encode_upper(st_array.as_ref());
+    ///
+    /// assert_eq!(actual_hex, expected_hex);
+    /// ```
+    pub fn try_from_value(value: Value) -> Result<Self> {
+        if let Some(array) = value.as_array() {
+            if !array.is_empty() && array.iter().filter(|v| v.is_object()).count() != array.len() {
+                Err!(exceptions::XRPLSerializeArrayException::ExpectedObjectArray)
+            } else {
+                let mut serializer = BinarySerializer::new();
+                for object in array {
+                    let obj = match object {
+                        Value::Object(map) => map,
+                        _ => {
+                            return Err!(
+                                exceptions::XRPLSerializeArrayException::ExpectedObjectArray
+                            )
+                        }
+                    };
+                    let transaction = STObject::try_from_value(Value::Object(obj.clone()), false)?;
+                    serializer.append(transaction.as_ref().to_vec().as_mut());
+                }
+                serializer.append(ARRAY_END_MARKER.to_vec().as_mut());
+                Ok(STArray(serializer.into()))
+            }
+        } else {
+            Err!(exceptions::XRPLSerializeArrayException::ExpectedArray)
+        }
+    }
+}
+
+impl XRPLType for STArray {
+    type Error = anyhow::Error;
+
+    fn new(buffer: Option<&[u8]>) -> Result<Self, Self::Error> {
+        if let Some(data) = buffer {
+            Ok(STArray(SerializedType(data.to_vec())))
+        } else {
+            Ok(STArray(SerializedType(vec![])))
+        }
+    }
+}
+
+impl AsRef<[u8]> for STArray {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+}
 
 /// Class for serializing/deserializing Indexmaps of objects.
 ///
@@ -347,7 +411,6 @@ impl STObject {
                 associated_value.to_owned(),
             )?;
             let associated_value: SerializedType = associated_value.into();
-            // dbg!(&field_instance, &associated_value);
             if field_instance.name == "TransactionType"
                 && associated_value.to_string() == UNL_MODIFY_TX_TYPE
             {

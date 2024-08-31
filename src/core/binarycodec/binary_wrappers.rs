@@ -387,7 +387,7 @@ pub trait Serialization {
     /// };
     ///
     /// let field_instance = FieldInstance::new(&field_info, "Generic", field_header);
-    /// let expected: Vec<u8> = [255, 224, 0, 17, 34].to_vec();
+    /// let expected: Vec<u8> = [224, 0, 17, 34].to_vec();
     /// let test_bytes: Vec<u8> = [0, 17, 34].to_vec();
     /// let mut serializer: BinarySerializer = BinarySerializer::new();
     ///
@@ -767,7 +767,7 @@ mod test {
         };
 
         let field_instance = FieldInstance::new(&field_info, "Generic", field_header);
-        let expected: Vec<u8> = [255, 224, 0, 17, 34].to_vec();
+        let expected: Vec<u8> = [224, 0, 17, 34].to_vec();
         let test_bytes: Vec<u8> = [0, 17, 34].to_vec();
         let mut serializer: BinarySerializer = BinarySerializer::new();
 
