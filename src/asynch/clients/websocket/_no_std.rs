@@ -22,7 +22,10 @@ use rand_core::RngCore;
 use url::Url;
 
 use super::{WebsocketClosed, WebsocketOpen};
-use crate::{asynch::clients::SingleExecutorMutex, models::requests::XRPLRequest};
+use crate::{
+    asynch::clients::SingleExecutorMutex,
+    models::requests::{Request, XRPLRequest},
+};
 use crate::{
     asynch::clients::{
         client::Client as ClientTrait,
