@@ -45,14 +45,15 @@ const RESTRICTED_NETWORKS: u16 = 1024;
 const REQUIRED_NETWORKID_VERSION: &str = "1.11.0";
 const LEDGER_OFFSET: u8 = 20;
 
-pub async fn autofill<'a, F, T>(
+pub async fn autofill<'a, 'b, F, T, C>(
     transaction: &mut T,
-    client: &'a impl AsyncClient,
+    client: &'b C,
     signers_count: Option<u8>,
 ) -> Result<()>
 where
     T: Transaction<'a, F> + Model + Clone,
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    C: AsyncClient,
 {
     let txn = transaction.clone();
     let txn_common_fields = transaction.get_mut_common_fields();
@@ -66,7 +67,7 @@ where
     }
     if txn_common_fields.fee.is_none() {
         txn_common_fields.fee =
-            Some(calculate_fee_per_transaction_type(txn, Some(client), signers_count).await?);
+            Some(calculate_fee_per_transaction_type(&txn, Some(client), signers_count).await?);
     }
     if txn_common_fields.last_ledger_sequence.is_none() {
         let ledger_sequence = get_latest_validated_ledger_sequence(client).await?;
@@ -76,14 +77,15 @@ where
     Ok(())
 }
 
-pub async fn calculate_fee_per_transaction_type<'a, T, F>(
-    transaction: T,
-    client: Option<&'a impl AsyncClient>,
+pub async fn calculate_fee_per_transaction_type<'a, 'b, 'c, T, F, C>(
+    transaction: &T,
+    client: Option<&'b C>,
     signers_count: Option<u8>,
-) -> Result<XRPAmount<'_>>
+) -> Result<XRPAmount<'c>>
 where
     T: Transaction<'a, F>,
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
+    C: AsyncClient,
 {
     let mut net_fee = XRPAmount::from("10");
     let base_fee;
@@ -135,10 +137,10 @@ async fn get_owner_reserve_from_response(client: &impl AsyncClient) -> Result<XR
     }
 }
 
-fn calculate_base_fee_for_escrow_finish<'a>(
+fn calculate_base_fee_for_escrow_finish<'a: 'b, 'b>(
     net_fee: XRPAmount<'a>,
     fulfillment: Option<Cow<str>>,
-) -> Result<XRPAmount<'a>> {
+) -> Result<XRPAmount<'b>> {
     if let Some(fulfillment) = fulfillment {
         calculate_based_on_fulfillment(fulfillment, net_fee)
     } else {
@@ -276,15 +278,16 @@ where
     Ok(())
 }
 
-pub async fn autofill_and_sign<'a, T, F>(
+pub async fn autofill_and_sign<'a, 'b, T, F, C>(
     transaction: &mut T,
-    client: &'a impl AsyncClient,
-    wallet: &'a Wallet,
+    client: &'b C,
+    wallet: &Wallet,
     check_fee: Option<bool>,
 ) -> Result<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone + Debug,
+    C: AsyncClient,
 {
     if check_fee.unwrap_or(true) {
         check_txn_fee(transaction, client).await?;
@@ -316,14 +319,15 @@ where
     }
 }
 
-async fn check_txn_fee<'a, T, F>(transaction: &mut T, client: &'a impl AsyncClient) -> Result<()>
+async fn check_txn_fee<'a, 'b, T, F, C>(transaction: &mut T, client: &'b C) -> Result<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone,
+    C: AsyncClient,
 {
     // max of xrp_to_drops(0.1) and calculate_fee_per_transaction_type
     let expected_fee = XRPAmount::from("100000")
-        .max(calculate_fee_per_transaction_type(transaction.clone(), Some(client), None).await?);
+        .max(calculate_fee_per_transaction_type(transaction, Some(client), None).await?);
     let transaction_fee = transaction
         .get_common_fields()
         .fee
@@ -489,13 +493,16 @@ mod test_sign {
     use alloc::borrow::Cow;
 
     use crate::{
-        asynch::transaction::sign,
+        asynch::{
+            clients::{AsyncWebsocketClient, SingleExecutorMutex},
+            transaction::{autofill_and_sign, sign},
+        },
         models::transactions::{AccountSet, Transaction},
         wallet::Wallet,
     };
 
-    #[tokio::test]
-    async fn test_sign() {
+    #[test]
+    fn test_sign() {
         let wallet = Wallet::new("sEdT7wHTCLzDG7ueaw4hroSTBvH7Mk5", 0).unwrap();
         let mut payment = AccountSet::new(
             Cow::from(wallet.classic_address.clone()),
@@ -524,5 +531,40 @@ mod test_sign {
                 .into();
         let actual_signature = payment.get_common_fields().txn_signature.as_ref().unwrap();
         assert_eq!(expected_signature, *actual_signature);
+    }
+
+    #[tokio::test]
+    async fn test_autofill_and_sign() {
+        let wallet = Wallet::new("sEdT7wHTCLzDG7ueaw4hroSTBvH7Mk5", 0).unwrap();
+        let mut payment = AccountSet::new(
+            Cow::from(wallet.classic_address.clone()),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("6578616d706c652e636f6d".into()), // "example.com"
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        let client = AsyncWebsocketClient::<SingleExecutorMutex, _>::open(
+            "wss://testnet.xrpl-labs.com/".parse().unwrap(),
+        )
+        .await
+        .unwrap();
+        autofill_and_sign(&mut payment, &client, &wallet, None)
+            .await
+            .unwrap();
+        assert!(payment.get_common_fields().sequence.is_some());
+        assert!(payment.get_common_fields().txn_signature.is_some());
     }
 }
