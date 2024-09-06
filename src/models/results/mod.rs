@@ -2,7 +2,7 @@ use core::convert::{TryFrom, TryInto};
 
 use alloc::{
     borrow::Cow,
-    format,
+    dbg, format,
     string::{String, ToString},
     vec::Vec,
 };
@@ -219,6 +219,7 @@ impl<'a> XRPLResponse<'a> {
     }
 
     pub fn try_into_result<T: TryFrom<XRPLResult<'a>, Error = anyhow::Error>>(self) -> Result<T> {
+        dbg!(self.result.clone());
         match self.result {
             Some(result) => result.try_into(),
             None => {
