@@ -69,20 +69,17 @@ where
             Err(e) => return Err!(e),
         };
     }
-    let account_info = client
-        .request(
-            AccountInfo::new(
-                None,
-                classic_address,
-                None,
-                Some(ledger_index),
-                None,
-                None,
-                None,
-            )
-            .into(),
-        )
-        .await?;
+    let request = AccountInfo::new(
+        None,
+        classic_address,
+        None,
+        Some(ledger_index),
+        None,
+        None,
+        None,
+    )
+    .into();
+    let account_info = client.request(request).await?;
 
     Ok(account_info
         .try_into_result::<results::AccountInfo<'_>>()?

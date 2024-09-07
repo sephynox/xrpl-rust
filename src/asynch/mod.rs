@@ -11,3 +11,5 @@ pub mod clients;
 pub mod ledger;
 #[cfg(feature = "transaction-helpers")]
 pub mod transaction;
+#[cfg(all(feature = "wallet-helpers", feature = "json-rpc-std"))]
+pub mod wallet;
