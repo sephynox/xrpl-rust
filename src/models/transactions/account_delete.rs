@@ -7,8 +7,8 @@ use crate::models::amount::XRPAmount;
 use crate::models::transactions::CommonFields;
 use crate::models::NoFlags;
 use crate::models::{
-    model::Model,
     transactions::{Transaction, TransactionType},
+    Model,
 };
 
 use super::{Memo, Signer};

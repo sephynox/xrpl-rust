@@ -7,7 +7,7 @@ use url::Url;
 
 use crate::{
     asynch::account::get_next_valid_seq_number,
-    models::{amount::XRPAmount, requests::FundFaucet},
+    models::{requests::FundFaucet, XRPAmount},
     wallet::Wallet,
     Err,
 };
@@ -17,8 +17,8 @@ use super::{
     clients::{Client, XRPLFaucet},
 };
 
-const TEST_FAUCET_URL: &'static str = "https://faucet.altnet.rippletest.net/accounts";
-const DEV_FAUCET_URL: &'static str = "https://faucet.devnet.rippletest.net/accounts";
+const TEST_FAUCET_URL: &str = "https://faucet.altnet.rippletest.net/accounts";
+const DEV_FAUCET_URL: &str = "https://faucet.devnet.rippletest.net/accounts";
 
 const TIMEOUT_SECS: u8 = 40;
 
@@ -54,6 +54,12 @@ where
     let mut is_funded = false;
     for _ in 0..TIMEOUT_SECS {
         // wait 1 second
+        #[cfg(all(feature = "embassy-rt", not(feature = "tokio-rt")))]
+        embassy_time::Timer::after_secs(1).await;
+        #[cfg(any(
+            feature = "tokio-rt",
+            all(feature = "embassy-rt", feature = "tokio-rt")
+        ))]
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         if !is_funded {
             let balance = check_balance(client, address.into()).await;
@@ -85,8 +91,8 @@ where
         let host_str = host.host_str().unwrap();
         if host_str.contains("altnet") || host_str.contains("testnet") {
             match Url::parse(TEST_FAUCET_URL) {
-                Ok(url) => return Ok(url),
-                Err(error) => return Err!(error),
+                Ok(url) => Ok(url),
+                Err(error) => Err!(error),
             }
         } else if host_str.contains("devnet") {
             match Url::parse(DEV_FAUCET_URL) {
@@ -130,16 +136,11 @@ where
     Ok(())
 }
 
-#[cfg(all(
-    feature = "json-rpc-std",
-    not(feature = "json-rpc"),
-    feature = "helpers",
-    feature = "models"
-))]
+#[cfg(all(feature = "json-rpc", feature = "std"))]
 #[cfg(test)]
 mod test_faucet_wallet_generation {
     use super::*;
-    use crate::asynch::clients::json_rpc::AsyncJsonRpcClient;
+    use crate::asynch::clients::AsyncJsonRpcClient;
     use url::Url;
 
     #[tokio::test]

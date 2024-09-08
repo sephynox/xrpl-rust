@@ -21,7 +21,7 @@ where
             Some(signers) => signers,
             None => return Err!(XRPLMultisignException::NoSigners),
         };
-        let tx_signer = match tx_signers.get(0) {
+        let tx_signer = match tx_signers.first() {
             Some(signer) => signer,
             None => return Err!(XRPLMultisignException::NoSigners),
         };
@@ -40,7 +40,7 @@ mod test {
 
     use super::*;
     use crate::asynch::transaction::sign;
-    use crate::models::transactions::AccountSet;
+    use crate::models::transactions::account_set::AccountSet;
     use crate::wallet::Wallet;
 
     #[tokio::test]

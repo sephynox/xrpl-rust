@@ -16,12 +16,12 @@ use crate::{
         keypairs::sign as keypairs_sign,
     },
     models::{
-        amount::XRPAmount,
-        exceptions::XRPLModelException,
-        requests::{ServerState, Submit},
-        results::{ServerState as ServerStateResult, Submit as SubmitResult},
-        transactions::{Signer, Transaction, TransactionType, XRPLTransactionFieldException},
-        Model,
+        requests::{server_state::ServerState, submit::Submit},
+        results::{server_state::ServerState as ServerStateResult, submit::Submit as SubmitResult},
+        transactions::{
+            exceptions::XRPLTransactionFieldException, Signer, Transaction, TransactionType,
+        },
+        Model, XRPAmount, XRPLModelException,
     },
     utils::transactions::{
         get_transaction_field_value, set_transaction_field_value, validate_transaction_has_field,
@@ -175,7 +175,7 @@ where
     let res = client.request(req.into()).await?;
     match res.try_into_result::<SubmitResult<'_>>() {
         Ok(value) => {
-            let submit_result = SubmitResult::from(value);
+            let submit_result = value;
             Ok(submit_result)
         }
         Err(e) => Err!(e),
@@ -444,18 +444,18 @@ where
             Ok(t) => t,
             Err(error) => return Err!(error),
         };
-        validate_transaction_has_field(prepared_transaction, &account_field_name)?;
-        set_transaction_field_value(prepared_transaction, &account_field_name, address)?;
+        validate_transaction_has_field(prepared_transaction, account_field_name)?;
+        set_transaction_field_value(prepared_transaction, account_field_name, address)?;
 
-        if validate_transaction_has_field(prepared_transaction, &tag_field_name).is_ok()
-            && get_transaction_field_value(prepared_transaction, &tag_field_name).unwrap_or(Some(0))
+        if validate_transaction_has_field(prepared_transaction, tag_field_name).is_ok()
+            && get_transaction_field_value(prepared_transaction, tag_field_name).unwrap_or(Some(0))
                 != tag
         {
             Err!(XRPLSignTransactionException::TagFieldMismatch(
-                &tag_field_name
+                tag_field_name
             ))
         } else {
-            set_transaction_field_value(prepared_transaction, &tag_field_name, tag)?;
+            set_transaction_field_value(prepared_transaction, tag_field_name, tag)?;
 
             Ok(())
         }
@@ -481,15 +481,15 @@ where
     }
 }
 
-#[cfg(all(feature = "websocket-std", feature = "std", not(feature = "websocket")))]
+#[cfg(all(feature = "websocket", feature = "std"))]
 #[cfg(test)]
 mod test_autofill {
     use super::autofill;
     use crate::{
-        asynch::clients::{AsyncWebsocketClient, SingleExecutorMutex},
+        asynch::clients::{AsyncWebSocketClient, SingleExecutorMutex},
         models::{
-            amount::{IssuedCurrencyAmount, XRPAmount},
-            transactions::{OfferCreate, Transaction},
+            transactions::{offer_create::OfferCreate, Transaction},
+            IssuedCurrencyAmount, XRPAmount,
         },
     };
     use anyhow::Result;
@@ -517,7 +517,7 @@ mod test_autofill {
             None,
             None,
         );
-        let client = AsyncWebsocketClient::<SingleExecutorMutex, _>::open(
+        let client = AsyncWebSocketClient::<SingleExecutorMutex, _>::open(
             "wss://testnet.xrpl-labs.com/".parse().unwrap(),
         )
         .await
@@ -533,17 +533,17 @@ mod test_autofill {
     }
 }
 
-#[cfg(all(feature = "websocket-std", feature = "std", not(feature = "websocket")))]
+#[cfg(all(feature = "websocket", feature = "std"))]
 #[cfg(test)]
 mod test_sign {
     use alloc::borrow::Cow;
 
     use crate::{
         asynch::{
-            clients::{AsyncWebsocketClient, SingleExecutorMutex},
+            clients::{AsyncWebSocketClient, SingleExecutorMutex},
             transaction::{autofill_and_sign, sign},
         },
-        models::transactions::{AccountSet, Transaction},
+        models::transactions::{account_set::AccountSet, Transaction},
         wallet::Wallet,
     };
 
@@ -602,7 +602,7 @@ mod test_sign {
             None,
             None,
         );
-        let client = AsyncWebsocketClient::<SingleExecutorMutex, _>::open(
+        let client = AsyncWebSocketClient::<SingleExecutorMutex, _>::open(
             "wss://testnet.xrpl-labs.com/".parse().unwrap(),
         )
         .await
