@@ -4,7 +4,7 @@ use alloc::{borrow::Cow, vec::Vec};
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{FlagCollection, Model, NoFlags, XRPAmount};
+use crate::models::{Amount, FlagCollection, Model, NoFlags, XRPAmount};
 
 use super::{CommonFields, Memo, Signer, Transaction, TransactionType, XChainBridge};
 
@@ -14,11 +14,11 @@ use super::{CommonFields, Memo, Signer, Transaction, TransactionType, XChainBrid
 pub struct XChainAccountCreateCommit<'a> {
     #[serde(flatten)]
     pub common_fields: CommonFields<'a, NoFlags>,
-    pub amount: XRPAmount<'a>,
+    pub amount: Amount<'a>,
     pub destination: Cow<'a, str>,
     #[serde(rename = "XChainBridge")]
     pub xchain_bridge: XChainBridge<'a>,
-    pub signature_reward: Option<XRPAmount<'a>>,
+    pub signature_reward: Option<Amount<'a>>,
 }
 
 impl Model for XChainAccountCreateCommit<'_> {}
@@ -48,10 +48,10 @@ impl<'a> XChainAccountCreateCommit<'a> {
         signers: Option<Vec<Signer<'a>>>,
         source_tag: Option<u32>,
         ticket_sequence: Option<u32>,
-        amount: XRPAmount<'a>,
+        amount: Amount<'a>,
         destination: Cow<'a, str>,
         xchain_bridge: XChainBridge<'a>,
-        signature_reward: Option<XRPAmount<'a>>,
+        signature_reward: Option<Amount<'a>>,
     ) -> XChainAccountCreateCommit<'a> {
         XChainAccountCreateCommit {
             common_fields: CommonFields {
