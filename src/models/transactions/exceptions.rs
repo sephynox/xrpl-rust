@@ -384,3 +384,13 @@ pub enum XRPLXChainCreateClaimIDException {
 
 #[cfg(feature = "std")]
 impl alloc::error::Error for XRPLXChainCreateClaimIDException {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+pub enum XRPLXChainModifyBridgeException {
+    #[error("Must either change `signature_reward`, change `min_account_create_amount`, or clear `min_account_create_amount`")]
+    MustChangeOrClear,
+    #[error("`account` must be either `locking_chain_door` or `issuing_chain_door`")]
+    AccountDoorMismatch,
+    #[error("Cannot have MinAccountCreateAmount if bridge is IOU-IOU")]
+    CannotHaveMinAccountCreateAmount,
+}
