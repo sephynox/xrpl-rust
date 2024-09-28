@@ -8,12 +8,12 @@ use strum_macros::{AsRefStr, Display, EnumIter};
 use crate::{
     models::{
         transactions::exceptions::XRPLXChainModifyBridgeException, Amount, FlagCollection, Model,
-        XRPAmount, XRP,
+        XChainBridge, XRPAmount, XRP,
     },
     Err,
 };
 
-use super::{CommonFields, Memo, Signer, Transaction, TransactionType, XChainBridge};
+use super::{CommonFields, Memo, Signer, Transaction, TransactionType};
 
 #[derive(
     Debug, Eq, PartialEq, Clone, Serialize_repr, Deserialize_repr, Display, AsRefStr, EnumIter,

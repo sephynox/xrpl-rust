@@ -6,12 +6,12 @@ use serde_with::skip_serializing_none;
 use crate::{
     models::{
         transactions::exceptions::XRPLXChainClaimException, Amount, Currency, FlagCollection,
-        Model, NoFlags,
+        Model, NoFlags, XChainBridge,
     },
     Err,
 };
 
-use super::{CommonFields, Memo, Signer, Transaction, TransactionType, XChainBridge};
+use super::{CommonFields, Memo, Signer, Transaction, TransactionType};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]

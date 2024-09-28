@@ -7,12 +7,12 @@ use crate::{
     core::addresscodec::is_valid_classic_address,
     models::{
         transactions::exceptions::XRPLXChainCreateClaimIDException, FlagCollection, Model, NoFlags,
-        XRPAmount,
+        XChainBridge, XRPAmount,
     },
     Err,
 };
 
-use super::{CommonFields, Memo, Signer, Transaction, TransactionType, XChainBridge};
+use super::{CommonFields, Memo, Signer, Transaction, TransactionType};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]

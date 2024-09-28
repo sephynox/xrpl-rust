@@ -2,9 +2,9 @@ use alloc::{borrow::Cow, vec::Vec};
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::models::{Amount, FlagCollection, Model, NoFlags};
+use crate::models::{Amount, FlagCollection, Model, NoFlags, XChainBridge};
 
-use super::{CommonFields, Transaction, TransactionType, XChainBridge};
+use super::{CommonFields, Transaction, TransactionType};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]

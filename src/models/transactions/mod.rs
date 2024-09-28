@@ -33,7 +33,7 @@ pub mod xchain_create_bridge;
 pub mod xchain_create_claim_id;
 pub mod xchain_modify_bridge;
 
-use super::{Currency, FlagCollection};
+use super::FlagCollection;
 use crate::core::binarycodec::encode;
 use crate::models::amount::XRPAmount;
 use crate::Err;
@@ -372,15 +372,6 @@ pub enum Flag {
     PaymentChannelClaim(payment_channel_claim::PaymentChannelClaimFlag),
     TrustSet(trust_set::TrustSetFlag),
     EnableAmendment(pseudo_transactions::enable_amendment::EnableAmendmentFlag),
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub struct XChainBridge<'a> {
-    pub issuing_chain_door: Cow<'a, str>,
-    pub issuing_chain_issue: Currency<'a>,
-    pub locking_chain_door: Cow<'a, str>,
-    pub locking_chain_issue: Currency<'a>,
 }
 
 #[cfg(all(
