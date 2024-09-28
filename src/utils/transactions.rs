@@ -1,6 +1,6 @@
 use core::fmt::Debug;
 
-use anyhow::Result;
+
 use serde::{de::DeserializeOwned, Serialize};
 use strum::IntoEnumIterator;
 

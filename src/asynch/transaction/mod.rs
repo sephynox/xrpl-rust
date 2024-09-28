@@ -34,7 +34,7 @@ use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec::Vec;
 use alloc::{borrow::Cow, vec};
-use anyhow::Result;
+
 use core::convert::TryInto;
 use core::fmt::Debug;
 use exceptions::XRPLTransactionException;
@@ -493,7 +493,6 @@ mod test_autofill {
             IssuedCurrencyAmount, XRPAmount,
         },
     };
-    use anyhow::Result;
 
     #[tokio::test]
     async fn test_autofill_txn() -> Result<()> {

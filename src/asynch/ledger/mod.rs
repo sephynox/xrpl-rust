@@ -1,7 +1,6 @@
 use core::{cmp::min, convert::TryInto};
 
 use alloc::string::ToString;
-use anyhow::Result;
 
 use crate::models::{
     requests::{fee::Fee, ledger::Ledger},

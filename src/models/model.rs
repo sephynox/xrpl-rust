@@ -1,6 +1,6 @@
 //! Base model
 
-use anyhow::Result;
+
 
 /// A trait that implements basic functions to every model.
 pub trait Model {

@@ -1,5 +1,5 @@
 use alloc::borrow::Cow;
-use anyhow::Result;
+
 use url::Url;
 
 use crate::{

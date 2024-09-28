@@ -5,7 +5,7 @@ use super::types::{AccountId, STObject};
 use crate::Err;
 
 use alloc::{borrow::Cow, string::String, vec::Vec};
-use anyhow::Result;
+
 use core::convert::TryFrom;
 use hex::ToHex;
 use serde::Serialize;

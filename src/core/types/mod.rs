@@ -44,7 +44,7 @@ use alloc::string::ToString;
 use alloc::vec;
 use alloc::vec::Vec;
 use amount::IssuedCurrency;
-use anyhow::Result;
+
 use serde_json::Map;
 use serde_json::Value;
 

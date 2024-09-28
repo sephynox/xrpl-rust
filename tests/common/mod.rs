@@ -1,4 +1,4 @@
-use anyhow::Result;
+
 #[cfg(all(feature = "websocket", not(feature = "std")))]
 use embedded_io_adapters::tokio_1::FromTokio;
 #[cfg(all(feature = "websocket", not(feature = "std")))]

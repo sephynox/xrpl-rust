@@ -1,4 +1,4 @@
-use anyhow::Result;
+
 
 use crate::{
     asynch::clients::{CommonFields, XRPLClient},
@@ -15,7 +15,7 @@ pub trait XRPLSyncClient: XRPLClient {
 
 #[cfg(all(feature = "json-rpc", feature = "std"))]
 pub mod json_rpc {
-    use anyhow::Result;
+    
     use tokio::runtime::Runtime;
     use url::Url;
 
@@ -81,7 +81,7 @@ pub mod json_rpc {
 
 #[cfg(all(feature = "json-rpc", not(feature = "std")))]
 pub mod json_rpc {
-    use anyhow::Result;
+    
     use embassy_sync::blocking_mutex::raw::RawMutex;
     use embedded_nal_async::{Dns, TcpConnect};
     use url::Url;
@@ -151,7 +151,7 @@ pub trait XRPLSyncWebsocketIO {
 
 #[cfg(all(feature = "websocket", feature = "std"))]
 pub mod websocket {
-    use anyhow::Result;
+    
     use embassy_sync::blocking_mutex::raw::RawMutex;
     use tokio::runtime::Runtime;
     use url::Url;
@@ -235,7 +235,7 @@ pub mod websocket {
 #[cfg(all(feature = "websocket", not(feature = "std")))]
 pub mod websocket {
     use super::XRPLSyncWebsocketIO;
-    use anyhow::Result;
+    
     use embassy_futures::block_on;
     use embassy_sync::blocking_mutex::raw::RawMutex;
     use embedded_io_async::{Read, Write};

@@ -1,7 +1,7 @@
 use core::fmt::Debug;
 
 use alloc::vec::Vec;
-use anyhow::Result;
+
 use serde::Serialize;
 use strum::IntoEnumIterator;
 

@@ -20,7 +20,7 @@ use crate::{
     },
     wallet::Wallet,
 };
-use anyhow::Result;
+
 use embassy_futures::block_on;
 use serde::{de::DeserializeOwned, Serialize};
 use strum::IntoEnumIterator;

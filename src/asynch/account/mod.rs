@@ -1,5 +1,4 @@
 use alloc::borrow::Cow;
-use anyhow::Result;
 
 use crate::{
     core::addresscodec::{is_valid_xaddress, xaddress_to_classic_address},

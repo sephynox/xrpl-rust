@@ -1,4 +1,3 @@
-use anyhow::Result;
 use embassy_futures::block_on;
 
 use crate::{

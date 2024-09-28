@@ -34,7 +34,7 @@ use alloc::borrow::Cow;
 use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
-use anyhow::Result;
+
 use core::fmt::Debug;
 use derive_new::new;
 use exceptions::XRPLTransactionException;

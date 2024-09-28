@@ -4,7 +4,7 @@ use crate::asynch::{
     wallet::generate_faucet_wallet as async_generate_faucet_wallet,
 };
 use alloc::borrow::Cow;
-use anyhow::Result;
+
 use embassy_futures::block_on;
 use url::Url;
 

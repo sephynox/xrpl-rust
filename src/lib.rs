@@ -41,6 +41,7 @@ pub mod clients;
 pub mod constants;
 #[cfg(feature = "core")]
 pub mod core;
+pub mod exceptions;
 #[cfg(feature = "ledger-helpers")]
 pub mod ledger;
 pub mod macros;
@@ -60,7 +61,6 @@ pub mod wallet;
 
 pub extern crate serde_json;
 
-mod _anyhow;
 #[cfg(any(
     feature = "ledger-models",
     feature = "request-models",

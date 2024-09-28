@@ -1,22 +1,28 @@
+use alloc::string::{FromUtf8Error, String};
 use core::fmt::Debug;
-use core::str::Utf8Error;
 #[cfg(all(feature = "websocket", not(feature = "std")))]
 use embedded_io_async::{Error as EmbeddedIoError, ErrorKind};
 #[cfg(all(feature = "websocket", not(feature = "std")))]
 use embedded_websocket_embedded_io::framer_async::FramerError;
+use futures::channel::oneshot::Canceled;
 use thiserror_no_std::Error;
 
+pub type XRPLWebSocketResult<T> = Result<T, XRPLWebSocketException>;
+
 #[derive(Debug, Error)]
-pub enum XRPLWebsocketException<E: Debug> {
+pub enum XRPLWebSocketException {
     // FramerError
     #[error("I/O error: {0:?}")]
-    Io(E),
+    Io(String),
     #[error("Frame too large (size: {0:?})")]
     FrameTooLarge(usize),
-    #[error("Failed to interpret u8 to string (error: {0:?})")]
-    Utf8(Utf8Error),
+    #[error("{0:?}")]
+    FromUtf8(FromUtf8Error),
     #[error("Invalid HTTP header")]
     HttpHeader,
+    #[cfg(all(feature = "websocket", feature = "std"))]
+    #[error("Websocket error: {0:?}")]
+    TungsteniteError(#[from] tokio_tungstenite::tungstenite::Error),
     #[cfg(all(feature = "websocket", not(feature = "std")))]
     #[error("Websocket error: {0:?}")]
     WebSocket(embedded_websocket_embedded_io::Error),
@@ -35,32 +41,36 @@ pub enum XRPLWebsocketException<E: Debug> {
     MissingRequestReceiver,
     #[error("Invalid message.")]
     InvalidMessage,
+    #[error("0:?")]
+    SerdeError(#[from] serde_json::Error),
+    #[error("0:?")]
+    CancelledRequest(Canceled),
 }
 
 #[cfg(all(feature = "websocket", not(feature = "std")))]
-impl<E: Debug> From<FramerError<E>> for XRPLWebsocketException<E> {
+impl<E: Debug> From<FramerError<E>> for XRPLWebSocketException {
     fn from(value: FramerError<E>) -> Self {
         match value {
-            FramerError::Io(e) => XRPLWebsocketException::Io(e),
-            FramerError::FrameTooLarge(e) => XRPLWebsocketException::FrameTooLarge(e),
-            FramerError::Utf8(e) => XRPLWebsocketException::Utf8(e),
-            FramerError::HttpHeader(_) => XRPLWebsocketException::HttpHeader,
-            FramerError::WebSocket(e) => XRPLWebsocketException::WebSocket(e),
-            FramerError::Disconnected => XRPLWebsocketException::Disconnected,
-            FramerError::RxBufferTooSmall(e) => XRPLWebsocketException::RxBufferTooSmall(e),
+            FramerError::Io(e) => XRPLWebSocketException::Io(format!("{:?}", e)),
+            FramerError::FrameTooLarge(e) => XRPLWebSocketException::FrameTooLarge(e),
+            FramerError::Utf8(e) => XRPLWebSocketException::Utf8(e),
+            FramerError::HttpHeader(_) => XRPLWebSocketException::HttpHeader,
+            FramerError::WebSocket(e) => XRPLWebSocketException::WebSocket(e),
+            FramerError::Disconnected => XRPLWebSocketException::Disconnected,
+            FramerError::RxBufferTooSmall(e) => XRPLWebSocketException::RxBufferTooSmall(e),
         }
     }
 }
 
 #[cfg(all(feature = "websocket", not(feature = "std")))]
-impl<E: Debug> EmbeddedIoError for XRPLWebsocketException<E> {
+impl EmbeddedIoError for XRPLWebSocketException {
     fn kind(&self) -> ErrorKind {
         match self {
-            XRPLWebsocketException::EmbeddedIoError(e) => e.kind(),
+            XRPLWebSocketException::EmbeddedIoError(e) => e.kind(),
             _ => ErrorKind::Other,
         }
     }
 }
 
 #[cfg(feature = "std")]
-impl<E: Debug> alloc::error::Error for XRPLWebsocketException<E> {}
+impl alloc::error::Error for XRPLWebSocketException {}
