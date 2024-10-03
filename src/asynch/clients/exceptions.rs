@@ -19,4 +19,6 @@ pub enum XRPLClientException {
     XRPLFaucetException(#[from] XRPLFaucetException),
     #[error("{0:?}")]
     UrlParseError(#[from] ParseError),
+    #[error("{0:?}")]
+    SerdeError(#[from] serde_json::Error),
 }
