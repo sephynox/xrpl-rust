@@ -27,7 +27,6 @@ use crate::{
         get_transaction_field_value, set_transaction_field_value, validate_transaction_has_field,
     },
     wallet::Wallet,
-    Err,
 };
 
 use alloc::string::String;
@@ -37,7 +36,7 @@ use alloc::{borrow::Cow, vec};
 
 use core::convert::TryInto;
 use core::fmt::Debug;
-use exceptions::XRPLTransactionException;
+use exceptions::XRPLTransactionHelperException;
 use rust_decimal::Decimal;
 use serde::Serialize;
 use serde::{de::DeserializeOwned, Deserialize};
@@ -290,7 +289,7 @@ fn txn_needs_network_id(common_fields: CommonFields<'_>) -> Result<bool> {
 fn is_not_later_rippled_version<'a>(
     source: String,
     target: String,
-) -> Result<bool, XRPLTransactionException<'a>> {
+) -> Result<bool, XRPLTransactionHelperException<'a>> {
     if source == target {
         Ok(true)
     } else {
@@ -305,18 +304,18 @@ fn is_not_later_rippled_version<'a>(
         let (source_major, source_minor) = (
             source_decomp[0]
                 .parse::<u8>()
-                .map_err(XRPLTransactionException::ParseRippledVersionError)?,
+                .map_err(XRPLTransactionHelperException::ParseRippledVersionError)?,
             source_decomp[1]
                 .parse::<u8>()
-                .map_err(XRPLTransactionException::ParseRippledVersionError)?,
+                .map_err(XRPLTransactionHelperException::ParseRippledVersionError)?,
         );
         let (target_major, target_minor) = (
             target_decomp[0]
                 .parse::<u8>()
-                .map_err(XRPLTransactionException::ParseRippledVersionError)?,
+                .map_err(XRPLTransactionHelperException::ParseRippledVersionError)?,
             target_decomp[1]
                 .parse::<u8>()
-                .map_err(XRPLTransactionException::ParseRippledVersionError)?,
+                .map_err(XRPLTransactionHelperException::ParseRippledVersionError)?,
         );
         if source_major != target_major {
             Ok(source_major < target_major)
@@ -333,19 +332,23 @@ fn is_not_later_rippled_version<'a>(
                 .collect::<Vec<String>>();
             let source_patch_version = source_patch[0]
                 .parse::<u8>()
-                .map_err(XRPLTransactionException::ParseRippledVersionError)?;
+                .map_err(XRPLTransactionHelperException::ParseRippledVersionError)?;
             let target_patch_version = target_patch[0]
                 .parse::<u8>()
-                .map_err(XRPLTransactionException::ParseRippledVersionError)?;
+                .map_err(XRPLTransactionHelperException::ParseRippledVersionError)?;
             if source_patch_version != target_patch_version {
                 Ok(source_patch_version < target_patch_version)
             } else if source_patch.len() != target_patch.len() {
                 Ok(source_patch.len() < target_patch.len())
             } else if source_patch.len() == 2 {
                 if source_patch[1].chars().next().ok_or(
-                    XRPLTransactionException::InvalidRippledVersion("source patch version".into()),
+                    XRPLTransactionHelperException::InvalidRippledVersion(
+                        "source patch version".into(),
+                    ),
                 )? != target_patch[1].chars().next().ok_or(
-                    XRPLTransactionException::InvalidRippledVersion("target patch version".into()),
+                    XRPLTransactionHelperException::InvalidRippledVersion(
+                        "target patch version".into(),
+                    ),
                 )? {
                     Ok(source_patch[1] < target_patch[1])
                 } else if source_patch[1].starts_with('b') {
