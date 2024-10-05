@@ -104,7 +104,7 @@ mod _std {
 #[cfg(all(feature = "json-rpc", not(feature = "std")))]
 mod _no_std {
     use crate::{
-        asynch::clients::{SingleExecutorMutex, XRPLFaucet},
+        asynch::clients::{exceptions::XRPLClientResult, SingleExecutorMutex, XRPLFaucet},
         models::requests::{FundFaucet, XRPLRequest},
     };
 
@@ -159,7 +159,7 @@ mod _no_std {
         async fn request_impl<'a: 'b, 'b>(
             &self,
             request: XRPLRequest<'a>,
-        ) -> Result<XRPLResponse<'b>> {
+        ) -> XRPLClientResult<XRPLResponse<'b>> {
             let request_json_rpc = request_to_json_rpc(&request)?;
             let request_string = request_json_rpc.to_string();
             let request_buf = request_string.as_bytes();
@@ -173,18 +173,15 @@ mod _no_std {
                         .send(&mut rx_buffer)
                         .await
                     {
-                        Err!(XRPLJsonRpcException::ReqwlessError)
+                        Err(XRPLJsonRpcException::ReqwlessError)
                     } else {
-                        match serde_json::from_slice::<XRPLResponse<'_>>(&rx_buffer) {
-                            Ok(response) => Ok(response),
-                            Err(error) => Err!(error),
-                        }
+                        Ok(serde_json::from_slice::<XRPLResponse<'_>>(&rx_buffer)?)
                     }
                 }
-                Err(_error) => Err!(XRPLJsonRpcException::ReqwlessError),
+                Err(_error) => Err(XRPLJsonRpcException::ReqwlessError),
             };
 
-            response
+            Ok(response?)
         }
 
         fn get_host(&self) -> Url {
@@ -198,7 +195,11 @@ mod _no_std {
         T: TcpConnect + 'a,
         D: Dns + 'a,
     {
-        async fn request_funding(&self, url: Option<Url>, request: FundFaucet<'_>) -> Result<()> {
+        async fn request_funding(
+            &self,
+            url: Option<Url>,
+            request: FundFaucet<'_>,
+        ) -> XRPLClientResult<()> {
             let faucet_url = self.get_faucet_url(url)?;
             let request_json_rpc = serde_json::to_value(&request).unwrap();
             let request_string = request_json_rpc.to_string();
@@ -213,7 +214,7 @@ mod _no_std {
                         .send(&mut rx_buffer)
                         .await
                     {
-                        Err!(XRPLJsonRpcException::ReqwlessError)
+                        Err(XRPLJsonRpcException::ReqwlessError)
                     } else {
                         if let Ok(response) = serde_json::from_slice::<XRPLResponse<'_>>(&rx_buffer)
                         {
@@ -224,14 +225,14 @@ mod _no_std {
                                 // Err!(XRPLJsonRpcException::RequestError())
                             }
                         } else {
-                            Err!(XRPLJsonRpcException::ReqwlessError)
+                            Err(XRPLJsonRpcException::ReqwlessError)
                         }
                     }
                 }
-                Err(_error) => Err!(XRPLJsonRpcException::ReqwlessError),
+                Err(_error) => Err(XRPLJsonRpcException::ReqwlessError),
             };
 
-            response
+            Ok(response?)
         }
     }
 }

@@ -41,42 +41,30 @@ impl<T: EmbeddedIoRead + EmbeddedIoWrite + MessageHandler> XRPLAsyncWebsocketIO 
 where
     <T as ErrorType>::Error: Display,
 {
-    async fn xrpl_send(&mut self, message: XRPLRequest<'_>) -> Result<()> {
-        let message = match serde_json::to_string(&message) {
-            Ok(message) => message,
-            Err(error) => return Err!(error),
-        };
+    async fn xrpl_send(&mut self, message: XRPLRequest<'_>) -> XRPLWebSocketResult<()> {
+        let message = serde_json::to_string(&message)?;
         let message_buffer = message.as_bytes();
-        match self.write(message_buffer).await {
-            Ok(_) => Ok(()),
-            Err(e) => Err!(e),
-        }
+        self.write(message_buffer)
+            .await
+            .map(|_| ())
+            .map_err(|error| XRPLWebSocketException::Io(error.to_string()))
     }
 
-    async fn xrpl_receive(&mut self) -> Result<Option<XRPLResponse<'_>>> {
+    async fn xrpl_receive(&mut self) -> XRPLWebSocketResult<Option<XRPLResponse<'_>>> {
         let mut buffer = [0; 1024];
         loop {
-            match self.read(&mut buffer).await {
-                Ok(u_size) => {
-                    // If the buffer is empty, continue to the next iteration.
-                    if u_size == 0 {
-                        continue;
-                    }
-                    let response_str = match core::str::from_utf8(&buffer[..u_size]) {
-                        Ok(response_str) => response_str,
-                        Err(error) => {
-                            return Err!(XRPLWebsocketException::<anyhow::Error>::Utf8(error))
-                        }
-                    };
-                    self.handle_message(response_str.to_string()).await?;
-                    let message = self.pop_message().await;
-                    match serde_json::from_str(&message) {
-                        Ok(response) => return Ok(response),
-                        Err(error) => return Err!(error),
-                    }
-                }
-                Err(error) => return Err!(error),
+            let u_size = self
+                .read(&mut buffer)
+                .await
+                .map_err(|error| XRPLWebSocketException::Io(error.to_string()))?;
+            // If the buffer is empty, continue to the next iteration.
+            if u_size == 0 {
+                continue;
             }
+            let response_str = core::str::from_utf8(&buffer[..u_size])?;
+            self.handle_message(response_str.to_string()).await?;
+            let message = self.pop_message().await;
+            return Ok(serde_json::from_str(&message)?);
         }
     }
 }

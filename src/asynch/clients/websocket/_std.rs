@@ -95,7 +95,7 @@ where
                     tungstenite::Message::Text(response) => Poll::Ready(Some(Ok(response))),
                     tungstenite::Message::Binary(response) => {
                         let response_string = String::from_utf8(response)
-                            .map_err(XRPLWebSocketException::FromUtf8)?;
+                            .map_err(|error| XRPLWebSocketException::Utf8(error.utf8_error()))?;
                         Poll::Ready(Some(Ok(response_string)))
                     }
                     tungstenite::Message::Close(_) => {
@@ -219,8 +219,8 @@ where
                     }
                 }
                 Some(Ok(tungstenite::Message::Binary(response))) => {
-                    let message =
-                        String::from_utf8(response).map_err(XRPLWebSocketException::FromUtf8)?;
+                    let message = String::from_utf8(response)
+                        .map_err(|error| XRPLWebSocketException::Utf8(error.utf8_error()))?;
                     serde_json::from_str(&message).map_err(XRPLWebSocketException::SerdeError)?
                 }
                 Some(Ok(tungstenite::Message::Close(_))) => {

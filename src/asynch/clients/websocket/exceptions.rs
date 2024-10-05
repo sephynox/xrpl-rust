@@ -1,5 +1,5 @@
-use alloc::string::{FromUtf8Error, String};
-use core::fmt::Debug;
+use alloc::{format, string::String};
+use core::{fmt::Debug, str::Utf8Error};
 #[cfg(all(feature = "websocket", not(feature = "std")))]
 use embedded_io_async::{Error as EmbeddedIoError, ErrorKind};
 #[cfg(all(feature = "websocket", not(feature = "std")))]
@@ -17,7 +17,7 @@ pub enum XRPLWebSocketException {
     #[error("Frame too large (size: {0:?})")]
     FrameTooLarge(usize),
     #[error("{0:?}")]
-    FromUtf8(FromUtf8Error),
+    Utf8(#[from] Utf8Error),
     #[error("Invalid HTTP header")]
     HttpHeader,
     #[cfg(all(feature = "websocket", feature = "std"))]
