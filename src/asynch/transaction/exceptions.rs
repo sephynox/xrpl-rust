@@ -1,11 +1,20 @@
 use core::num::ParseIntError;
 
-use alloc::{borrow::Cow, string::String};
+use alloc::string::String;
 use thiserror_no_std::Error;
 
-use crate::models::XRPAmount;
+use crate::{
+    asynch::{
+        account::exceptions::XRPLAccountHelperException, clients::exceptions::XRPLClientException,
+        ledger::exceptions::XRPLLedgerHelperException,
+    },
+    core::keypairs::exceptions::XRPLKeypairsException,
+    models::XRPAmount,
+};
 
-#[derive(Error, Debug, PartialEq)]
+pub type XRPLTransactionHelperResult<T> = Result<T, XRPLTransactionHelperException<'static>>;
+
+#[derive(Error, Debug)]
 pub enum XRPLTransactionHelperException<'a> {
     #[error("Fee of {0:?} Drops is much higher than a typical XRP transaction fee. This may be a mistake. If intentional, please use `check_fee = false`")]
     FeeUnusuallyHigh(XRPAmount<'a>),
@@ -17,6 +26,18 @@ pub enum XRPLTransactionHelperException<'a> {
     SignTransactionException(#[from] XRPLSignTransactionException),
     #[error("0:?")]
     SubmitAndWaitException(#[from] XRPLSubmitAndWaitException),
+    #[error("0:?")]
+    FromHexError(#[from] hex::FromHexError),
+    #[error("0:?")]
+    KeyPairsException(#[from] XRPLKeypairsException),
+    #[error("0:?")]
+    ClientException(#[from] XRPLClientException),
+    #[error("0:?")]
+    AccountHelperException(#[from] XRPLAccountHelperException),
+    #[error("0:?")]
+    LedgerHelperException(#[from] XRPLLedgerHelperException),
+    #[error("0:?")]
+    SerdeError(#[from] serde_json::Error),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]

@@ -8,6 +8,8 @@ use crate::utils::exceptions::XRPRangeException;
 use strum_macros::Display;
 use thiserror_no_std::Error;
 
+pub type XRPLTypeResult<T> = Result<T, XRPLTypeException>;
+
 #[derive(Debug, Clone, PartialEq, Display)]
 #[non_exhaustive]
 pub enum XRPLTypeException {

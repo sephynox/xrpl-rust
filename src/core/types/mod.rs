@@ -45,6 +45,8 @@ use alloc::vec;
 use alloc::vec::Vec;
 use amount::IssuedCurrency;
 
+use exceptions::XRPLTypeException;
+use exceptions::XRPLTypeResult;
 use serde_json::Map;
 use serde_json::Value;
 
@@ -84,7 +86,7 @@ pub enum XRPLTypes {
 }
 
 impl XRPLTypes {
-    pub fn from_value(name: &str, value: Value) -> Result<XRPLTypes> {
+    pub fn from_value(name: &str, value: Value) -> XRPLTypeResult<XRPLTypes> {
         if let Some(value) = value.as_str() {
             match name {
                 "AccountID" => Ok(XRPLTypes::AccountID(Self::type_from_str(value)?)),
@@ -125,7 +127,7 @@ impl XRPLTypes {
         }
     }
 
-    fn type_from_str<'a, T>(value: &'a str) -> Result<T>
+    fn type_from_str<'a, T>(value: &'a str) -> XRPLTypeResult<T>
     where
         T: TryFrom<&'a str>,
         <T as TryFrom<&'a str>>::Error: Display,
@@ -136,7 +138,7 @@ impl XRPLTypes {
         }
     }
 
-    fn amount_from_map<T>(value: Map<String, Value>) -> Result<T>
+    fn amount_from_map<T>(value: Map<String, Value>) -> XRPLTypeResult<T>
     where
         T: TryFrom<IssuedCurrency>,
         <T as TryFrom<IssuedCurrency>>::Error: Display,
@@ -210,7 +212,7 @@ impl STArray {
     ///
     /// assert_eq!(actual_hex, expected_hex);
     /// ```
-    pub fn try_from_value(value: Value) -> Result<Self> {
+    pub fn try_from_value(value: Value) -> XRPLTypeResult<Self> {
         if let Some(array) = value.as_array() {
             if !array.is_empty() && array.iter().filter(|v| v.is_object()).count() != array.len() {
                 Err!(exceptions::XRPLSerializeArrayException::ExpectedObjectArray)
@@ -238,7 +240,7 @@ impl STArray {
 }
 
 impl XRPLType for STArray {
-    type Error = anyhow::Error;
+    type Error = XRPLTypeException;
 
     fn new(buffer: Option<&[u8]>) -> Result<Self, Self::Error> {
         if let Some(data) = buffer {
@@ -297,7 +299,7 @@ impl STObject {
     /// let hex = hex::encode_upper(serialized_map.as_ref());
     /// assert_eq!(hex, buffer);
     /// ```
-    pub fn try_from_value(value: Value, signing_only: bool) -> Result<Self> {
+    pub fn try_from_value(value: Value, signing_only: bool) -> XRPLTypeResult<Self> {
         let object = match value {
             Value::Object(map) => map,
             _ => return Err!(exceptions::XRPLSerializeMapException::ExpectedObject),
@@ -433,7 +435,7 @@ impl STObject {
 }
 
 impl XRPLType for STObject {
-    type Error = anyhow::Error;
+    type Error = XRPLTypeException;
 
     fn new(buffer: Option<&[u8]>) -> Result<Self, Self::Error> {
         if let Some(data) = buffer {
@@ -450,7 +452,7 @@ impl AsRef<[u8]> for STObject {
     }
 }
 
-fn handle_xaddress(field: Cow<str>, xaddress: Cow<str>) -> Result<Map<String, Value>> {
+fn handle_xaddress(field: Cow<str>, xaddress: Cow<str>) -> XRPLTypeResult<Map<String, Value>> {
     let (classic_address, tag, _is_test_net) = match xaddress_to_classic_address(&xaddress) {
         Ok((classic_address, tag, is_test_net)) => (classic_address, tag, is_test_net),
         Err(e) => return Err!(e),

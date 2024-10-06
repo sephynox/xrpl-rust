@@ -36,7 +36,7 @@ use alloc::{borrow::Cow, vec};
 
 use core::convert::TryInto;
 use core::fmt::Debug;
-use exceptions::XRPLTransactionHelperException;
+use exceptions::{XRPLTransactionHelperException, XRPLTransactionHelperResult};
 use rust_decimal::Decimal;
 use serde::Serialize;
 use serde::{de::DeserializeOwned, Deserialize};
@@ -47,7 +47,11 @@ const RESTRICTED_NETWORKS: u16 = 1024;
 const REQUIRED_NETWORKID_VERSION: &str = "1.11.0";
 const LEDGER_OFFSET: u8 = 20;
 
-pub fn sign<'a, T, F>(transaction: &mut T, wallet: &Wallet, multisign: bool) -> Result<()>
+pub fn sign<'a, T, F>(
+    transaction: &mut T,
+    wallet: &Wallet,
+    multisign: bool,
+) -> XRPLTransactionHelperResult<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone + Debug,
@@ -55,14 +59,8 @@ where
     if multisign {
         let serialized_for_signing =
             encode_for_multisigning(transaction, wallet.classic_address.clone().into())?;
-        let serialized_bytes = match hex::decode(serialized_for_signing) {
-            Ok(bytes) => bytes,
-            Err(e) => return Err!(e),
-        };
-        let signature = match keypairs_sign(&serialized_bytes, &wallet.private_key) {
-            Ok(signature) => signature,
-            Err(e) => return Err!(e),
-        };
+        let serialized_bytes = hex::decode(serialized_for_signing)?;
+        let signature = keypairs_sign(&serialized_bytes, &wallet.private_key)?;
         let signer = Signer::new(
             wallet.classic_address.clone().into(),
             signature.into(),
@@ -74,14 +72,8 @@ where
     } else {
         prepare_transaction(transaction, wallet)?;
         let serialized_for_signing = encode_for_signing(transaction)?;
-        let serialized_bytes = match hex::decode(serialized_for_signing) {
-            Ok(bytes) => bytes,
-            Err(e) => return Err!(e),
-        };
-        let signature = match keypairs_sign(&serialized_bytes, &wallet.private_key) {
-            Ok(signature) => signature,
-            Err(e) => return Err!(e),
-        };
+        let serialized_bytes = hex::decode(serialized_for_signing)?;
+        let signature = keypairs_sign(&serialized_bytes, &wallet.private_key)?;
         transaction.get_mut_common_fields().txn_signature = Some(signature.into());
 
         Ok(())
@@ -94,7 +86,7 @@ pub async fn sign_and_submit<'a, 'b, T, F, C>(
     wallet: &Wallet,
     autofill: bool,
     check_fee: bool,
-) -> Result<SubmitResult<'a>>
+) -> XRPLTransactionHelperResult<SubmitResult<'a>>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone + Debug,
@@ -115,7 +107,7 @@ pub async fn autofill<'a, 'b, F, T, C>(
     transaction: &mut T,
     client: &'b C,
     signers_count: Option<u8>,
-) -> Result<()>
+) -> XRPLTransactionHelperResult<()>
 where
     T: Transaction<'a, F> + Model + Clone,
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
@@ -148,7 +140,7 @@ pub async fn autofill_and_sign<'a, 'b, T, F, C>(
     client: &'b C,
     wallet: &Wallet,
     check_fee: bool,
-) -> Result<()>
+) -> XRPLTransactionHelperResult<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone + Debug,
@@ -163,7 +155,10 @@ where
     Ok(())
 }
 
-pub async fn submit<'a, T, F, C>(transaction: &T, client: &C) -> Result<SubmitResult<'a>>
+pub async fn submit<'a, T, F, C>(
+    transaction: &T,
+    client: &C,
+) -> XRPLTransactionHelperResult<SubmitResult<'a>>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone + Debug,
@@ -174,11 +169,8 @@ where
     let req = Submit::new(None, txn_blob.into(), None);
     let res = client.request(req.into()).await?;
     match res.try_into_result::<SubmitResult<'_>>() {
-        Ok(value) => {
-            let submit_result = value;
-            Ok(submit_result)
-        }
-        Err(e) => Err!(e),
+        Ok(value) => Ok(value),
+        Err(e) => Err(e),
     }
 }
 
@@ -186,7 +178,7 @@ pub async fn calculate_fee_per_transaction_type<'a, 'b, 'c, T, F, C>(
     transaction: &T,
     client: Option<&'b C>,
     signers_count: Option<u8>,
-) -> Result<XRPAmount<'c>>
+) -> XRPLTransactionHelperResult<XRPAmount<'c>>
 where
     T: Transaction<'a, F>,
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
@@ -230,7 +222,9 @@ where
     Ok(base_fee_decimal.ceil().into())
 }
 
-async fn get_owner_reserve_from_response(client: &impl XRPLAsyncClient) -> Result<XRPAmount<'_>> {
+async fn get_owner_reserve_from_response(
+    client: &impl XRPLAsyncClient,
+) -> XRPLTransactionHelperResult<XRPAmount<'_>> {
     let owner_reserve_response = client.request(ServerState::new(None).into()).await?;
     match owner_reserve_response
         .try_into_result::<ServerStateResult<'_>>()?
@@ -238,14 +232,14 @@ async fn get_owner_reserve_from_response(client: &impl XRPLAsyncClient) -> Resul
         .validated_ledger
     {
         Some(validated_ledger) => Ok(validated_ledger.reserve_base),
-        None => Err!(XRPLModelException::MissingField("validated_ledger")),
+        None => Err(XRPLModelException::MissingField("validated_ledger")),
     }
 }
 
 fn calculate_base_fee_for_escrow_finish<'a: 'b, 'b>(
     net_fee: XRPAmount<'a>,
     fulfillment: Option<Cow<str>>,
-) -> Result<XRPAmount<'b>> {
+) -> XRPLTransactionHelperResult<XRPAmount<'b>> {
     if let Some(fulfillment) = fulfillment {
         calculate_based_on_fulfillment(fulfillment, net_fee)
     } else {
@@ -256,7 +250,7 @@ fn calculate_base_fee_for_escrow_finish<'a: 'b, 'b>(
 fn calculate_based_on_fulfillment<'a>(
     fulfillment: Cow<str>,
     net_fee: XRPAmount<'_>,
-) -> Result<XRPAmount<'a>> {
+) -> XRPLTransactionHelperResult<XRPAmount<'a>> {
     let fulfillment_bytes: Vec<u8> = fulfillment.chars().map(|c| c as u8).collect();
     let net_fee_f64: f64 = net_fee.try_into()?;
     let base_fee_string =
@@ -267,7 +261,7 @@ fn calculate_based_on_fulfillment<'a>(
     Ok(base_fee_decimal.ceil().into())
 }
 
-fn txn_needs_network_id(common_fields: CommonFields<'_>) -> Result<bool> {
+fn txn_needs_network_id(common_fields: CommonFields<'_>) -> XRPLTransactionHelperResult<bool> {
     let is_higher_restricted_networks = if let Some(network_id) = common_fields.network_id {
         network_id > RESTRICTED_NETWORKS as u32
     } else {
@@ -279,7 +273,7 @@ fn txn_needs_network_id(common_fields: CommonFields<'_>) -> Result<bool> {
             Ok(is_not_later_rippled_version) => {
                 Ok(is_higher_restricted_networks && is_not_later_rippled_version)
             }
-            Err(e) => Err!(e),
+            Err(e) => Err(e),
         }
     } else {
         Ok(false)
@@ -289,7 +283,7 @@ fn txn_needs_network_id(common_fields: CommonFields<'_>) -> Result<bool> {
 fn is_not_later_rippled_version<'a>(
     source: String,
     target: String,
-) -> Result<bool, XRPLTransactionHelperException<'a>> {
+) -> XRPLTransactionHelperResult<bool, XRPLTransactionHelperException<'a>> {
     if source == target {
         Ok(true)
     } else {
@@ -369,7 +363,10 @@ enum AccountFieldType {
     Destination,
 }
 
-async fn check_txn_fee<'a, 'b, T, F, C>(transaction: &mut T, client: &'b C) -> Result<()>
+async fn check_txn_fee<'a, 'b, T, F, C>(
+    transaction: &mut T,
+    client: &'b C,
+) -> XRPLTransactionHelperResult<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Model + Serialize + DeserializeOwned + Clone,
@@ -384,14 +381,17 @@ where
         .clone()
         .unwrap_or(XRPAmount::from("0"));
     if transaction_fee > expected_fee {
-        return Err!(XRPLSignTransactionException::FeeTooHigh(
-            transaction_fee.try_into()?
+        return Err(XRPLSignTransactionException::FeeTooHigh(
+            transaction_fee.try_into()?,
         ));
     }
     Ok(())
 }
 
-fn prepare_transaction<'a, T, F>(transaction: &mut T, wallet: &Wallet) -> Result<()>
+fn prepare_transaction<'a, T, F>(
+    transaction: &mut T,
+    wallet: &Wallet,
+) -> XRPLTransactionHelperResult<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
@@ -418,7 +418,7 @@ where
 fn validate_account_xaddress<'a, T, F>(
     prepared_transaction: &mut T,
     account_field: AccountFieldType,
-) -> Result<()>
+) -> XRPLTransactionHelperResult<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
@@ -431,10 +431,10 @@ where
             } else if name_str == "\"Destination\"" {
                 ("Destination", "DestinationTag")
             } else {
-                return Err!(XRPLTransactionFieldException::UnknownAccountField(name_str));
+                return Err(XRPLTransactionFieldException::UnknownAccountField(name_str));
             }
         }
-        Err(error) => return Err!(error),
+        Err(error) => return Err(error),
     };
     let account_address = match account_field {
         AccountFieldType::Account => prepared_transaction.get_common_fields().account.clone(),
@@ -446,7 +446,7 @@ where
     if is_valid_xaddress(&account_address) {
         let (address, tag, _) = match xaddress_to_classic_address(&account_address) {
             Ok(t) => t,
-            Err(error) => return Err!(error),
+            Err(error) => return Err(error),
         };
         validate_transaction_has_field(prepared_transaction, account_field_name)?;
         set_transaction_field_value(prepared_transaction, account_field_name, address)?;
@@ -455,8 +455,8 @@ where
             && get_transaction_field_value(prepared_transaction, tag_field_name).unwrap_or(Some(0))
                 != tag
         {
-            Err!(XRPLSignTransactionException::TagFieldMismatch(
-                tag_field_name
+            Err(XRPLSignTransactionException::TagFieldMismatch(
+                tag_field_name,
             ))
         } else {
             set_transaction_field_value(prepared_transaction, tag_field_name, tag)?;
@@ -468,7 +468,10 @@ where
     }
 }
 
-fn convert_to_classic_address<'a, T, F>(transaction: &mut T, field_name: &str) -> Result<()>
+fn convert_to_classic_address<'a, T, F>(
+    transaction: &mut T,
+    field_name: &str,
+) -> XRPLTransactionHelperResult<()>
 where
     F: IntoEnumIterator + Serialize + Debug + PartialEq,
     T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
@@ -477,7 +480,7 @@ where
     if is_valid_xaddress(&address) {
         let classic_address = match xaddress_to_classic_address(&address) {
             Ok(t) => t.0,
-            Err(error) => return Err!(error),
+            Err(error) => return Err(error),
         };
         set_transaction_field_value(transaction, field_name, classic_address)
     } else {
@@ -490,7 +493,10 @@ where
 mod test_autofill {
     use super::autofill;
     use crate::{
-        asynch::clients::{AsyncWebSocketClient, SingleExecutorMutex},
+        asynch::{
+            clients::{AsyncWebSocketClient, SingleExecutorMutex},
+            transaction::exceptions::XRPLTransactionHelperResult,
+        },
         models::{
             transactions::{offer_create::OfferCreate, Transaction},
             IssuedCurrencyAmount, XRPAmount,
@@ -498,7 +504,7 @@ mod test_autofill {
     };
 
     #[tokio::test]
-    async fn test_autofill_txn() -> Result<()> {
+    async fn test_autofill_txn() -> XRPLTransactionHelperResult<()> {
         let mut txn = OfferCreate::new(
             "r9mhdWo1NXVZr2pDnCtC1xwxE85kFtSzYR".into(),
             None,
