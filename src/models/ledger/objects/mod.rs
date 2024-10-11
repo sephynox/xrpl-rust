@@ -133,3 +133,54 @@ pub struct XChainClaimProofSig<'a> {
     pub public_key: Cow<'a, str>,
     pub was_locking_chain_send: u8,
 }
+
+/// The base fields for all ledger object models.
+///
+/// See Ledger Object Common Fields:
+/// `<https://xrpl.org/ledger-entry-common-fields.html>`
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
+#[serde(rename_all = "PascalCase")]
+pub struct CommonFields<'a, F>
+where
+    F: IntoEnumIterator + Serialize + core::fmt::Debug,
+{
+    /// A bit-map of boolean flags enabled for this account.
+    #[serde(with = "lgr_obj_flags")]
+    pub flags: FlagCollection<F>,
+    /// The type of the ledger object.
+    pub ledger_entry_type: LedgerEntryType,
+    /// The object ID of a single object to retrieve from the ledger, as a
+    /// 64-character (256-bit) hexadecimal string.
+    #[serde(rename = "index")]
+    pub index: Option<Cow<'a, str>>,
+    /// The object ID in transaction metadata of a single object to retrieve from the ledger, as a
+    /// 64-character (256-bit) hexadecimal string.
+    pub ledger_index: Option<Cow<'a, str>>,
+}
+
+impl<'a, T> LedgerObject<T> for CommonFields<'a, T>
+where
+    T: IntoEnumIterator + Serialize + PartialEq + core::fmt::Debug,
+{
+    fn has_flag(&self, flag: &T) -> bool {
+        self.flags.0.contains(flag)
+    }
+
+    fn get_ledger_entry_type(&self) -> LedgerEntryType {
+        self.ledger_entry_type.clone()
+    }
+}
+
+/// Standard functions for ledger objects.
+pub trait LedgerObject<T>
+where
+    T: IntoEnumIterator + Serialize,
+{
+    fn has_flag(&self, flag: &T) -> bool {
+        let _txn_flag = flag;
+        false
+    }
+
+    fn get_ledger_entry_type(&self) -> LedgerEntryType;
+}
