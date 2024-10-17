@@ -15,11 +15,11 @@ use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec;
 use alloc::vec::Vec;
+use bigdecimal::{BigDecimal, Signed, Zero};
 use core::convert::TryFrom;
 use core::convert::TryInto;
 use core::str::FromStr;
 use rust_decimal::prelude::ToPrimitive;
-use rust_decimal::Decimal;
 use serde::ser::Error;
 use serde::ser::SerializeMap;
 use serde::Serializer;
@@ -34,10 +34,18 @@ const _ZERO_CURRENCY_AMOUNT_HEX: u64 = 0x8000000000000000;
 const _NATIVE_AMOUNT_BYTE_LENGTH: u8 = 8;
 const _CURRENCY_AMOUNT_BYTE_LENGTH: u8 = 48;
 
+/// Normally when using bigdecimal "serde_json" feature a `1` will be serialized as `1.000000000000000`.
+/// This function normalizes a `BigDecimal` before serializing to a string.
+pub fn serialize_bigdecimal<S: Serializer>(value: &BigDecimal, s: S) -> Result<S::Ok, S::Error> {
+    let trimmed_str = value.normalized().to_string();
+    s.serialize_str(&trimmed_str)
+}
+
 /// An Issued Currency object.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub(crate) struct IssuedCurrency {
-    pub value: Decimal,
+    #[serde(serialize_with = "serialize_bigdecimal")]
+    pub value: BigDecimal,
     pub currency: Currency,
     pub issuer: AccountId,
 }
@@ -58,16 +66,17 @@ fn _contains_decimal(string: &str) -> bool {
 
 /// Serializes the value field of an issued currency amount
 /// to its bytes representation.
-fn _serialize_issued_currency_value(decimal: Decimal) -> Result<[u8; 8], XRPRangeException> {
-    verify_valid_ic_value(&decimal.to_string())?;
+fn _serialize_issued_currency_value(decimal: BigDecimal) -> Result<[u8; 8], XRPRangeException> {
+    verify_valid_ic_value(&decimal.to_scientific_notation())?;
 
     if decimal.is_zero() {
         return Ok((_ZERO_CURRENCY_AMOUNT_HEX).to_be_bytes());
     };
 
-    let is_positive: bool = decimal.is_sign_positive();
-    let mut exp: i32 = -(decimal.normalize().scale() as i32);
-    let mut mantissa: u128 = decimal.normalize().mantissa().unsigned_abs();
+    let is_positive: bool = decimal.is_positive();
+    let (mantissa_str, scale) = decimal.normalized().as_bigint_and_exponent();
+    let mut exp: i32 = -(scale as i32);
+    let mut mantissa: u128 = mantissa_str.abs().to_u128().unwrap();
 
     while mantissa < _MIN_MANTISSA && exp > MIN_IOU_EXPONENT {
         mantissa *= 10;
@@ -116,7 +125,7 @@ fn _serialize_issued_currency_value(decimal: Decimal) -> Result<[u8; 8], XRPRang
 fn _serialize_xrp_amount(value: &str) -> Result<[u8; 8], XRPRangeException> {
     verify_valid_xrp_value(value)?;
 
-    let decimal = Decimal::from_str(value)?.normalize();
+    let decimal = rust_decimal::Decimal::from_str(value)?.normalize();
 
     if let Some(result) = decimal.to_i64() {
         let value_with_pos_bit = result | _POS_SIGN_BIT_MASK;
@@ -175,28 +184,35 @@ impl IssuedCurrency {
     /// Deserialize the issued currency amount.
     fn _deserialize_issued_currency_amount(
         parser: &mut BinaryParser,
-    ) -> Result<Decimal, XRPLBinaryCodecException> {
-        let mut value: Decimal;
+    ) -> Result<BigDecimal, XRPLBinaryCodecException> {
+        let mut value: BigDecimal;
         let bytes = parser.read(8)?;
+
         // Some wizardry by Amie Corso
         let exp = ((bytes[0] as i32 & 0x3F) << 2) + ((bytes[1] as i32 & 0xFF) >> 6) - 97;
 
         if exp < MIN_IOU_EXPONENT {
-            value = Decimal::ZERO;
+            value = BigDecimal::from(0);
         } else {
             let hex_mantissa = hex::encode([&[bytes[1] & 0x3F], &bytes[2..]].concat());
             let int_mantissa = i128::from_str_radix(&hex_mantissa, 16)?;
-            value = Decimal::from_i128_with_scale(int_mantissa, exp.unsigned_abs());
 
+            // Adjust scale using the exponent
+            let scale = exp.unsigned_abs();
+            value = BigDecimal::new(int_mantissa.into(), scale as i64);
+
+            // Handle the sign
             if bytes[0] & 0x40 > 0 {
-                value.set_sign_positive(true);
+                // Set the value to positive (BigDecimal assumes positive by default)
+                value = value.abs();
             } else {
-                value.set_sign_negative(true);
+                // Set the value to negative
+                value = -value.abs();
             }
         }
 
         verify_valid_ic_value(&value.to_string())?;
-        Ok(value.normalize())
+        Ok(value)
     }
 }
 
@@ -261,7 +277,7 @@ impl Serialize for Amount {
             if let Ok(ic) = IssuedCurrency::from_parser(&mut parser, None) {
                 let mut builder = serializer.serialize_map(Some(3))?;
 
-                builder.serialize_entry("value", &ic.value)?;
+                builder.serialize_entry("value", &ic.value.normalized())?;
                 builder.serialize_entry("currency", &ic.currency)?;
                 builder.serialize_entry("issuer", &ic.issuer)?;
                 builder.end()
@@ -319,7 +335,7 @@ impl TryFrom<serde_json::Value> for IssuedCurrency {
 
     /// Construct an IssuedCurrency object from a Serde JSON Value.
     fn try_from(json: serde_json::Value) -> Result<Self, Self::Error> {
-        let value = Decimal::from_str(
+        let value = BigDecimal::from_str(
             json["value"]
                 .as_str()
                 .ok_or(XRPLTypeException::InvalidNoneValue)?,

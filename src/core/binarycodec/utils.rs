@@ -179,7 +179,6 @@ fn _decode_field_id(field_id: &str) -> Result<FieldHeader, XRPLBinaryCodecExcept
 pub fn encode_field_name(field_name: &str) -> Result<Vec<u8>, XRPLBinaryCodecException> {
     let definitions = load_definition_map();
     let field_header = definitions.get_field_header_from_name(field_name);
-
     if let Some(header) = field_header {
         _encode_field_id(&header)
     } else {
