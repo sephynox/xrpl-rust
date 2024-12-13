@@ -15,8 +15,9 @@ pub struct WebsocketBase<M>
 where
     M: RawMutex,
 {
-    /// The messages the user requests, which means he is waiting for a specific `id`.
+    /// The pending requests that are waiting for a response.
     pending_requests: HashMap<String, Receiver<String>>,
+    /// The senders for the pending requests.
     request_senders: HashMap<String, Sender<String>>,
     /// The messages the user waits for when sending and receiving normally.
     messages: Channel<M, String, _MAX_CHANNEL_MSG_CNT>,
@@ -41,10 +42,11 @@ where
     }
 }
 
+/// A trait for handling requests with a specific `id`. This is used to handle the futures of requests.
 #[allow(async_fn_in_trait)]
 pub trait MessageHandler {
-    /// Setup an empty future for a request.
-    async fn setup_request_future(&mut self, id: String);
+    /// Setup an empty channel for a request.
+    async fn setup_request_channel(&mut self, id: String);
     async fn handle_message(&mut self, message: String) -> XRPLClientResult<()>;
     async fn pop_message(&mut self) -> String;
     async fn try_recv_request(&mut self, id: String) -> XRPLClientResult<Option<String>>;
@@ -54,7 +56,7 @@ impl<M> MessageHandler for WebsocketBase<M>
 where
     M: RawMutex,
 {
-    async fn setup_request_future(&mut self, id: String) {
+    async fn setup_request_channel(&mut self, id: String) {
         if self.pending_requests.contains_key(&id) {
             return;
         }

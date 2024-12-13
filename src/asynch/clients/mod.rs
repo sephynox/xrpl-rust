@@ -31,9 +31,14 @@ const DEV_FAUCET_URL: &str = "https://faucet.devnet.rippletest.net/accounts";
 #[cfg(feature = "helpers")]
 use crate::{asynch::wallet::exceptions::XRPLFaucetException, models::requests::FundFaucet};
 
+/// Trait for XRPL faucet wallet generation.
+///
+/// This trait is used to generate wallets for the XRPL testnet, devnet, and altnet.
+/// It is supposed to be implmented by the clients interacting with the XRPL network.
 #[cfg(feature = "helpers")]
 #[allow(async_fn_in_trait)]
 pub trait XRPLFaucet: XRPLClient {
+    /// Parses the faucet URL from the clients host.
     fn get_faucet_url(&self, url: Option<Url>) -> XRPLClientResult<Url>
     where
         Self: Sized + XRPLClient,
@@ -55,6 +60,7 @@ pub trait XRPLFaucet: XRPLClient {
         }
     }
 
+    /// Requests funding from the faucet for a given wallet.
     async fn request_funding(
         &self,
         url: Option<Url>,
@@ -62,6 +68,7 @@ pub trait XRPLFaucet: XRPLClient {
     ) -> XRPLClientResult<()>;
 }
 
+/// The common fields for a XRPL client.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommonFields<'a> {
     pub build_version: Option<Cow<'a, str>>,

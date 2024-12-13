@@ -174,9 +174,9 @@ impl<M> MessageHandler for AsyncWebSocketClient<M, WebSocketOpen>
 where
     M: RawMutex,
 {
-    async fn setup_request_future(&mut self, id: String) {
+    async fn setup_request_channel(&mut self, id: String) {
         let mut websocket_base = self.websocket_base.lock().await;
-        websocket_base.setup_request_future(id).await;
+        websocket_base.setup_request_channel(id).await;
     }
 
     async fn handle_message(&mut self, message: String) -> XRPLClientResult<()> {
@@ -212,7 +212,7 @@ where
         let request_id = request.get_common_fields().id.as_ref().unwrap();
         let mut websocket_base = self.websocket_base.lock().await;
         websocket_base
-            .setup_request_future(request_id.to_string())
+            .setup_request_channel(request_id.to_string())
             .await;
         // send request
         let mut websocket = self.websocket.lock().await;

@@ -4,8 +4,10 @@ use crate::models::{
     results::{server_state::ServerState as ServerStateResult, XRPLResponse},
 };
 
+/// Trait for XRPL async clients.
 #[allow(async_fn_in_trait)]
 pub trait XRPLAsyncClient: XRPLClient {
+    /// Handles the request implementation for an async client.
     async fn request<'a: 'b, 'b>(
         &self,
         request: XRPLRequest<'a>,
@@ -13,6 +15,7 @@ pub trait XRPLAsyncClient: XRPLClient {
         self.request_impl(request).await
     }
 
+    /// Get the common fields for the client.
     async fn get_common_fields(&self) -> XRPLClientResult<CommonFields<'_>> {
         let server_state = self.request(ServerState::new(None).into()).await?;
         let state = server_state
