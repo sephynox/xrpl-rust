@@ -2,7 +2,10 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/rust
 {
 	"name": "xrpl-rust",
-	"dockerComposeFile": "docker-compose.yml",
+    "dockerComposeFile": [
+        "docker-compose.yml",
+        "docker-compose.override.yml"
+    ],
 	"service": "app",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	// Use 'mounts' to make the cargo cache persistent in a Docker Volume.
