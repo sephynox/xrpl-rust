@@ -22,3 +22,6 @@ src/main.rs
 **/.DS_Store
 
 rustc-ice*
+
+# Local docker config
+.devcontainer/docker-compose.override.yml
