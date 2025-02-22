@@ -24,6 +24,18 @@ Getting started with Rust and `xrpl-rust` is easy. To install `rust` and
         // Cargo
         cargo install cargo-audit
 
+#### Local Docker Configuration
+
+If you need to add custom volumes or ports, update the
+`docker-compose.override.yml` file and fun the following command:
+
+```bash
+git update-index --skip-worktree .devcontainer/docker-compose.override.yml
+```
+
+Then modify `.devcontainer/docker-compose.override.yml` with your local
+settings. This file is gitignored  and won't be committed to the repository.
+
 ### Git `pre-commit` Hooks
 
 To run linting and other checks, `xrpl-rust` uses 
