@@ -10,6 +10,7 @@ use crate::{
 
 pub mod balance_parser;
 pub mod nodes;
+pub mod order_book_parser;
 pub mod parser;
 
 #[derive(Debug, Clone, PartialEq)]
