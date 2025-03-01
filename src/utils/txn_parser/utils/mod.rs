@@ -91,7 +91,7 @@ pub struct AccountOfferChange<'a> {
 #[derive(Debug, Clone)]
 pub struct AccountOfferChanges<'a> {
     pub account: Cow<'a, str>,
-    pub offer_changes: Vec<AccountOfferChange<'a>>,
+    pub offer_changes: Vec<OfferChange<'a>>,
 }
 
 #[derive(Debug, Clone)]
