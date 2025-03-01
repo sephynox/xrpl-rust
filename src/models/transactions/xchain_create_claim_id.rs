@@ -62,7 +62,7 @@ impl<'a> XChainCreateClaimID<'a> {
         XChainCreateClaimID {
             common_fields: CommonFields::new(
                 account,
-                 TransactionType::XChainCreateClaimID,
+                TransactionType::XChainCreateClaimID,
                 account_txn_id,
                 fee,
                 Some(FlagCollection::default()),
@@ -71,7 +71,7 @@ impl<'a> XChainCreateClaimID<'a> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,

@@ -29,7 +29,7 @@ where
     decoded_tx_signers
         .sort_by_key(|signer| decode_classic_address(signer.account.as_ref()).unwrap());
     transaction.get_mut_common_fields().signers = Some(decoded_tx_signers);
-    transaction.get_mut_common_fields().signing_pub_key = Some("".into());
+    transaction.get_mut_common_fields().signing_pub_key = "".into();
 
     Ok(())
 }

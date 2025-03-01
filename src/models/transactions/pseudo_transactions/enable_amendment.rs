@@ -88,7 +88,7 @@ impl<'a> EnableAmendment<'a> {
         Self {
             common_fields: CommonFields::new(
                 account,
-                 TransactionType::EnableAmendment,
+                TransactionType::EnableAmendment,
                 account_txn_id,
                 fee,
                 Some(flags.unwrap_or_default()),
@@ -97,7 +97,7 @@ impl<'a> EnableAmendment<'a> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,

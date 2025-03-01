@@ -80,7 +80,7 @@ impl<'a> TicketCreate<'a> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,
@@ -108,7 +108,7 @@ mod tests {
             None,
             10,
         );
-        let default_json_str = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"TicketCreate","Fee":"10","Flags":0,"Sequence":381,"SigningPubKey":"","TicketCount":10}"#;
+        let default_json_str = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"TicketCreate","SigningPubKey":"","Fee":"10","Flags":0,"Sequence":381,"TicketCount":10}"#;
         // Serialize
         let default_json_value = serde_json::to_value(default_json_str).unwrap();
         let serialized_string = serde_json::to_string(&default_txn).unwrap();

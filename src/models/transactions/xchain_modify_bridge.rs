@@ -83,7 +83,7 @@ impl<'a> XChainModifyBridge<'a> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,

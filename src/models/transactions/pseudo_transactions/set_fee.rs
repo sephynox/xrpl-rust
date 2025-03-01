@@ -75,7 +75,7 @@ impl<'a> SetFee<'a> {
         Self {
             common_fields: CommonFields::new(
                 account,
-                 TransactionType::SetFee,
+                TransactionType::SetFee,
                 account_txn_id,
                 fee,
                 Some(FlagCollection::default()),
@@ -84,7 +84,7 @@ impl<'a> SetFee<'a> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,

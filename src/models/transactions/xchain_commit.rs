@@ -64,7 +64,7 @@ impl<'a> XChainCommit<'a> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,
@@ -87,6 +87,7 @@ mod test_serde {
         "Account": "rMTi57fNy2UkUb4RcdoUeJm7gjxVQvxzUo",
         "Flags": 0,
         "TransactionType": "XChainCommit",
+        "SigningPubKey":"",
         "XChainBridge": {
             "LockingChainDoor": "rMAXACCrp3Y8PpswXcg3bKggHX76V3F8M4",
             "LockingChainIssue": {

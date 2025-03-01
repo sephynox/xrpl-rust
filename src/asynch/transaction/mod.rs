@@ -385,7 +385,7 @@ where
     T: Transaction<'a, F> + Serialize + DeserializeOwned + Clone,
 {
     let commond_fields = transaction.get_mut_common_fields();
-    commond_fields.signing_pub_key = Some(wallet.public_key.clone().into());
+    commond_fields.signing_pub_key = wallet.public_key.clone().into();
 
     validate_account_xaddress(transaction, AccountFieldType::Account)?;
     if validate_transaction_has_field(transaction, "Destination").is_ok() {
