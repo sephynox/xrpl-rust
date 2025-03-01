@@ -1,4 +1,4 @@
-use alloc::{dbg, string::ToString, vec::Vec};
+use alloc::{string::ToString, vec::Vec};
 use bigdecimal::BigDecimal;
 
 use crate::{
@@ -82,7 +82,7 @@ fn get_change_amount<'a: 'b, 'b>(
             OfferSide::TakerGets => &final_fields.taker_gets,
             OfferSide::TakerPays => &final_fields.taker_pays,
         };
-        let previous_fields_amount = match side {
+        let previous_fields_amount: &Option<Amount<'_>> = match side {
             OfferSide::TakerGets => &node.previous_fields.as_ref().unwrap().taker_gets,
             OfferSide::TakerPays => &node.previous_fields.as_ref().unwrap().taker_pays,
         };
@@ -152,7 +152,6 @@ fn get_offer_change<'a: 'b, 'b>(
         0
     };
     if taker_gets.is_none() || taker_pays.is_none() || account.is_none() {
-        dbg!("required missing");
         return Ok(None);
     }
     let taker_gets = taker_gets.unwrap();
