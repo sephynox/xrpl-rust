@@ -3,7 +3,8 @@ use core::convert::TryFrom;
 
 use serde::{Deserialize, Serialize};
 
-use super::{metadata::TransactionMetadata, tx::TxVersionMap};
+use super::tx::TxVersionMap;
+use crate::models::transactions::metadata::TransactionMetadata;
 use crate::models::{XRPLModelException, XRPLModelResult};
 
 /// Result type for NFTokenMint transaction
