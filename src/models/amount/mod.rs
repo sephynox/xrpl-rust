@@ -4,7 +4,7 @@ mod xrp_amount;
 pub use issued_currency_amount::*;
 pub use xrp_amount::*;
 
-use alloc::string::ToString;
+use alloc::{borrow::Cow, string::ToString};
 use core::convert::TryInto;
 
 use bigdecimal::BigDecimal;
@@ -103,5 +103,31 @@ impl<'a> From<f64> for Amount<'a> {
 impl<'a> From<BigDecimal> for Amount<'a> {
     fn from(value: BigDecimal) -> Self {
         Self::XRPAmount((value * XRP_DROPS).to_string().into())
+    }
+}
+
+impl<'a, 'b: 'a> TryFrom<(Cow<'b, str>, Cow<'b, str>)> for Amount<'a> {
+    type Error = XRPLModelException;
+
+    /// Converts a tuple of (issuer/currency, value) into the correct amount.
+    /// This is used for parsing the `Amount` from `BookChanges`, for example.
+    fn try_from(value: (Cow<'b, str>, Cow<'b, str>)) -> Result<Self, XRPLModelException> {
+        if value.0 == "XRP_drops" {
+            Ok(Self::XRPAmount(value.1.into()))
+        } else {
+            if let Some((issuer, currency)) = value.0.split_once('/') {
+                let issuer_cow: Cow<'a, str> = Cow::Owned(issuer.to_string());
+                let currency_cow: Cow<'a, str> = Cow::Owned(currency.to_string());
+                Ok(Self::IssuedCurrencyAmount(IssuedCurrencyAmount::new(
+                    currency_cow,
+                    issuer_cow,
+                    value.1,
+                )))
+            } else {
+                Err(XRPLModelException::InvalidAmountCurrencyFormat(
+                    value.0.to_string(),
+                ))
+            }
+        }
     }
 }

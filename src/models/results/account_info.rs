@@ -22,41 +22,55 @@ pub enum AccountInfoVersionMap<'a> {
 #[serde(rename_all = "camelCase")]
 pub struct AccountFlags {
     /// If true, the account allows rippling on its trust lines by default.
+    #[serde(default)]
     pub default_ripple: bool,
     /// If true, the account is using Deposit Authorization and does not
     /// accept any payments from unknown parties.
+    #[serde(default)]
     pub deposit_auth: bool,
     /// If true, the account's master key pair is disabled.
+    #[serde(default)]
     pub disable_master_key: bool,
     /// If true, the account does not allow others to send Checks to it.
+    #[serde(default)]
     pub disallow_incoming_check: bool,
     /// If true, the account does not allow others to make NFT buy or sell
     /// offers to it.
     #[serde(rename = "disallowIncomingNFTokenOffer")]
+    #[serde(default)]
     pub disallow_incoming_nftoken_offer: bool,
     /// If true, the account does not allow others to make Payment Channels
     /// to it.
+    #[serde(default)]
     pub disallow_incoming_pay_chan: bool,
     /// If true, the account does not allow others to make trust lines to it.
+    #[serde(default)]
     pub disallow_incoming_trustline: bool,
     /// If true, the account does not want to receive XRP from others.
     #[serde(rename = "disallowIncomingXRP")]
+    #[serde(default)]
     pub disallow_incoming_xrp: bool,
     /// If true, all tokens issued by the account are currently frozen.
+    #[serde(default)]
     pub global_freeze: bool,
     /// If true, the account has permanently given up the abilities to freeze
     /// individual trust lines or end a global freeze.
+    #[serde(default)]
     pub no_freeze: bool,
     /// If false, the account can send a special key reset transaction with a
     /// transaction cost of 0.
+    #[serde(default)]
     pub password_spent: bool,
     /// If true, the account is using Authorized Trust Lines to limit who can
     /// hold the tokens it issues.
+    #[serde(default)]
     pub require_authorization: bool,
     /// If true, the account requires a destination tag on all payments it
     /// receives.
+    #[serde(default)]
     pub require_destination_tag: bool,
     /// If true, allows trust line clawback
+    #[serde(default)]
     pub allow_trust_line_clawback: bool,
 }
 

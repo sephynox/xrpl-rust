@@ -527,3 +527,16 @@ pub struct XRPLWarning<'a> {
     pub message: Cow<'a, str>,
     pub forwarded: Option<bool>,
 }
+
+#[cfg(test)]
+mod tests {
+    use alloc::dbg;
+
+    use super::*;
+
+    #[test]
+    fn test_deserialize_submit_result() {
+        let json = r#"{"result":{"error":"invalidTransaction","error_exception":"Field 'Sequence' is required but missing.","request":{"command":"submit","tx_blob":"120000220000000061400000003B9ACA0068400000000000271073210330E7FC9D56BB25D6893BA3F317AE5BCF33B3291BD63DB32654A313222F7FD02074473045022100E97EBA30FDCB27489745E83900717FAE798DC491271874531D4688BC7AD39E5A022020DA0FDAFA4874BD44B259BE211FBDA6065EB916B6CBC9A5C07B6AAECBB0736F8114B5F762798A53D543A014CAF8B297CFF8F2F937E883144C01DCE0C4B07277547BB8E83BEB2E1842E8E2D6"},"status":"error"}}"#;
+        dbg!(serde_json::from_str::<XRPLResponse>(json).unwrap());
+    }
+}

@@ -88,6 +88,8 @@ pub enum XRPLModelException {
     XRPLResultError(#[from] XRPLResultException),
     #[error("{0}")]
     XRPLTransactionError(#[from] XRPLTransactionException),
+    #[error("Unsupported currency format ({0:?}). Use 'issuer/currency' format instead.")]
+    InvalidAmountCurrencyFormat(String),
 }
 
 #[cfg(feature = "std")]
