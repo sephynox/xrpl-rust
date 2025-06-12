@@ -168,7 +168,7 @@ where
     let req = Submit::new(None, txn_blob.into(), None);
     let res = client.request(req.into()).await?;
 
-    Ok(res.try_into()?)
+    Ok(SubmitResult::try_from(res)?)
 }
 
 pub async fn calculate_fee_per_transaction_type<'a, 'b, 'c, T, F, C>(
