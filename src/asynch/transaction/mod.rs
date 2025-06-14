@@ -40,7 +40,6 @@ use exceptions::XRPLTransactionHelperException;
 use serde::Serialize;
 use serde::{de::DeserializeOwned, Deserialize};
 use strum::IntoEnumIterator;
-
 use super::exceptions::XRPLHelperResult;
 
 const OWNER_RESERVE: &str = "2000000"; // 2 XRP
@@ -166,9 +165,9 @@ where
     transaction.validate()?;
     let txn_blob = encode(transaction)?;
     let req = Submit::new(None, txn_blob.into(), None);
-    let res = client.request(req.into()).await?;
+    let res = client.request::<SubmitResult>(req.into()).await?;
 
-    Ok(SubmitResult::try_from(res)?)
+    Ok(res.result.unwrap()) // TODO: handle unwrap
 }
 
 pub async fn calculate_fee_per_transaction_type<'a, 'b, 'c, T, F, C>(
@@ -224,8 +223,8 @@ where
 async fn get_owner_reserve_from_response(
     client: &impl XRPLAsyncClient,
 ) -> XRPLHelperResult<XRPAmount<'_>> {
-    let owner_reserve_response = client.request(ServerState::new(None).into()).await?;
-    let result: ServerStateResult = owner_reserve_response.try_into()?;
+    let owner_reserve_response = client.request::<ServerStateResult>(ServerState::new(None).into()).await?;
+    let result = owner_reserve_response.result.unwrap();
     match result.state.validated_ledger {
         Some(validated_ledger) => Ok(validated_ledger.reserve_base),
         None => Err(XRPLModelException::MissingField("validated_ledger".to_string()).into()),

@@ -9,6 +9,8 @@ use embedded_io_async::Error;
 use embedded_io_async::{Read as EmbeddedIoRead, Write as EmbeddedIoWrite};
 #[cfg(feature = "std")]
 use futures::{Sink, SinkExt, Stream, StreamExt};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 mod websocket_base;
 use websocket_base::MessageHandler;
@@ -31,10 +33,10 @@ pub struct WebSocketOpen;
 pub struct WebSocketClosed;
 
 #[allow(async_fn_in_trait)]
-pub trait XRPLAsyncWebsocketIO {
+pub trait XRPLAsyncWebsocketIO<U: DeserializeOwned + Serialize + Clone> {
     async fn xrpl_send(&mut self, message: XRPLRequest<'_>) -> XRPLClientResult<()>;
 
-    async fn xrpl_receive(&mut self) -> XRPLClientResult<Option<XRPLResponse<'_>>>;
+    async fn xrpl_receive(&mut self) -> XRPLClientResult<Option<XRPLResponse<'_, U>>>;
 }
 
 #[cfg(not(feature = "std"))]
@@ -74,12 +76,13 @@ impl<T: EmbeddedIoRead + EmbeddedIoWrite + MessageHandler> XRPLAsyncWebsocketIO 
 }
 
 #[cfg(feature = "std")]
-impl<T: ?Sized> XRPLAsyncWebsocketIO for T
+impl<T: ?Sized, U> XRPLAsyncWebsocketIO<U> for T
 where
     T: Stream<Item = XRPLClientResult<String>>
         + Sink<String, Error = super::exceptions::XRPLClientException>
         + MessageHandler
         + Unpin,
+    U: DeserializeOwned + Serialize + Clone,
 {
     async fn xrpl_send(&mut self, message: XRPLRequest<'_>) -> XRPLClientResult<()> {
         let message = serde_json::to_string(&message)?;
@@ -87,7 +90,7 @@ where
         self.send(message).await
     }
 
-    async fn xrpl_receive(&mut self) -> XRPLClientResult<Option<XRPLResponse<'_>>> {
+    async fn xrpl_receive(&mut self) -> XRPLClientResult<Option<XRPLResponse<'_, U>>> {
         match self.next().await {
             Some(Ok(item)) => {
                 self.handle_message(item).await?;

@@ -1,5 +1,6 @@
-use alloc::borrow::{Cow, ToOwned};
-
+use super::{clients::XRPLAsyncClient, exceptions::XRPLHelperResult};
+use crate::asynch::exceptions::XRPLHelperException;
+use crate::models::XRPLModelException;
 use crate::{
     core::addresscodec::{is_valid_xaddress, xaddress_to_classic_address},
     models::{
@@ -9,8 +10,8 @@ use crate::{
         XRPAmount,
     },
 };
-
-use super::{clients::XRPLAsyncClient, exceptions::XRPLHelperResult};
+use alloc::borrow::{Cow, ToOwned};
+use alloc::string::ToString;
 
 pub async fn does_account_exist<C>(
     address: Cow<'_, str>,
@@ -74,8 +75,18 @@ where
         None,
     )
     .into();
-    let response = client.request(request).await?;
-    let account_info = results::account_info::AccountInfoVersionMap::try_from(response)?;
+    let response = client
+        .request::<results::account_info::AccountInfoVersionMap>(request)
+        .await?;
+
+    let account_info = match response.result {
+        Some(result) => result,
+        None => {
+            return Err(XRPLHelperException::from(XRPLModelException::MissingField(
+                "result".to_string(),
+            )))
+        }
+    };
     let account_root = account_info.get_account_root().to_owned();
 
     Ok(account_root)
