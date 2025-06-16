@@ -229,7 +229,8 @@ pub mod websocket {
         M: RawMutex,
     {
         fn xrpl_send(&mut self, message: XRPLRequest<'_>) -> XRPLClientResult<()> {
-            self.rt.block_on(self.inner.xrpl_send(message))
+            let _: XRPLClientResult<()> = self.rt.block_on(self.inner.xrpl_send(message));
+            Ok(())
         }
 
         fn xrpl_receive(&mut self) -> XRPLClientResult<Option<String>> {

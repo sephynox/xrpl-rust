@@ -352,32 +352,32 @@ pub struct XRPLResponse<'a, T: Clone + DeserializeOwned + Serialize> {
     pub warnings: Option<Cow<'a, [XRPLWarning<'a>]>>,
 }
 
-macro_rules! impl_try_from_response {
-    ($module_name:ident, $type:ident, $variant:ident) => {
-        impl<'a, 'b> TryFrom<XRPLResponse<'a>> for $module_name::$type<'b>
-        // Lifetime variance
-        where
-            'a: 'b,
-            'b: 'a,
-        {
-            type Error = XRPLModelException;
-
-            fn try_from(response: XRPLResponse<'a>) -> XRPLModelResult<Self> {
-                match response.result {
-                    Some(result) => match result {
-                        XRPLResult::$variant(value) => Ok(value),
-                        res => Err(XRPLResultException::UnexpectedResultType(
-                            stringify!($variant).to_string(),
-                            res.get_name(),
-                        )
-                        .into()),
-                    },
-                    None => Err(XRPLModelException::MissingField("result".to_string())),
-                }
-            }
-        }
-    };
-}
+// macro_rules! impl_try_from_response {
+//     ($module_name:ident, $type:ident, $variant:ident) => {
+//         impl<'a, 'b> TryFrom<XRPLResponse<'a>> for $module_name::$type<'b>
+//         // Lifetime variance
+//         where
+//             'a: 'b,
+//             'b: 'a,
+//         {
+//             type Error = XRPLModelException;
+//
+//             fn try_from(response: XRPLResponse<'a>) -> XRPLModelResult<Self> {
+//                 match response.result {
+//                     Some(result) => match result {
+//                         XRPLResult::$variant(value) => Ok(value),
+//                         res => Err(XRPLResultException::UnexpectedResultType(
+//                             stringify!($variant).to_string(),
+//                             res.get_name(),
+//                         )
+//                         .into()),
+//                     },
+//                     None => Err(XRPLModelException::MissingField("result".to_string())),
+//                 }
+//             }
+//         }
+//     };
+// }
 
 // impl_try_from_response!(account_channels, AccountChannels, AccountChannels);
 // impl_try_from_response!(account_currencies, AccountCurrencies, AccountCurrencies);
