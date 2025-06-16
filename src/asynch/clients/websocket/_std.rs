@@ -5,7 +5,6 @@ use crate::asynch::clients::exceptions::{XRPLClientException, XRPLClientResult};
 use crate::asynch::clients::websocket::websocket_base::{MessageHandler, WebsocketBase};
 use crate::asynch::clients::SingleExecutorMutex;
 use crate::models::requests::{Request, XRPLRequest};
-use crate::models::results::XRPLResponse;
 
 use alloc::string::{String, ToString};
 use alloc::sync::Arc;
@@ -206,7 +205,7 @@ where
     async fn request_impl<'a: 'b, 'b>(
         &self,
         mut request: XRPLRequest<'a>,
-    ) -> XRPLClientResult<XRPLResponse<'b>> {
+    ) -> XRPLClientResult<String> {
         // setup request future
         self.set_request_id(&mut request);
         let request_id = request.get_common_fields().id.as_ref().unwrap();
@@ -236,11 +235,11 @@ where
                         .try_recv_request(request_id.to_string())
                         .await?;
                     if let Some(message) = message_opt {
-                        let response = match serde_json::from_str(&message) {
-                            Ok(response) => response,
-                            Err(error) => return Err(error.into()),
-                        };
-                        return Ok(response);
+                        // let response = match serde_json::from_str(&message) {
+                        //     Ok(response) => response,
+                        //     Err(error) => return Err(error.into()),
+                        // };
+                        return Ok(message);
                     }
                 }
                 Some(Ok(tungstenite::Message::Binary(response))) => {

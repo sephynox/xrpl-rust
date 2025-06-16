@@ -1,17 +1,12 @@
-use crate::models::{
-    requests::{Request, XRPLRequest},
-    results::XRPLResponse,
-};
+use crate::models::requests::{Request, XRPLRequest};
+use alloc::string::String;
 use url::Url;
 
 use super::exceptions::XRPLClientResult;
 
 #[allow(async_fn_in_trait)]
 pub trait XRPLClient {
-    async fn request_impl<'a: 'b, 'b>(
-        &self,
-        request: XRPLRequest<'a>,
-    ) -> XRPLClientResult<XRPLResponse<'b>>;
+    async fn request_impl<'a: 'b, 'b>(&self, request: XRPLRequest<'a>) -> XRPLClientResult<String>;
 
     fn get_host(&self) -> Url;
 

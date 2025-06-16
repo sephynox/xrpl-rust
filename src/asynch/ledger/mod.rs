@@ -13,7 +13,7 @@ use super::{clients::XRPLAsyncClient, exceptions::XRPLHelperResult};
 pub async fn get_latest_validated_ledger_sequence(
     client: &impl XRPLAsyncClient,
 ) -> XRPLHelperResult<u32> {
-    let ledger_response = client
+    let ledger_response_raw = client
         .request(
             Ledger::new(
                 None,
@@ -30,7 +30,8 @@ pub async fn get_latest_validated_ledger_sequence(
             .into(),
         )
         .await?;
-    let ledger_result: results::ledger::Ledger = ledger_response.try_into()?;
+    let ledger_result: results::ledger::Ledger = serde_json::from_str(&ledger_response_raw)?;
+    //let ledger_result: results::ledger::Ledger = ledger_response.try_into()?;
 
     Ok(ledger_result.ledger_index)
 }
@@ -38,7 +39,7 @@ pub async fn get_latest_validated_ledger_sequence(
 pub async fn get_latest_open_ledger_sequence(
     client: &impl XRPLAsyncClient,
 ) -> XRPLHelperResult<u32> {
-    let ledger_response = client
+    let ledger_response_raw = client
         .request(
             Ledger::new(
                 None,
@@ -55,7 +56,8 @@ pub async fn get_latest_open_ledger_sequence(
             .into(),
         )
         .await?;
-    let ledger_result: results::ledger::Ledger = ledger_response.try_into()?;
+    let ledger_result: results::ledger::Ledger = serde_json::from_str(&ledger_response_raw)?;
+    //let ledger_result: results::ledger::Ledger = ledger_response.try_into()?;
 
     Ok(ledger_result.ledger_index)
 }
@@ -73,7 +75,8 @@ pub async fn get_fee(
 ) -> XRPLHelperResult<XRPAmount<'_>> {
     let fee_request = Fee::new(None);
     let response = client.request(fee_request.into()).await?;
-    let result: results::fee::Fee = response.try_into()?;
+    let result: results::fee::Fee = serde_json::from_str(&response)?;
+    //let result: results::fee::Fee = response.try_into()?;
     let drops = result.drops;
     let fee = match_fee_type(fee_type, drops)?;
 

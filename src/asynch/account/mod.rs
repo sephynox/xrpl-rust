@@ -12,6 +12,7 @@ use crate::{
 };
 use alloc::borrow::{Cow, ToOwned};
 use alloc::string::ToString;
+use crate::models::results::XRPLResponse;
 
 pub async fn does_account_exist<C>(
     address: Cow<'_, str>,
@@ -75,9 +76,8 @@ where
         None,
     )
     .into();
-    let response = client
-        .request::<results::account_info::AccountInfoVersionMap>(request)
-        .await?;
+    let response = client.request(request).await?;
+    let response: XRPLResponse<'a, results::account_info::AccountInfoVersionMap> = serde_json::from_str(&response)?;
 
     let account_info = match response.result {
         Some(result) => result,
@@ -114,8 +114,11 @@ where
         Some(1),
         None,
     );
+    let response_raw = client.request(account_tx.into()).await?;
     let response: results::account_tx::AccountTxVersionMap =
-        client.request(account_tx.into()).await?.try_into()?;
+        serde_json::from_str(&response_raw)?; // TODO probably it is XRPLResponse<'a, results::account_tx::AccountTxVersionMap>
+    // let response: results::account_tx::AccountTxVersionMap =
+    //     client.request(account_tx.into()).await?.try_into()?;
 
     Ok(response)
 }

@@ -40,6 +40,7 @@ use exceptions::XRPLTransactionHelperException;
 use serde::Serialize;
 use serde::{de::DeserializeOwned, Deserialize};
 use strum::IntoEnumIterator;
+use crate::models::results::XRPLResponse;
 use super::exceptions::XRPLHelperResult;
 
 const OWNER_RESERVE: &str = "2000000"; // 2 XRP
@@ -165,7 +166,9 @@ where
     transaction.validate()?;
     let txn_blob = encode(transaction)?;
     let req = Submit::new(None, txn_blob.into(), None);
-    let res = client.request::<SubmitResult>(req.into()).await?;
+    let res = client.request(req.into()).await?;
+    let res: XRPLResponse<'a, SubmitResult<'a>> = serde_json::from_str(&res)?;
+    
 
     Ok(res.result.unwrap()) // TODO: handle unwrap
 }
@@ -223,7 +226,9 @@ where
 async fn get_owner_reserve_from_response(
     client: &impl XRPLAsyncClient,
 ) -> XRPLHelperResult<XRPAmount<'_>> {
-    let owner_reserve_response = client.request::<ServerStateResult>(ServerState::new(None).into()).await?;
+    let owner_reserve_response = client.request(ServerState::new(None).into()).await?;
+    let owner_reserve_response: XRPLResponse<'_, ServerStateResult> =
+        serde_json::from_str(&owner_reserve_response)?;
     let result = owner_reserve_response.result.unwrap();
     match result.state.validated_ledger {
         Some(validated_ledger) => Ok(validated_ledger.reserve_base),

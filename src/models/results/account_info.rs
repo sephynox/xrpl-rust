@@ -8,7 +8,7 @@ use crate::models::ledger::objects::signer_list::SignerList;
 use crate::models::{XRPLModelException, XRPLModelResult};
 
 use super::exceptions::XRPLResultException;
-use super::{XRPLResponse, XRPLResult};
+use super::XRPLResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
