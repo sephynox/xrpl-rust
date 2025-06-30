@@ -1,4 +1,4 @@
-use crate::models::{requests::XRPLRequest};
+use crate::models::requests::XRPLRequest;
 #[cfg(feature = "std")]
 use alloc::string::String;
 #[cfg(not(feature = "std"))]
@@ -93,7 +93,6 @@ where
                 self.handle_message(item).await?;
                 let message = self.pop_message().await;
 
-                //Ok(serde_json::from_str(&message)?)
                 Ok(Some(message))
             }
             Some(Err(error)) => Err(error),

@@ -181,17 +181,6 @@ impl<'a> TryFrom<XRPLResult<'a>> for AccountInfoVersionMap<'a> {
     }
 }
 
-// impl<'a> TryFrom<XRPLResponse<'a>> for AccountInfoVersionMap<'a> {
-//     type Error = XRPLModelException;
-//
-//     fn try_from(response: XRPLResponse<'a>) -> XRPLModelResult<Self> {
-//         match response.result {
-//             Some(result) => AccountInfoVersionMap::try_from(result),
-//             None => Err(XRPLModelException::MissingField("result".to_string())),
-//         }
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;

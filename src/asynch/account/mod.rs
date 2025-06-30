@@ -117,8 +117,6 @@ where
     let response_raw = client.request(account_tx.into()).await?;
     let response: results::account_tx::AccountTxVersionMap =
         serde_json::from_str(&response_raw)?; // TODO probably it is XRPLResponse<'a, results::account_tx::AccountTxVersionMap>
-    // let response: results::account_tx::AccountTxVersionMap =
-    //     client.request(account_tx.into()).await?.try_into()?;
 
     Ok(response)
 }

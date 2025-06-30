@@ -59,39 +59,6 @@ pub struct Submit<'a> {
     pub validated_ledger_index: Option<u32>,
 }
 
-// impl<'b, 'a> TryFrom<XRPLResponse<'b>> for Submit<'a> {
-//     type Error = XRPLHelperException;
-//
-//     fn try_from(response: XRPLResponse) -> Result<Self, Self::Error> {
-//         match response.result {
-//             Some(result) => {
-//                 // TODO transform the result into a Submit struct
-//             }
-//             None => {
-//                 return Err(XRPLHelperException::XRPLModelError(
-//                     XRPLModelException::MissingField("result".to_string()),
-//                 ))
-//             }
-//         }
-//         Ok(Submit {
-//             engine_result: Default::default(),
-//             engine_result_code: 0,
-//             engine_result_message: Default::default(),
-//             tx_blob: Default::default(),
-//             tx_json: Default::default(),
-//             accepted: None,
-//             account_sequence_available: None,
-//             account_sequence_next: None,
-//             applied: None,
-//             broadcast: None,
-//             kept: None,
-//             queued: None,
-//             open_ledger_cost: None,
-//             validated_ledger_index: None,
-//         })
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;

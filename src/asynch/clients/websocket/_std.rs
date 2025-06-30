@@ -235,10 +235,6 @@ where
                         .try_recv_request(request_id.to_string())
                         .await?;
                     if let Some(message) = message_opt {
-                        // let response = match serde_json::from_str(&message) {
-                        //     Ok(response) => response,
-                        //     Err(error) => return Err(error.into()),
-                        // };
                         return Ok(message);
                     }
                 }

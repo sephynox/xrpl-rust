@@ -352,69 +352,6 @@ pub struct XRPLResponse<'a, T: Clone + DeserializeOwned + Serialize> {
     pub warnings: Option<Cow<'a, [XRPLWarning<'a>]>>,
 }
 
-// macro_rules! impl_try_from_response {
-//     ($module_name:ident, $type:ident, $variant:ident) => {
-//         impl<'a, 'b> TryFrom<XRPLResponse<'a>> for $module_name::$type<'b>
-//         // Lifetime variance
-//         where
-//             'a: 'b,
-//             'b: 'a,
-//         {
-//             type Error = XRPLModelException;
-//
-//             fn try_from(response: XRPLResponse<'a>) -> XRPLModelResult<Self> {
-//                 match response.result {
-//                     Some(result) => match result {
-//                         XRPLResult::$variant(value) => Ok(value),
-//                         res => Err(XRPLResultException::UnexpectedResultType(
-//                             stringify!($variant).to_string(),
-//                             res.get_name(),
-//                         )
-//                         .into()),
-//                     },
-//                     None => Err(XRPLModelException::MissingField("result".to_string())),
-//                 }
-//             }
-//         }
-//     };
-// }
-
-// impl_try_from_response!(account_channels, AccountChannels, AccountChannels);
-// impl_try_from_response!(account_currencies, AccountCurrencies, AccountCurrencies);
-// impl_try_from_response!(account_lines, AccountLines, AccountLines);
-// impl_try_from_response!(account_objects, AccountObjects, AccountObjects);
-// impl_try_from_response!(account_nfts, AccountNfts, AccountNfts);
-// impl_try_from_response!(account_offers, AccountOffers, AccountOffers);
-// impl_try_from_response!(amm_info, AMMInfo, AMMInfo);
-// impl_try_from_response!(book_offers, BookOffers, BookOffers);
-// impl_try_from_response!(channel_authorize, ChannelAuthorize, ChannelAuthorize);
-// impl_try_from_response!(channel_verify, ChannelVerify, ChannelVerify);
-// impl_try_from_response!(deposit_authorize, DepositAuthorized, DepositAuthorized);
-// impl_try_from_response!(fee, Fee, Fee);
-// impl_try_from_response!(gateway_balances, GatewayBalances, GatewayBalances);
-// impl_try_from_response!(ledger, Ledger, Ledger);
-// impl_try_from_response!(ledger_closed, LedgerClosed, LedgerClosed);
-// impl_try_from_response!(ledger_current, LedgerCurrent, LedgerCurrent);
-// impl_try_from_response!(ledger_data, LedgerData, LedgerData);
-// impl_try_from_response!(ledger_entry, LedgerEntry, LedgerEntry);
-// impl_try_from_response!(manifest, Manifest, Manifest);
-// impl_try_from_response!(nft_info, NFTInfo, NFTInfo);
-// impl_try_from_response!(nft_buy_offers, NFTBuyOffers, NFTBuyOffers);
-// impl_try_from_response!(nft_sell_offers, NFTSellOffers, NFTSellOffers);
-// impl_try_from_response!(nftoken, NFTokenMintResult, NFTokenMintResult);
-// impl_try_from_response!(no_ripple_check, NoRippleCheck, NoRippleCheck);
-// impl_try_from_response!(path_find, PathFind, PathFind);
-// impl_try_from_response!(ping, Ping, Ping);
-// impl_try_from_response!(random, Random, Random);
-// impl_try_from_response!(ripple_path_find, RipplePathFind, RipplePathFind);
-// impl_try_from_response!(server_info, ServerInfo, ServerInfo);
-// impl_try_from_response!(server_state, ServerState, ServerState);
-// impl_try_from_response!(submit, Submit, Submit);
-// impl_try_from_response!(submit_multisigned, SubmitMultisigned, SubmitMultisigned);
-// impl_try_from_response!(transaction_entry, TransactionEntry, TransactionEntry);
-// impl_try_from_response!(subscribe, Subscribe, Subscribe);
-// impl_try_from_response!(unsubscribe, Unsubscribe, Unsubscribe);
-
 fn is_subscription_stream_item(item: &Map<String, Value>) -> bool {
     item.get("result").is_none() && item.get("error_code").is_none()
 }
@@ -481,27 +418,6 @@ impl<'a, 'de, T: Clone + DeserializeOwned + Serialize> Deserialize<'de> for XRPL
         }
     }
 }
-
-// impl<'a, T: Clone + DeserializeOwned + Serialize> TryInto<T> for XRPLResponse<'a, T> {
-//     type Error = XRPLModelException;
-//
-//     fn try_into(self) -> XRPLModelResult<T> {
-//         if self.is_success() {
-//             if let Some(result) = self.result {
-//                 Ok(result)
-//             } else {
-//                 Err(XRPLResultException::ExpectedResultOrError.into())
-//             }
-//         } else {
-//             Err(XRPLResultException::ResponseError(
-//                 self.error_message
-//                     .unwrap_or(self.error.unwrap_or_else(|| "Unknown error".into()))
-//                     .to_string(),
-//             )
-//             .into())
-//         }
-//     }
-// }
 
 impl<'a, T: Clone + DeserializeOwned + Serialize> XRPLResponse<'a, T> {
     pub fn is_success(&self) -> bool {

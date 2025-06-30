@@ -113,53 +113,6 @@ impl<'a> TryFrom<XRPLResult<'a>> for TxVersionMap<'a> {
     }
 }
 
-// impl<'a> TryFrom<XRPLResponse<'a>> for TxVersionMap<'a> {
-//     type Error = XRPLModelException;
-//
-//     fn try_from(response: XRPLResponse<'a>) -> XRPLModelResult<Self> {
-//         match response.result {
-//             Some(result) => TxVersionMap::try_from(result),
-//             None => Err(XRPLModelException::MissingField("result".to_string())),
-//         }
-//     }
-// }
-//
-// impl<'a> TryFrom<XRPLResponse<'a>> for Tx<'a> {
-//     type Error = XRPLModelException;
-//
-//     fn try_from(response: XRPLResponse<'a>) -> XRPLModelResult<Self> {
-//         match response.result {
-//             Some(result) => match result {
-//                 XRPLResult::Tx(TxVersionMap::Default(tx)) => Ok(tx),
-//                 res => Err(XRPLResultException::UnexpectedResultType(
-//                     "Tx (v2)".to_string(),
-//                     res.get_name(),
-//                 )
-//                 .into()),
-//             },
-//             None => Err(XRPLModelException::MissingField("result".to_string())),
-//         }
-//     }
-// }
-
-// impl<'a> TryFrom<XRPLResponse<'a>> for TxV1<'a> {
-//     type Error = XRPLModelException;
-//
-//     fn try_from(response: XRPLResponse<'a>) -> XRPLModelResult<Self> {
-//         match response.result {
-//             Some(result) => match result {
-//                 XRPLResult::Tx(TxVersionMap::V1(tx)) => Ok(tx),
-//                 res => Err(XRPLResultException::UnexpectedResultType(
-//                     "Tx (v1)".to_string(),
-//                     res.get_name(),
-//                 )
-//                 .into()),
-//             },
-//             None => Err(XRPLModelException::MissingField("result".to_string())),
-//         }
-//     }
-// }
-
 #[cfg(test)]
 mod test_serde {
     use super::*;
