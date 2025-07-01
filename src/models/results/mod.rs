@@ -41,10 +41,7 @@ pub mod tx;
 pub mod unsubscribe;
 
 use super::{requests::XRPLRequest, Amount, XRPLModelException, XRPLModelResult};
-use alloc::{
-    borrow::Cow,
-    string::{String, ToString},
-};
+use alloc::{borrow::Cow, format, string::{String, ToString}};
 use core::convert::{TryFrom, TryInto};
 use exceptions::XRPLResultException;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -382,7 +379,7 @@ impl<'a, 'de, T: Clone + DeserializeOwned + Serialize> Deserialize<'de> for XRPL
                 warnings: None,
             })
         } else {
-            Ok(XRPLResponse {
+            let mut response = XRPLResponse {
                 id: map
                     .remove("id")
                     .and_then(|v| serde_json::from_value(v).ok()),
@@ -399,9 +396,7 @@ impl<'a, 'de, T: Clone + DeserializeOwned + Serialize> Deserialize<'de> for XRPL
                 request: map
                     .remove("request")
                     .and_then(|v| serde_json::from_value(v).ok()),
-                result: map
-                    .remove("result")
-                    .and_then(|v| serde_json::from_value(v).ok()),
+                result: None,
                 status: map
                     .remove("status")
                     .and_then(|v| serde_json::from_value(v).ok()),
@@ -414,7 +409,23 @@ impl<'a, 'de, T: Clone + DeserializeOwned + Serialize> Deserialize<'de> for XRPL
                 warnings: map
                     .remove("warnings")
                     .and_then(|v| serde_json::from_value(v).ok()),
-            })
+            };
+
+            let result_serde_value = map.remove("result");
+            match result_serde_value {
+                Some(v) => {
+                    response.result = match T::deserialize(&v) {
+                        Ok(data) => Some(data),
+                        Err(e) => return Err(serde::de::Error::custom(format!("{}", e))),
+                    };
+                }
+                None => {
+                    // If the result is not present, we can still return the response
+                    response.result = None;
+                }
+            }
+
+            Ok(response)
         }
     }
 }

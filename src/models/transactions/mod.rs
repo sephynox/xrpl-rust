@@ -108,6 +108,12 @@ pub enum TransactionType {
     UNLModify,
 }
 
+impl Default for TransactionType {
+    fn default() -> Self {
+        TransactionType::Payment
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
 #[serde(rename_all = "PascalCase")]
 pub struct PreparedTransaction<'a, T> {
@@ -134,7 +140,7 @@ pub struct SignedTransaction<'a, T> {
 /// See Transaction Common Fields:
 /// `<https://xrpl.org/transaction-common-fields.html>`
 #[skip_serializing_none]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "PascalCase")]
 pub struct CommonFields<'a, F>
 where

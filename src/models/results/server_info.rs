@@ -82,7 +82,7 @@ pub struct Info<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ValidatorList<'a> {
     pub count: u32,
-    pub expiration: u32,
+    pub expiration: Cow<'a, str>,
     pub status: Cow<'a, str>,
 }
 

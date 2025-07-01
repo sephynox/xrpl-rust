@@ -22,42 +22,42 @@ pub enum AccountInfoVersionMap<'a> {
 #[serde(rename_all = "camelCase")]
 pub struct AccountFlags {
     /// If true, the account allows rippling on its trust lines by default.
-    pub default_ripple: bool,
+    pub default_ripple: Option<bool>,
     /// If true, the account is using Deposit Authorization and does not
     /// accept any payments from unknown parties.
-    pub deposit_auth: bool,
+    pub deposit_auth: Option<bool>,
     /// If true, the account's master key pair is disabled.
-    pub disable_master_key: bool,
+    pub disable_master_key: Option<bool>,
     /// If true, the account does not allow others to send Checks to it.
-    pub disallow_incoming_check: bool,
+    pub disallow_incoming_check: Option<bool>,
     /// If true, the account does not allow others to make NFT buy or sell
     /// offers to it.
     #[serde(rename = "disallowIncomingNFTokenOffer")]
-    pub disallow_incoming_nftoken_offer: bool,
+    pub disallow_incoming_nftoken_offer: Option<bool>,
     /// If true, the account does not allow others to make Payment Channels
     /// to it.
-    pub disallow_incoming_pay_chan: bool,
+    pub disallow_incoming_pay_chan: Option<bool>,
     /// If true, the account does not allow others to make trust lines to it.
-    pub disallow_incoming_trustline: bool,
+    pub disallow_incoming_trustline: Option<bool>,
     /// If true, the account does not want to receive XRP from others.
     #[serde(rename = "disallowIncomingXRP")]
-    pub disallow_incoming_xrp: bool,
+    pub disallow_incoming_xrp: Option<bool>,
     /// If true, all tokens issued by the account are currently frozen.
-    pub global_freeze: bool,
+    pub global_freeze: Option<bool>,
     /// If true, the account has permanently given up the abilities to freeze
     /// individual trust lines or end a global freeze.
-    pub no_freeze: bool,
+    pub no_freeze: Option<bool>,
     /// If false, the account can send a special key reset transaction with a
     /// transaction cost of 0.
-    pub password_spent: bool,
+    pub password_spent: Option<bool>,
     /// If true, the account is using Authorized Trust Lines to limit who can
     /// hold the tokens it issues.
-    pub require_authorization: bool,
+    pub require_authorization: Option<bool>,
     /// If true, the account requires a destination tag on all payments it
     /// receives.
-    pub require_destination_tag: bool,
+    pub require_destination_tag: Option<bool>,
     /// If true, allows trust line clawback
-    pub allow_trust_line_clawback: bool,
+    pub allow_trust_line_clawback: Option<bool>,
 }
 
 /// Information about a queued transaction
@@ -183,7 +183,44 @@ impl<'a> TryFrom<XRPLResult<'a>> for AccountInfoVersionMap<'a> {
 
 #[cfg(test)]
 mod tests {
+    use crate::models::results::XRPLResponse;
     use super::*;
+
+    #[test]
+    fn test_account_info_version_map_deserialization<'a>() {
+        let json = r#"{
+            "result":{
+                "account_data":{
+                    "Account":"something",
+                    "Balance":"3000000000",
+                    "Flags":0,
+                    "LedgerEntryType":"AccountRoot",
+                    "OwnerCount":0,
+                    "PreviousTxnID":"0000000000000000000000000000000000000000000000000000000000000000",
+                    "PreviousTxnLgrSeq":0,
+                    "Sequence":3,
+                    "index":"andIndexValue"
+                },
+                "account_flags":{
+                    "defaultRipple":false,
+                    "depositAuth":false,
+                    "disableMasterKey":false,
+                    "disallowIncomingXRP":false,
+                    "globalFreeze":false,
+                    "noFreeze":false,
+                    "passwordSpent":false,
+                    "requireAuthorization":false,
+                    "requireDestinationTag":false
+                },
+                "ledger_current_index":3,
+                "status":"success",
+                "validated":false
+            }
+        }"#;
+
+        let account_info: XRPLResponse<'a, AccountInfo> = serde_json::from_str(json).unwrap();
+        assert!(account_info.result.is_some());
+    }
 
     #[test]
     fn test_account_info_deserialization() {
