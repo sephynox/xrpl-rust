@@ -28,7 +28,7 @@ pub struct Fee<'a> {
     pub levels: Levels<'a>,
     /// The maximum number of transactions that the transaction queue can
     /// currently hold.
-    pub max_queue_size: Cow<'a, str>,
+    pub max_queue_size: Option<Cow<'a, str>>,
 }
 
 /// Information about transaction costs in drops of XRP
