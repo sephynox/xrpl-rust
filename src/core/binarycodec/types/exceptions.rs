@@ -13,8 +13,8 @@ pub enum XRPLTypeException {
     UnknownXRPLType,
     #[error("Unexpected JSON type")]
     UnexpectedJSONType,
-    #[error("Try from str error")]
-    TryFromStrError,
+    #[error("Try from str error: {0}")]
+    TryFromStrError(String),
     #[error("Failed to parse type from issued currency")]
     TryFromIssuedCurrencyError,
     #[error("XRPL Serialize Map error: {0}")]
