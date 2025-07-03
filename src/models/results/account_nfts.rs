@@ -13,7 +13,7 @@ use crate::models::requests::Marker;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct AccountNfts<'a> {
     /// The account that owns the list of NFTs.
-    pub account: Cow<'a, str>,
+    pub account: Option<Cow<'a, str>>,
     /// A list of NFTs owned by the account, formatted as NFT Objects.
     #[serde(rename = "account_nfts")]
     pub nfts: Cow<'a, [NFToken<'a>]>,
@@ -22,7 +22,7 @@ pub struct AccountNfts<'a> {
     pub ledger_hash: Option<Cow<'a, str>>,
     /// (May be omitted) The ledger index of the ledger that was used to
     /// generate this response.
-    pub ledger_index: u32,
+    pub ledger_index: Option<u32>,
     /// (May be omitted) The ledger index of the current in-progress ledger
     /// version, which was used to generate this response.
     pub ledger_current_index: Option<u32>,
