@@ -1,4 +1,4 @@
-use crate::models::{requests::XRPLRequest, results::XRPLResponse};
+use crate::models::requests::XRPLRequest;
 #[cfg(feature = "std")]
 use alloc::string::String;
 #[cfg(not(feature = "std"))]
@@ -34,7 +34,7 @@ pub struct WebSocketClosed;
 pub trait XRPLAsyncWebsocketIO {
     async fn xrpl_send(&mut self, message: XRPLRequest<'_>) -> XRPLClientResult<()>;
 
-    async fn xrpl_receive(&mut self) -> XRPLClientResult<Option<XRPLResponse<'_>>>;
+    async fn xrpl_receive(&mut self) -> XRPLClientResult<Option<String>>;
 }
 
 #[cfg(not(feature = "std"))]
@@ -87,13 +87,13 @@ where
         self.send(message).await
     }
 
-    async fn xrpl_receive(&mut self) -> XRPLClientResult<Option<XRPLResponse<'_>>> {
+    async fn xrpl_receive(&mut self) -> XRPLClientResult<Option<String>> {
         match self.next().await {
             Some(Ok(item)) => {
                 self.handle_message(item).await?;
                 let message = self.pop_message().await;
 
-                Ok(serde_json::from_str(&message)?)
+                Ok(Some(message))
             }
             Some(Err(error)) => Err(error),
             None => Ok(None),

@@ -51,7 +51,12 @@ pub fn encode_for_multisigning<T>(
 where
     T: Serialize,
 {
-    let signing_account_id = AccountId::try_from(signing_account.as_ref()).unwrap();
+    let signing_account_id = match AccountId::try_from(signing_account.as_ref()){
+        Ok(account_id) => account_id,
+        Err(e) => {
+            return Err(e);
+        }
+    };
 
     serialize_json(
         prepared_transaction,

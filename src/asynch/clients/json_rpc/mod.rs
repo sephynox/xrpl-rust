@@ -2,7 +2,7 @@ use alloc::{string::ToString, vec};
 use serde::Serialize;
 use serde_json::{Map, Value};
 
-use crate::{models::results::XRPLResponse, XRPLSerdeJsonError};
+use crate::XRPLSerdeJsonError;
 
 mod exceptions;
 pub use exceptions::XRPLJsonRpcException;
@@ -36,6 +36,7 @@ mod _std {
     use crate::models::requests::XRPLRequest;
     #[cfg(feature = "helpers")]
     use crate::{asynch::clients::XRPLFaucet, models::requests::FundFaucet};
+    use alloc::string::String;
     #[cfg(feature = "helpers")]
     use alloc::string::ToString;
 
@@ -57,7 +58,7 @@ mod _std {
         async fn request_impl<'a: 'b, 'b>(
             &self,
             request: XRPLRequest<'a>,
-        ) -> XRPLClientResult<XRPLResponse<'b>> {
+        ) -> XRPLClientResult<String> {
             let client = HttpClient::new();
             let request_json_rpc = request_to_json_rpc(&request)?;
             let response = client
@@ -68,7 +69,8 @@ mod _std {
             match response {
                 Ok(response) => match response.text().await {
                     Ok(response) => {
-                        Ok(serde_json::from_str::<XRPLResponse<'b>>(&response).unwrap())
+                        //Ok(serde_json::from_str::<XRPLResponse<'b>>(&response).unwrap())
+                        Ok(response)
                     }
                     Err(error) => Err(error.into()),
                 },

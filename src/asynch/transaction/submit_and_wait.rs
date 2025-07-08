@@ -24,6 +24,7 @@ use crate::{
     },
     wallet::Wallet,
 };
+use crate::models::results::XRPLResponse;
 
 pub async fn submit_and_wait<'a: 'b, 'b, T, F, C>(
     transaction: &'b mut T,
@@ -98,6 +99,8 @@ where
         let response = client
             .request(requests::tx::Tx::new(None, None, None, None, Some(tx_hash.clone())).into())
             .await?;
+        let response: XRPLResponse<TxVersionMap> = serde_json::from_str(&response)?;
+
         if response.is_success() {
             if let Some(error) = response.error {
                 if error == "txnNotFound" {
@@ -111,7 +114,7 @@ where
                     .into());
                 }
             } else {
-                let result: TxVersionMap = response.try_into()?;
+                let result: TxVersionMap = response.result.unwrap(); // TODO
                 let base = match &result {
                     TxVersionMap::Default(tx) => tx.base.clone(),
                     TxVersionMap::V1(tx) => tx.base.clone(),

@@ -39,8 +39,10 @@ use core::fmt::Debug;
 use exceptions::XRPLTransactionHelperException;
 use serde::Serialize;
 use serde::{de::DeserializeOwned, Deserialize};
+use serde_json::Value;
 use strum::IntoEnumIterator;
-
+use crate::asynch::transaction::exceptions::XRPLSubmitAndWaitException;
+use crate::models::results::XRPLResponse;
 use super::exceptions::XRPLHelperResult;
 
 const OWNER_RESERVE: &str = "2000000"; // 2 XRP
@@ -166,9 +168,19 @@ where
     transaction.validate()?;
     let txn_blob = encode(transaction)?;
     let req = Submit::new(None, txn_blob.into(), None);
-    let res = client.request(req.into()).await?;
-
-    Ok(res.try_into()?)
+    let response_raw = client.request(req.into()).await?;
+    let response: XRPLResponse<'a, SubmitResult<'a>> = serde_json::from_str(&response_raw)?;
+    
+    match response.result {
+        Some(result) => Ok(result),
+        None => {
+            let response_unknown: XRPLResponse<'a, Value> = serde_json::from_str(&response_raw)?;
+            match examine_submit_error(response_unknown).err() {
+                Some(e) => Err(e),
+                None => Err(XRPLModelException::MissingField("result".to_string()).into()),
+            }
+        }
+    }
 }
 
 pub async fn calculate_fee_per_transaction_type<'a, 'b, 'c, T, F, C>(
@@ -225,7 +237,9 @@ async fn get_owner_reserve_from_response(
     client: &impl XRPLAsyncClient,
 ) -> XRPLHelperResult<XRPAmount<'_>> {
     let owner_reserve_response = client.request(ServerState::new(None).into()).await?;
-    let result: ServerStateResult = owner_reserve_response.try_into()?;
+    let owner_reserve_response: XRPLResponse<'_, ServerStateResult> =
+        serde_json::from_str(&owner_reserve_response)?;
+    let result = owner_reserve_response.result.unwrap();
     match result.state.validated_ledger {
         Some(validated_ledger) => Ok(validated_ledger.reserve_base),
         None => Err(XRPLModelException::MissingField("validated_ledger".to_string()).into()),
@@ -479,6 +493,41 @@ where
     } else {
         Ok(())
     }
+}
+
+fn examine_submit_error(response : XRPLResponse<'_, Value>) -> XRPLHelperResult<()> {
+    let default_error = XRPLModelException::MissingField(
+        "result".to_string(),
+    ).into();
+    let result = match response.result {
+        Some(result) => result,
+        None => return Err(default_error),
+    };
+    match result.get("status") {
+        None => {
+            return Err(default_error);
+        }
+        Some(status) => {
+            let status_str = match status.as_str() {
+                Some(s) => s,
+                None => return Err(default_error),
+            };
+            if status_str == "error" {
+                let error = result.get("error").unwrap().as_str().unwrap_or_default();
+                let error_exception = result.get("error_exception").unwrap().as_str().unwrap_or_default();
+                let mut error_response = String::new();
+                error_response.push_str("Error: ");
+                error_response.push_str(error);
+                if !error_exception.is_empty() {
+                    error_response.push_str(", Exception: ");
+                    error_response.push_str(error_exception);
+                }
+                return Err(XRPLSubmitAndWaitException::SubmissionFailed(error_response).into());
+            }
+        }
+    };
+
+    Err(default_error)
 }
 
 #[cfg(all(feature = "websocket", feature = "std"))]

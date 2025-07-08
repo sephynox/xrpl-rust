@@ -89,7 +89,7 @@ pub struct Payment<'a> {
     pub deliver_min: Option<Amount<'a>>,
 }
 
-impl<'a: 'static> Model for Payment<'a> {
+impl<'a> Model for Payment<'a> {
     fn get_errors(&self) -> XRPLModelResult<()> {
         self._get_xrp_transaction_error()?;
         self._get_partial_payment_error()?;

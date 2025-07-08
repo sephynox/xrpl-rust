@@ -45,7 +45,7 @@ use alloc::borrow::Cow;
 use alloc::borrow::ToOwned;
 use alloc::string::String;
 use alloc::string::ToString;
-use alloc::vec;
+use alloc::{format, vec};
 use alloc::vec::Vec;
 use amount::IssuedCurrency;
 use exceptions::XRPLTypeException;
@@ -172,7 +172,9 @@ impl XRPLTypes {
     {
         value
             .try_into()
-            .map_err(|_| XRPLTypeException::TryFromStrError.into())
+            .map_err(|e| {
+                XRPLTypeException::TryFromStrError(format!("{}", e)).into()
+            })
     }
 
     fn amount_from_map<T>(value: Map<String, Value>) -> XRPLCoreResult<T>

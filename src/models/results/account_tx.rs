@@ -7,9 +7,7 @@ use serde_json::Value;
 use crate::models::requests::Marker;
 use crate::models::{XRPLModelException, XRPLModelResult};
 
-use super::{
-    exceptions::XRPLResultException, metadata::TransactionMetadata, XRPLResponse, XRPLResult,
-};
+use super::{exceptions::XRPLResultException, metadata::TransactionMetadata, XRPLResult};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
@@ -118,17 +116,6 @@ impl<'a> TryFrom<XRPLResult<'a>> for AccountTxVersionMap<'a> {
                 res.get_name(),
             )
             .into()),
-        }
-    }
-}
-
-impl<'a> TryFrom<XRPLResponse<'a>> for AccountTxVersionMap<'a> {
-    type Error = XRPLModelException;
-
-    fn try_from(response: XRPLResponse<'a>) -> XRPLModelResult<Self> {
-        match response.result {
-            Some(result) => AccountTxVersionMap::try_from(result),
-            None => Err(XRPLModelException::MissingField("result".to_string())),
         }
     }
 }
