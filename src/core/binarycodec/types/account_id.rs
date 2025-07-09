@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 ///
 #[derive(Debug, Deserialize, Clone)]
 #[serde(try_from = "&str")]
-pub struct AccountId(Hash160);
+pub struct AccountId(pub Hash160);
 
 impl XRPLType for AccountId {
     type Error = XRPLCoreException;

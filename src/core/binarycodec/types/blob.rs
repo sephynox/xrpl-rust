@@ -19,7 +19,7 @@ use super::XRPLType;
 /// `<https://xrpl.org/serialization.html#blob-fields>`
 #[derive(Debug, Deserialize, Clone)]
 #[serde(try_from = "&str")]
-pub struct Blob(Vec<u8>);
+pub struct Blob(pub Vec<u8>);
 
 impl XRPLType for Blob {
     type Error = XRPLCoreException;

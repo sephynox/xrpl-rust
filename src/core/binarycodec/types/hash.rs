@@ -25,7 +25,7 @@ use serde::Deserialize;
 /// `<https://xrpl.org/serialization.html#hash-fields>`
 #[derive(Debug, Deserialize, Clone)]
 #[serde(try_from = "&str")]
-pub struct Hash128(Vec<u8>);
+pub struct Hash128(pub Vec<u8>);
 
 /// Codec for serializing and deserializing a hash field
 /// with a width of 160 bits (20 bytes).
@@ -34,7 +34,7 @@ pub struct Hash128(Vec<u8>);
 /// `<https://xrpl.org/serialization.html#hash-fields>`
 #[derive(Debug, Deserialize, Clone)]
 #[serde(try_from = "&str")]
-pub struct Hash160(Vec<u8>);
+pub struct Hash160(pub Vec<u8>);
 
 /// Codec for serializing and deserializing a hash field
 /// with a width of 256 bits (32 bytes).
@@ -43,7 +43,7 @@ pub struct Hash160(Vec<u8>);
 /// `<https://xrpl.org/serialization.html#hash-fields>`
 #[derive(Debug, Deserialize, Clone)]
 #[serde(try_from = "&str")]
-pub struct Hash256(Vec<u8>);
+pub struct Hash256(pub Vec<u8>);
 
 /// XRPL Hash type.
 ///

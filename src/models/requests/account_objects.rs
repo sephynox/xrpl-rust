@@ -46,6 +46,7 @@ pub struct AccountObjects<'a> {
     /// of ledger object. The valid types are: check, deposit_preauth,
     /// escrow, offer, payment_channel, signer_list, ticket,
     /// and state (trust line).
+    #[serde(flatten)]
     pub r#type: Option<AccountObjectType>,
     /// If true, the response only includes objects that would block
     /// this account from being deleted. The default is false.
