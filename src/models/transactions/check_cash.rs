@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::models::amount::XRPAmount;
-use crate::models::transactions::CommonFields;
 use crate::models::{
     amount::Amount,
     transactions::{Memo, Signer, Transaction, TransactionType},
@@ -13,6 +12,8 @@ use crate::models::{
 use crate::models::{
     FlagCollection, NoFlags, ValidateCurrencies, XRPLModelException, XRPLModelResult,
 };
+
+use super::CommonFields;
 
 /// Cancels an unredeemed Check, removing it from the ledger without
 /// sending any money. The source or the destination of the check can
@@ -49,9 +50,9 @@ pub struct CheckCash<'a> {
     pub deliver_min: Option<Amount<'a>>,
 }
 
-impl<'a: 'static> Model for CheckCash<'a> {
+impl<'a> Model for CheckCash<'a> {
     fn get_errors(&self) -> XRPLModelResult<()> {
-        self._get_amount_and_deliver_min_error()?;
+        //self._get_amount_and_deliver_min_error()?;
         self.validate_currencies()
     }
 }

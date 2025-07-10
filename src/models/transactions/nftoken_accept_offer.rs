@@ -56,7 +56,7 @@ pub struct NFTokenAcceptOffer<'a> {
     pub nftoken_broker_fee: Option<Amount<'a>>,
 }
 
-impl<'a: 'static> Model for NFTokenAcceptOffer<'a> {
+impl<'a> Model for NFTokenAcceptOffer<'a> {
     fn get_errors(&self) -> XRPLModelResult<()> {
         self._get_brokered_mode_error()?;
         self._get_nftoken_broker_fee_error()?;

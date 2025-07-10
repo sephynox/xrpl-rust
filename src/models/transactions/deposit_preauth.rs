@@ -40,7 +40,7 @@ pub struct DepositPreauth<'a> {
     pub unauthorize: Option<Cow<'a, str>>,
 }
 
-impl<'a: 'static> Model for DepositPreauth<'a> {
+impl<'a> Model for DepositPreauth<'a> {
     fn get_errors(&self) -> XRPLModelResult<()> {
         self._get_authorize_and_unauthorize_error()?;
         self.validate_currencies()

@@ -80,7 +80,7 @@ pub struct NFTokenCreateOffer<'a> {
     pub destination: Option<Cow<'a, str>>,
 }
 
-impl<'a: 'static> Model for NFTokenCreateOffer<'a> {
+impl<'a> Model for NFTokenCreateOffer<'a> {
     fn get_errors(&self) -> XRPLModelResult<()> {
         self._get_amount_error()?;
         self._get_destination_error()?;

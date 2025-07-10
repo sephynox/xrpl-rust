@@ -91,7 +91,7 @@ pub struct LedgerEntry<'a> {
     pub ticket: Option<Ticket<'a>>,
 }
 
-impl<'a: 'static> Model for LedgerEntry<'a> {
+impl<'a> Model for LedgerEntry<'a> {
     fn get_errors(&self) -> XRPLModelResult<()> {
         self._get_field_error()
     }

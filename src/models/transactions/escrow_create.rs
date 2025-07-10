@@ -56,7 +56,7 @@ pub struct EscrowCreate<'a> {
     pub condition: Option<Cow<'a, str>>,
 }
 
-impl<'a: 'static> Model for EscrowCreate<'a> {
+impl<'a> Model for EscrowCreate<'a> {
     fn get_errors(&self) -> XRPLModelResult<()> {
         self._get_finish_after_error()?;
         self.validate_currencies()

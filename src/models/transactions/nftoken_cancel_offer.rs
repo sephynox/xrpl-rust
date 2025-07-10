@@ -47,7 +47,7 @@ pub struct NFTokenCancelOffer<'a> {
     pub nftoken_offers: Vec<Cow<'a, str>>,
 }
 
-impl<'a: 'static> Model for NFTokenCancelOffer<'a> {
+impl<'a> Model for NFTokenCancelOffer<'a> {
     fn get_errors(&self) -> XRPLModelResult<()> {
         self._get_nftoken_offers_error()?;
         self.validate_currencies()
