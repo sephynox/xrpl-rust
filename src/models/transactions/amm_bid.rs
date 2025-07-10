@@ -92,7 +92,7 @@ impl<'a> AMMBid<'_> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,
