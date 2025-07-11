@@ -17,7 +17,7 @@
 //!
 //! For the user guide and further documentation, please read
 //! [XRP Ledger](https://xrpl.org/docs.html).
-#![no_std]
+// #![no_std]
 #![allow(dead_code)] // Remove eventually
 
 use ::core::fmt::Display;

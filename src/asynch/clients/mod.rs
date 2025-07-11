@@ -7,7 +7,7 @@ mod json_rpc;
 mod websocket;
 
 use alloc::borrow::Cow;
-use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex, NoopRawMutex};
+use embassy_sync::blocking_mutex::raw::{NoopRawMutex, RawMutex};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "helpers")]
@@ -22,8 +22,23 @@ pub use json_rpc::*;
 #[cfg(feature = "websocket")]
 pub use websocket::*;
 
-pub type MultiExecutorMutex = CriticalSectionRawMutex;
+pub type MultiExecutorMutex = StdRawMutex;
 pub type SingleExecutorMutex = NoopRawMutex;
+
+pub struct StdRawMutex {
+    inner: std::sync::Mutex<()>,
+}
+
+unsafe impl RawMutex for StdRawMutex {
+    const INIT: Self = StdRawMutex {
+        inner: std::sync::Mutex::new(()),
+    };
+
+    fn lock<R>(&self, f: impl FnOnce() -> R) -> R {
+        let _guard = self.inner.lock().unwrap();
+        f()
+    }
+}
 
 const TEST_FAUCET_URL: &str = "https://faucet.altnet.rippletest.net/accounts";
 const DEV_FAUCET_URL: &str = "https://faucet.devnet.rippletest.net/accounts";
