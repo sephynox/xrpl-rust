@@ -227,7 +227,7 @@ impl<'a> Payment<'a> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,
@@ -414,7 +414,7 @@ mod tests {
             None,
             None,
         );
-        let default_json_str = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"Payment","Fee":"12","Flags":131072,"Sequence":2,"SigningPubKey":"","Amount":{"currency":"USD","issuer":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","value":"1"},"Destination":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX"}"#;
+        let default_json_str = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"Payment","SigningPubKey":"","Fee":"12","Flags":131072,"Sequence":2,"Amount":{"currency":"USD","issuer":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","value":"1"},"Destination":"ra5nK24KXen9AHvsdFTKHSANinZseWnPcX"}"#;
         // Serialize
         let default_json_value = serde_json::to_value(default_json_str).unwrap();
         let serialized_string = serde_json::to_string(&default_txn).unwrap();

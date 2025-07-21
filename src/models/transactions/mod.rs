@@ -109,27 +109,6 @@ pub enum TransactionType {
     UNLModify,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
-#[serde(rename_all = "PascalCase")]
-pub struct PreparedTransaction<'a, T> {
-    #[serde(flatten)]
-    pub transaction: T,
-    /// Hex representation of the public key that corresponds to the
-    /// private key used to sign this transaction. If an empty string,
-    /// indicates a multi-signature is present in the Signers field instead.
-    pub signing_pub_key: Cow<'a, str>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, new)]
-#[serde(rename_all = "PascalCase")]
-pub struct SignedTransaction<'a, T> {
-    #[serde(flatten)]
-    pub prepared_transaction: PreparedTransaction<'a, T>,
-    /// The signature that verifies this transaction as originating
-    /// from the account it says it is from.
-    pub txn_signature: Cow<'a, str>,
-}
-
 /// The base fields for all transaction models.
 ///
 /// See Transaction Common Fields:
@@ -148,6 +127,11 @@ where
     /// See Transaction Types:
     /// `<https://xrpl.org/transaction-types.html>`
     pub transaction_type: TransactionType,
+    /// Hex representation of the public key that corresponds to the
+    /// private key used to sign this transaction. If an empty string,
+    /// indicates a multi-signature is present in the Signers field instead.
+    #[serde(default)]
+    pub signing_pub_key: Cow<'a, str>,
     /// Hash value identifying another transaction. If provided, this
     /// transaction is only valid if the sending account's
     /// previously-sent transaction matches the provided hash.
@@ -183,10 +167,6 @@ where
     /// made. Conventionally, a refund should specify the initial
     /// payment's SourceTag as the refund payment's DestinationTag.
     pub signers: Option<Vec<Signer>>,
-    /// Hex representation of the public key that corresponds to the
-    /// private key used to sign this transaction. If an empty string,
-    /// indicates a multi-signature is present in the Signers field instead.
-    pub signing_pub_key: Option<Cow<'a, str>>,
     /// Arbitrary integer used to identify the reason for this
     /// payment, or a sender on whose behalf this transaction
     /// is made. Conventionally, a refund should specify the initial
@@ -216,7 +196,7 @@ where
         network_id: Option<u32>,
         sequence: Option<u32>,
         signers: Option<Vec<Signer>>,
-        signing_pub_key: Option<Cow<'a, str>>,
+        signing_pub_key: Cow<'a, str>,
         source_tag: Option<u32>,
         ticket_sequence: Option<u32>,
         txn_signature: Option<Cow<'a, str>>,
@@ -232,7 +212,7 @@ where
             network_id,
             sequence,
             signers,
-            signing_pub_key: Some(signing_pub_key.unwrap_or("".into())),
+            signing_pub_key,
             source_tag,
             ticket_sequence,
             txn_signature,
@@ -250,7 +230,7 @@ where
                 .iter()
                 .all(|signer| signer.txn_signature.len() > 0 && signer.signing_pub_key.len() > 0)
         } else {
-            self.txn_signature.is_some() && self.signing_pub_key.is_some()
+            self.txn_signature.is_some() && !self.signing_pub_key.is_empty()
         }
     }
 }
@@ -493,7 +473,7 @@ where
 
     fn is_signed(&self) -> bool {
         self.get_common_fields().txn_signature.is_some()
-            && self.get_common_fields().signing_pub_key.is_some()
+            && !self.get_common_fields().signing_pub_key.is_empty()
     }
 
     /// Hashes the Transaction object as the ledger does. Only valid for signed

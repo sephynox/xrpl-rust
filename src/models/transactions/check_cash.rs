@@ -112,7 +112,7 @@ impl<'a> CheckCash<'a> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,
@@ -179,7 +179,7 @@ mod tests {
             Some("100000000".into()),
             None,
         );
-        let default_json_str = r#"{"Account":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","TransactionType":"CheckCash","Fee":"12","Flags":0,"SigningPubKey":"","CheckID":"838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334","Amount":"100000000"}"#;
+        let default_json_str = r#"{"Account":"rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy","TransactionType":"CheckCash","SigningPubKey":"","Fee":"12","Flags":0,"CheckID":"838766BA2B995C00744175F69A1B11E32C3DBC40E64801A4056FCBD657F57334","Amount":"100000000"}"#;
         // Serialize
         let default_json_value = serde_json::to_value(default_json_str).unwrap();
         let serialized_string = serde_json::to_string(&default_txn).unwrap();

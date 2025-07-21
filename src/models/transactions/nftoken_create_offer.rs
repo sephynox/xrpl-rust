@@ -190,7 +190,7 @@ impl<'a> NFTokenCreateOffer<'a> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,
@@ -352,7 +352,7 @@ mod tests {
             None,
             None,
         );
-        let default_json_str = r#"{"Account":"rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX","TransactionType":"NFTokenCreateOffer","Flags":1,"SigningPubKey":"","NFTokenID":"000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007","Amount":"1000000"}"#;
+        let default_json_str = r#"{"Account":"rs8jBmmfpwgmrSPgwMsh7CvKRmRt1JTVSX","TransactionType":"NFTokenCreateOffer","SigningPubKey":"","Flags":1,"NFTokenID":"000100001E962F495F07A990F4ED55ACCFEEF365DBAA76B6A048C0A200000007","Amount":"1000000"}"#;
         // Serialize
         let default_json_value = serde_json::to_value(default_json_str).unwrap();
         let serialized_string = serde_json::to_string(&default_txn).unwrap();

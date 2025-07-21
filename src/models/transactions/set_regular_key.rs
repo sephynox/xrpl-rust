@@ -92,7 +92,7 @@ impl<'a> SetRegularKey<'a> {
                 None,
                 sequence,
                 signers,
-                None,
+                "".into(),
                 source_tag,
                 ticket_sequence,
                 None,
@@ -120,7 +120,7 @@ mod tests {
             None,
             Some("rAR8rR8sUkBoCZFawhkWzY4Y5YoyuznwD".into()),
         );
-        let default_json_str = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"SetRegularKey","Fee":"12","Flags":0,"SigningPubKey":"","RegularKey":"rAR8rR8sUkBoCZFawhkWzY4Y5YoyuznwD"}"#;
+        let default_json_str = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"SetRegularKey","SigningPubKey":"","Fee":"12","Flags":0,"RegularKey":"rAR8rR8sUkBoCZFawhkWzY4Y5YoyuznwD"}"#;
         // Serialize
         let default_json_value = serde_json::to_value(default_json_str).unwrap();
         let serialized_string = serde_json::to_string(&default_txn).unwrap();
