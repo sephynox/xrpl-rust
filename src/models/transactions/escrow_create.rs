@@ -59,6 +59,15 @@ pub struct EscrowCreate<'a> {
     /// before the expiration time specified in the CancelAfter
     /// field, the XRP can only revert to the sender.
     pub condition: Option<Cow<'a, str>>,
+    /// Smart-escrow WebAssembly bytecode (hex-encoded), evaluated by rippled
+    /// on `EscrowFinish` to decide whether the escrow releases. Added by the
+    /// [XLS-100 Smart Escrows amendment](https://xls.xrpl.org/xls/XLS-0100-smart-escrows.html).
+    /// Optional — the field is only meaningful on a rippled build that
+    /// enables the amendment.
+    pub bytecode: Option<Cow<'a, str>>,
+    /// Opaque contract-owned state (hex-encoded) accessible to the smart-escrow
+    /// bytecode at finish time. Also part of XLS-100; optional.
+    pub data: Option<Cow<'a, str>>,
 }
 
 impl<'a> Model for EscrowCreate<'a> {
@@ -93,6 +102,7 @@ impl<'a> CommonTransactionBuilder<'a, NoFlags> for EscrowCreate<'a> {
 }
 
 impl<'a> EscrowCreate<'a> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         account: Cow<'a, str>,
         account_txn_id: Option<Cow<'a, str>>,
@@ -109,6 +119,8 @@ impl<'a> EscrowCreate<'a> {
         condition: Option<Cow<'a, str>>,
         destination_tag: Option<u32>,
         finish_after: Option<u32>,
+        bytecode: Option<Cow<'a, str>>,
+        data: Option<Cow<'a, str>>,
     ) -> Self {
         Self {
             common_fields: CommonFields::new(
@@ -133,6 +145,8 @@ impl<'a> EscrowCreate<'a> {
             cancel_after,
             finish_after,
             condition,
+            bytecode,
+            data,
         }
     }
 
@@ -153,6 +167,20 @@ impl<'a> EscrowCreate<'a> {
 
     pub fn with_condition(mut self, condition: Cow<'a, str>) -> Self {
         self.condition = Some(condition);
+        self
+    }
+
+    /// Attach smart-escrow bytecode (hex-encoded WebAssembly). Requires the
+    /// XLS-100 Smart Escrows amendment on the target network.
+    pub fn with_bytecode(mut self, bytecode: Cow<'a, str>) -> Self {
+        self.bytecode = Some(bytecode);
+        self
+    }
+
+    /// Attach opaque contract-owned state for the smart-escrow contract to
+    /// read at finish time. Requires XLS-100.
+    pub fn with_data(mut self, data: Cow<'a, str>) -> Self {
+        self.data = Some(data);
         self
     }
 }
@@ -240,6 +268,8 @@ mod tests {
                 "A0258020E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855810100"
                     .into(),
             ),
+            bytecode: None,
+            data: None,
         };
 
         let default_json_str = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"EscrowCreate","Flags":0,"SigningPubKey":"","SourceTag":11747,"Amount":"10000","Destination":"rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW","DestinationTag":23480,"CancelAfter":533257958,"FinishAfter":533171558,"Condition":"A0258020E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855810100"}"#;
@@ -320,5 +350,47 @@ mod tests {
         assert!(escrow_create.cancel_after.is_none());
         assert!(escrow_create.finish_after.is_none());
         assert!(escrow_create.condition.is_none());
+        assert!(escrow_create.bytecode.is_none());
+        assert!(escrow_create.data.is_none());
+    }
+
+    /// Verifies the two XLS-100 fields (`Bytecode`, `Data`) round-trip
+    /// through serde and set correctly via the builder helpers. Uses the
+    /// smallest valid WASM module that exports `escrow_finish() -> i32`
+    /// returning 1 (46 bytes) as the bytecode payload.
+    #[test]
+    fn test_smart_escrow_fields() {
+        const RETURN_1_WASM_HEX: &str = "0061736D010000000105016000017F030201000711010D657363726F775F66696E69736800000A0601040041010B";
+
+        let escrow_create = EscrowCreate {
+            common_fields: CommonFields {
+                account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
+                transaction_type: TransactionType::EscrowCreate,
+                ..Default::default()
+            },
+            amount: XRPAmount::from("10000"),
+            destination: "rsA2LpzuawewSBQXkiju3YQTMzW13pAAdW".into(),
+            ..Default::default()
+        }
+        .with_bytecode(RETURN_1_WASM_HEX.into())
+        .with_data("DEADBEEF".into());
+
+        assert_eq!(escrow_create.bytecode.as_deref(), Some(RETURN_1_WASM_HEX));
+        assert_eq!(escrow_create.data.as_deref(), Some("DEADBEEF"));
+
+        // Serde: PascalCase per the struct-level attribute.
+        let serialized = serde_json::to_string(&escrow_create).unwrap();
+        assert!(
+            serialized.contains(&alloc::format!("\"Bytecode\":\"{RETURN_1_WASM_HEX}\"")),
+            "serialized: {serialized}"
+        );
+        assert!(serialized.contains("\"Data\":\"DEADBEEF\""));
+
+        let deserialized: EscrowCreate = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized.bytecode.as_deref(), Some(RETURN_1_WASM_HEX));
+        assert_eq!(deserialized.data.as_deref(), Some("DEADBEEF"));
+
+        // Both fields are optional and validation doesn't touch them.
+        assert!(escrow_create.get_errors().is_ok());
     }
 }

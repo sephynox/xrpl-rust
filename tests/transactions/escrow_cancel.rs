@@ -41,6 +41,8 @@ async fn test_escrow_cancel_base() {
             None,                                       // condition
             None,                                       // destination_tag
             Some(finish_after),                         // finish_after
+            None,                                       // bytecode (XLS-100)
+            None,                                       // data (XLS-100)
         );
 
         // test_transaction signs, submits, asserts tesSUCCESS, and calls ledger_accept.
