@@ -1,0 +1,28 @@
+# Dependabot configuration for xrpl-rust.
+#
+# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# We deliberately opt in to GitHub Actions updates only for now — Cargo updates
+# are handled manually because the toolchain is pinned (see rust-toolchain.toml)
+# and dependency bumps often require a coordinated MSRV/feature review.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - ci
+      - dependencies
+    commit-message:
+      prefix: "ci"
+      include: scope
+    groups:
+      # Batch routine action bumps into a single PR so reviewers don't have to
+      # merge one per action every week.
+      github-actions:
+        patterns:
+          - "*"
