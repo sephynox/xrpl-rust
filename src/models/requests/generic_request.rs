@@ -185,6 +185,7 @@ impl<'de, 'a> Deserialize<'de> for GenericRequest<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::string::ToString;
     use serde_json::json;
 
     #[test]
@@ -217,7 +218,10 @@ mod tests {
     #[test]
     fn test_roundtrip_with_params_and_id() {
         let mut params = Map::new();
-        params.insert("account".into(), json!("rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh"));
+        params.insert(
+            "account".into(),
+            json!("rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh"),
+        );
         let req = GenericRequest::new(
             Cow::Borrowed("account_info"),
             Some(Cow::Borrowed("id-42")),
