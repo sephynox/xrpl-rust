@@ -14,6 +14,7 @@ use crate::common::{
 use xrpl::asynch::{
     exceptions::XRPLHelperException,
     transaction::{
+        autofill,
         exceptions::{XRPLSubmitAndWaitException, XRPLTransactionHelperException},
         submit_and_wait,
     },
@@ -80,26 +81,42 @@ async fn test_submit_and_wait_payment() {
     .await;
 }
 
-/// Prelim `tem*` path: a Payment where `Destination == Account` is rejected
-/// by rippled at submit time with `temREDUNDANT`. `submit_and_wait` should
-/// return a typed `SubmissionFailed` carrying that code plus the human
-/// message.
+/// Prelim `tem*` path: submit a Payment with an autofilled sequence/ledger
+/// but a manually-overridden `Fee: "0"`, and disable `check_fee` so the bad
+/// fee reaches rippled. Rippled rejects it at preflight with a `temBAD_FEE`,
+/// and `submit_and_wait` should surface that via the typed
+/// `SubmissionFailed { result_code, message }`.
 #[tokio::test]
 async fn test_submit_and_wait_prelim_tem_error() {
     with_blockchain_lock(|| async {
         let client = get_client().await;
         let sender = generate_funded_wallet().await;
+        let recipient = Wallet::create(None).expect("recipient wallet");
 
-        // Self-payment — rippled preflight returns temREDUNDANT.
         let mut payment = xrp_payment(
             sender.classic_address.clone(),
-            sender.classic_address.clone(),
+            recipient.classic_address.clone(),
             "1000000",
         );
 
-        let err = submit_and_wait(&mut payment, client, Some(&sender), Some(true), Some(true))
+        // Autofill sequence + last_ledger_sequence + fee, then stomp the fee.
+        autofill(&mut payment, client, None)
             .await
-            .expect_err("self-payment should fail at prelim tem*");
+            .expect("autofill");
+        payment.common_fields.fee = Some("0".into());
+
+        // autofill=false so our zero fee isn't overwritten;
+        // check_fee=false so the client-side minimum-fee guard doesn't reject
+        // the tx before it reaches rippled.
+        let err = submit_and_wait(
+            &mut payment,
+            client,
+            Some(&sender),
+            Some(false),
+            Some(false),
+        )
+        .await
+        .expect_err("Fee=0 should fail with tem* at rippled");
 
         assert_submission_failed_matches!(err, |result_code, message| {
             assert!(
@@ -126,13 +143,14 @@ async fn test_submit_and_wait_validated_tec_error() {
         let sender = generate_funded_wallet().await;
         let recipient = Wallet::create(None).expect("recipient wallet");
 
-        // Sender was funded with 400 XRP; asking for 10_000 XRP is well over
-        // that even accounting for reserves, so the transactor is guaranteed
-        // to reject with tecUNFUNDED_PAYMENT.
+        // Sender was funded with 400 XRP; asking for 1000 XRP (10^9 drops)
+        // exceeds the balance and reserves, so the transactor rejects with
+        // tecUNFUNDED_PAYMENT. Kept below 2^32 drops to avoid the u32-parsing
+        // overflow in XRPAmount's client-side check.
         let mut payment = xrp_payment(
             sender.classic_address.clone(),
             recipient.classic_address.clone(),
-            "10000000000",
+            "1000000000",
         );
 
         let ledger_driver = tokio::spawn(async {
@@ -158,9 +176,10 @@ async fn test_submit_and_wait_validated_tec_error() {
     .await;
 }
 
-/// Polling timeout path: if no ledger closes while `submit_and_wait` polls,
-/// the loop exhausts its retries and returns a synthetic
-/// `SubmissionFailed { result_code: "submission_timeout", .. }`.
+/// Polling timeout: if no ledger closes while `submit_and_wait` polls, the
+/// retry counter (`c > 20`) trips and returns `SubmissionTimeout`. This is
+/// the pre-existing variant orthogonal to the `SubmissionFailed` restructure,
+/// but exercising it here documents the timeout contract end-to-end.
 #[tokio::test]
 async fn test_submit_and_wait_polling_timeout() {
     with_blockchain_lock(|| async {
@@ -174,19 +193,22 @@ async fn test_submit_and_wait_polling_timeout() {
             "20000000",
         );
 
-        // No ledger driver spawned → validated_ledger_sequence never advances
-        // past last_ledger_sequence, and the poll loop hits its retry cap.
+        // No ledger driver spawned → validated_ledger_sequence never advances,
+        // so the poll loop hits its 20-iteration retry cap after ~20s.
         let err = submit_and_wait(&mut payment, client, Some(&sender), Some(true), Some(true))
             .await
             .expect_err("polling without ledger_accept should time out");
 
-        assert_submission_failed_matches!(err, |result_code, message| {
-            assert_eq!(result_code, "submission_timeout");
-            assert_eq!(
-                message.as_deref(),
-                Some("Transaction not included in ledger"),
-            );
-        });
+        match err {
+            XRPLHelperException::XRPLTransactionHelperError(
+                XRPLTransactionHelperException::XRPLSubmitAndWaitError(
+                    XRPLSubmitAndWaitException::SubmissionTimeout { prelim_result, .. },
+                ),
+            ) => {
+                assert_eq!(prelim_result, "Transaction not included in ledger");
+            }
+            other => panic!("expected SubmissionTimeout, got {other:?}"),
+        }
 
         // Close the ledger the timed-out tx sat in so subsequent tests
         // (serialized on the blockchain lock) see a clean state.
