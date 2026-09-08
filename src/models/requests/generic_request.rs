@@ -72,6 +72,15 @@ impl<'a> GenericRequest<'a> {
         id: Option<Cow<'a, str>>,
         params: Map<String, Value>,
     ) -> Self {
+        // Reserved keys `command` and `id` would collide with the fields the
+        // serializer emits before `params`, letting a caller-supplied
+        // `command` silently override the intended RPC method. We reject them
+        // at construction so the mistake is loud in dev; `serialize` also
+        // filters them defensively for release builds.
+        debug_assert!(
+            !params.contains_key("command") && !params.contains_key("id"),
+            "GenericRequest params must not contain reserved keys `command` or `id`"
+        );
         Self {
             common_fields: CommonFields {
                 command: RequestMethod::Generic,
@@ -103,14 +112,25 @@ impl<'a> Serialize for GenericRequest<'a> {
         // Emit: {"command": <self.command>, ["id": <id>,] ...self.params}
         // We deliberately skip `common_fields.command` (the sentinel
         // `RequestMethod::Generic`) so the real command string wins.
+        //
+        // `params` entries keyed `command` or `id` are dropped: they would
+        // collide with the fields we emit above, and `serde_json`'s Map
+        // (BTreeMap-backed) resolves duplicate keys with last-write-wins —
+        // so a stray `params.insert("command", "stop")` would silently
+        // redirect the RPC. `new()` catches this in debug builds; this
+        // filter is defense in depth for release.
+        let reserved = |k: &str| k == "command" || k == "id";
+        let params_count = self.params.keys().filter(|k| !reserved(k)).count();
         let extra = 1 + usize::from(self.common_fields.id.is_some());
-        let mut map = serializer.serialize_map(Some(self.params.len() + extra))?;
+        let mut map = serializer.serialize_map(Some(params_count + extra))?;
         map.serialize_entry("command", &self.command)?;
         if let Some(id) = &self.common_fields.id {
             map.serialize_entry("id", id)?;
         }
         for (k, v) in &self.params {
-            map.serialize_entry(k, v)?;
+            if !reserved(k) {
+                map.serialize_entry(k, v)?;
+            }
         }
         map.end()
     }
@@ -239,6 +259,71 @@ mod tests {
         let json = r#"{"id": "x"}"#;
         let err = serde_json::from_str::<GenericRequest<'static>>(json).unwrap_err();
         assert!(err.to_string().contains("command"));
+    }
+
+    /// A caller who somehow gets a reserved key into `params` (e.g. via
+    /// struct-literal construction that bypasses `new()`'s debug_assert,
+    /// or by deserializing user-controlled JSON) must not be able to
+    /// override the request's top-level `command` on the wire. In release
+    /// builds `serialize` filters the reserved keys out of `params`.
+    #[test]
+    fn test_serialize_drops_reserved_command_key_in_params() {
+        let mut params = Map::new();
+        params.insert("command".into(), json!("stop"));
+        params.insert("account".into(), json!("rAlice"));
+        // Bypass `new()` (which debug-asserts) via struct-literal.
+        let req = GenericRequest {
+            common_fields: CommonFields {
+                command: RequestMethod::Generic,
+                id: None,
+            },
+            command: Cow::Borrowed("ledger_accept"),
+            params,
+        };
+        let value: Value = serde_json::to_value(&req).unwrap();
+        // The intended command wins and the injected "command" is gone.
+        assert_eq!(value["command"], json!("ledger_accept"));
+        assert_eq!(value["account"], json!("rAlice"));
+        // No sign of the injected reserved key elsewhere.
+        assert_eq!(value.as_object().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn test_serialize_drops_reserved_id_key_in_params() {
+        let mut params = Map::new();
+        params.insert("id".into(), json!("attacker-id"));
+        let req = GenericRequest {
+            common_fields: CommonFields {
+                command: RequestMethod::Generic,
+                id: Some(Cow::Borrowed("real-id")),
+            },
+            command: Cow::Borrowed("server_info"),
+            params,
+        };
+        let value: Value = serde_json::to_value(&req).unwrap();
+        assert_eq!(value["id"], json!("real-id"));
+        assert_eq!(value.as_object().unwrap().len(), 2);
+    }
+
+    // `debug_assert!` compiles out under `--release`, so these should_panic
+    // tests are gated on `debug_assertions`. The serialize filter above is
+    // what protects release builds (covered by the two tests just above).
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic(expected = "reserved keys")]
+    fn test_new_debug_asserts_on_reserved_command_key() {
+        let mut params = Map::new();
+        params.insert("command".into(), json!("stop"));
+        let _ = GenericRequest::new("ledger_accept", None, params);
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic(expected = "reserved keys")]
+    fn test_new_debug_asserts_on_reserved_id_key() {
+        let mut params = Map::new();
+        params.insert("id".into(), json!("x"));
+        let _ = GenericRequest::new("ledger_accept", None, params);
     }
 
     #[test]
