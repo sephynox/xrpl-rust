@@ -1,6 +1,7 @@
 use core::fmt::Debug;
 
-use alloc::{borrow::Cow, format};
+use alloc::borrow::Cow;
+use alloc::string::ToString;
 use serde::{de::DeserializeOwned, Serialize};
 use strum::IntoEnumIterator;
 
@@ -54,11 +55,11 @@ where
     let submit_response = submit(transaction, client).await?;
     let prelim_result = submit_response.engine_result;
     if &prelim_result[0..3] == "tem" {
-        let message = format!(
-            "{}: {}",
-            prelim_result, submit_response.engine_result_message
-        );
-        Err(XRPLSubmitAndWaitException::SubmissionFailed(message).into())
+        Err(XRPLSubmitAndWaitException::SubmissionFailed {
+            result_code: prelim_result.to_string(),
+            message: Some(submit_response.engine_result_message.to_string()),
+        }
+        .into())
     } else {
         wait_for_final_transaction_result(
             tx_hash,
@@ -103,11 +104,13 @@ where
                 if response.rpc_error() == Some(XRPLRpcError::TxnNotFound) {
                     continue;
                 } else {
-                    return Err(XRPLSubmitAndWaitException::SubmissionFailed(format!(
-                        "{}: {}",
-                        error,
-                        response.error_message.unwrap_or("".into())
-                    ))
+                    // Non-`txnNotFound` RPC error while polling — treat the
+                    // rippled `error` name as the result code, and put the
+                    // human-readable `error_message` alongside it.
+                    return Err(XRPLSubmitAndWaitException::SubmissionFailed {
+                        result_code: error.to_string(),
+                        message: response.error_message.map(|m| m.to_string()),
+                    }
                     .into());
                 }
             } else {
@@ -124,9 +127,14 @@ where
                     };
                     let meta = meta.expect("Expected field in the transaction metadata: meta");
                     if meta.transaction_result != "tesSUCCESS" {
-                        return Err(XRPLSubmitAndWaitException::SubmissionFailed(
-                            meta.transaction_result.into(),
-                        )
+                        // The ledger validated the tx and the transactor
+                        // rejected it (tec*/tef*). The transaction_result is
+                        // the code; no separate message is available on the
+                        // meta object.
+                        return Err(XRPLSubmitAndWaitException::SubmissionFailed {
+                            result_code: meta.transaction_result.to_string(),
+                            message: None,
+                        }
                         .into());
                     } else {
                         return Ok(result);
@@ -135,10 +143,13 @@ where
             }
         }
     }
-    Err(
-        XRPLSubmitAndWaitException::SubmissionFailed("Transaction not included in ledger".into())
-            .into(),
-    )
+    // Polling loop exhausted retries. Use a synthetic sentinel result_code so
+    // callers can match on it distinct from real rippled result codes.
+    Err(XRPLSubmitAndWaitException::SubmissionFailed {
+        result_code: "submission_timeout".to_string(),
+        message: Some("Transaction not included in ledger".to_string()),
+    }
+    .into())
 }
 
 async fn get_signed_transaction<'a, T, F, C>(
@@ -361,11 +372,112 @@ mod tests {
         match result {
             Err(crate::asynch::exceptions::XRPLHelperException::XRPLTransactionHelperError(
                 crate::asynch::transaction::exceptions::XRPLTransactionHelperException::XRPLSubmitAndWaitError(
-                    XRPLSubmitAndWaitException::SubmissionFailed(message),
+                    XRPLSubmitAndWaitException::SubmissionFailed { result_code, message },
                 ),
-            )) => assert_eq!(message, "Transaction not included in ledger"),
+            )) => {
+                assert_eq!(result_code, "submission_timeout");
+                assert_eq!(message.as_deref(), Some("Transaction not included in ledger"));
+            }
             other => panic!("expected typed txnNotFound retry path, got {other:?}"),
         }
         assert_eq!(*client.request_count.lock().unwrap(), 2);
+    }
+
+    /// Verifies that when rippled returns a validated transaction with a
+    /// non-tesSUCCESS `TransactionResult` (a `tec*` code, i.e. the ledger
+    /// accepted the tx and the transactor rejected it), the polling loop
+    /// surfaces it as `SubmissionFailed { result_code: "tec...", .. }` so
+    /// callers can match on the code without substring-parsing.
+    #[tokio::test]
+    async fn test_wait_for_final_transaction_result_surfaces_tec_result_code() {
+        use std::sync::Mutex;
+
+        use crate::{
+            asynch::clients::{exceptions::XRPLClientResult, XRPLClient},
+            models::{requests::XRPLRequest, results::XRPLResponse},
+        };
+        use url::Url;
+
+        struct MockClient {
+            request_count: Mutex<usize>,
+        }
+
+        const HASH: &str = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        impl XRPLClient for MockClient {
+            async fn request_impl<'a: 'b, 'b>(
+                &self,
+                _request: XRPLRequest<'a>,
+            ) -> XRPLClientResult<XRPLResponse<'b>> {
+                let mut request_count = self.request_count.lock().unwrap();
+                *request_count += 1;
+                // First call is get_latest_validated_ledger_sequence, second
+                // is the tx lookup. Serve a validated tx with a tec* meta on
+                // the second call.
+                if *request_count == 1 {
+                    Ok(serde_json::from_str(&alloc::format!(
+                        r#"{{
+                            "status":"success",
+                            "result":{{
+                                "ledger":{{
+                                    "account_hash":"{HASH}",
+                                    "close_flags":0,
+                                    "close_time":0,
+                                    "close_time_resolution":10,
+                                    "closed":true,
+                                    "ledger_hash":"{HASH}",
+                                    "ledger_index":"2",
+                                    "parent_close_time":0,
+                                    "parent_hash":"{HASH}",
+                                    "total_coins":"0",
+                                    "transaction_hash":"{HASH}"
+                                }},
+                                "ledger_hash":"{HASH}",
+                                "ledger_index":2,
+                                "validated":true
+                            }}
+                        }}"#
+                    ))?)
+                } else {
+                    Ok(serde_json::from_str(&alloc::format!(
+                        r#"{{
+                            "status":"success",
+                            "result":{{
+                                "hash":"{HASH}",
+                                "validated":true,
+                                "meta":{{
+                                    "AffectedNodes":[],
+                                    "TransactionIndex":0,
+                                    "TransactionResult":"tecBYTECODE_REJECTED"
+                                }}
+                            }}
+                        }}"#
+                    ))?)
+                }
+            }
+
+            fn get_host(&self) -> Url {
+                "http://127.0.0.1:5005".parse().unwrap()
+            }
+        }
+
+        let client = MockClient {
+            request_count: Mutex::new(0),
+        };
+
+        let result = wait_for_final_transaction_result(HASH.into(), &client, 1).await;
+        match result {
+            Err(crate::asynch::exceptions::XRPLHelperException::XRPLTransactionHelperError(
+                crate::asynch::transaction::exceptions::XRPLTransactionHelperException::XRPLSubmitAndWaitError(
+                    XRPLSubmitAndWaitException::SubmissionFailed { result_code, message },
+                ),
+            )) => {
+                assert_eq!(result_code, "tecBYTECODE_REJECTED");
+                // A validated-but-rejected tx has no separate engine_result_message
+                // on the meta object, so message is None.
+                assert_eq!(message, None);
+            }
+            other => panic!("expected tec* SubmissionFailed, got {other:?}"),
+        }
     }
 }
