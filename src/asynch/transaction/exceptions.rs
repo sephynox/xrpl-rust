@@ -61,6 +61,7 @@ pub enum XRPLSubmitAndWaitException {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::string::ToString;
 
     /// The `Display` output includes both the result code and, when present,
     /// the accompanying message in parentheses. This shape is documented in
