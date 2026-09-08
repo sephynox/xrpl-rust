@@ -1,7 +1,7 @@
 use core::fmt::Debug;
 
 use alloc::borrow::Cow;
-use alloc::string::ToString;
+use alloc::string::{String, ToString};
 use serde::{de::DeserializeOwned, Serialize};
 use strum::IntoEnumIterator;
 
@@ -25,6 +25,19 @@ use crate::{
     },
     wallet::Wallet,
 };
+
+/// Build a `SubmissionFailed` exception. Extracted so all four failure sites
+/// (prelim `tem*`, RPC error mid-poll, validated `tec*`/`tef*`, poll timeout)
+/// share the same construction shape.
+fn submission_failed(
+    result_code: impl Into<String>,
+    message: Option<String>,
+) -> XRPLSubmitAndWaitException {
+    XRPLSubmitAndWaitException::SubmissionFailed {
+        result_code: result_code.into(),
+        message,
+    }
+}
 
 pub async fn submit_and_wait<'a: 'b, 'b, T, F, C>(
     transaction: &'b mut T,
@@ -55,10 +68,10 @@ where
     let submit_response = submit(transaction, client).await?;
     let prelim_result = submit_response.engine_result;
     if &prelim_result[0..3] == "tem" {
-        Err(XRPLSubmitAndWaitException::SubmissionFailed {
-            result_code: prelim_result.to_string(),
-            message: Some(submit_response.engine_result_message.to_string()),
-        }
+        Err(submission_failed(
+            prelim_result,
+            Some(submit_response.engine_result_message.to_string()),
+        )
         .into())
     } else {
         wait_for_final_transaction_result(
@@ -107,10 +120,10 @@ where
                     // Non-`txnNotFound` RPC error while polling — treat the
                     // rippled `error` name as the result code, and put the
                     // human-readable `error_message` alongside it.
-                    return Err(XRPLSubmitAndWaitException::SubmissionFailed {
-                        result_code: error.to_string(),
-                        message: response.error_message.map(|m| m.to_string()),
-                    }
+                    return Err(submission_failed(
+                        error.to_string(),
+                        response.error_message.map(|m| m.to_string()),
+                    )
                     .into());
                 }
             } else {
@@ -131,11 +144,7 @@ where
                         // rejected it (tec*/tef*). The transaction_result is
                         // the code; no separate message is available on the
                         // meta object.
-                        return Err(XRPLSubmitAndWaitException::SubmissionFailed {
-                            result_code: meta.transaction_result.to_string(),
-                            message: None,
-                        }
-                        .into());
+                        return Err(submission_failed(meta.transaction_result, None).into());
                     } else {
                         return Ok(result);
                     }
@@ -145,10 +154,10 @@ where
     }
     // Polling loop exhausted retries. Use a synthetic sentinel result_code so
     // callers can match on it distinct from real rippled result codes.
-    Err(XRPLSubmitAndWaitException::SubmissionFailed {
-        result_code: "submission_timeout".to_string(),
-        message: Some("Transaction not included in ledger".to_string()),
-    }
+    Err(submission_failed(
+        "submission_timeout",
+        Some("Transaction not included in ledger".to_string()),
+    )
     .into())
 }
 
