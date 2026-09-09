@@ -16,7 +16,7 @@ use xrpl::asynch::{
     transaction::{
         autofill,
         exceptions::{XRPLSubmitAndWaitException, XRPLTransactionHelperException},
-        submit_and_wait,
+        sign, submit_and_wait,
     },
 };
 use xrpl::wallet::Wallet;
@@ -81,11 +81,16 @@ async fn test_submit_and_wait_payment() {
     .await;
 }
 
-/// Prelim `tem*` path: submit a Payment with an autofilled sequence/ledger
-/// but a manually-overridden `Fee: "0"`, and disable `check_fee` so the bad
-/// fee reaches rippled. Rippled rejects it at preflight with a `temBAD_FEE`,
-/// and `submit_and_wait` should surface that via the typed
+/// Prelim `tem*` path: autofill and sign a valid Payment, then mutate the
+/// fee after signing so rippled's hash-verify fails at preflight with
+/// `temBAD_SIGNATURE`. `submit_and_wait` should surface that via the typed
 /// `SubmissionFailed { result_code, message }`.
+///
+/// (An explicit `Fee: "0"` or a self-payment both fail earlier — the former
+/// gets a `tel*` code that stalls the poll loop, the latter is caught by
+/// client-side Payment validation before submit — so tampering with a
+/// post-sign field is the reliable way to force rippled into the `tem*`
+/// branch end-to-end.)
 #[tokio::test]
 async fn test_submit_and_wait_prelim_tem_error() {
     with_blockchain_lock(|| async {
@@ -99,15 +104,17 @@ async fn test_submit_and_wait_prelim_tem_error() {
             "1000000",
         );
 
-        // Autofill sequence + last_ledger_sequence + fee, then stomp the fee.
+        // Autofill + sign a well-formed tx, then bump the fee to invalidate
+        // the signature without altering `is_signed()` (which only checks
+        // that `txn_signature` / `signing_pub_key` are populated).
         autofill(&mut payment, client, None)
             .await
             .expect("autofill");
-        payment.common_fields.fee = Some("0".into());
+        sign(&mut payment, &sender, false).expect("sign");
+        payment.common_fields.fee = Some("15".into());
 
-        // autofill=false so our zero fee isn't overwritten;
-        // check_fee=false so the client-side minimum-fee guard doesn't reject
-        // the tx before it reaches rippled.
+        // autofill=false + check_fee=false so nothing tries to re-sign or
+        // re-fee the tampered tx before it hits rippled.
         let err = submit_and_wait(
             &mut payment,
             client,
@@ -116,7 +123,7 @@ async fn test_submit_and_wait_prelim_tem_error() {
             Some(false),
         )
         .await
-        .expect_err("Fee=0 should fail with tem* at rippled");
+        .expect_err("post-sign tampering should trigger temBAD_SIGNATURE");
 
         assert_submission_failed_matches!(err, |result_code, message| {
             assert!(
