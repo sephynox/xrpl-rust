@@ -152,12 +152,17 @@ where
             }
         }
     }
-    // Polling loop exhausted retries. Use a synthetic sentinel result_code so
-    // callers can match on it distinct from real rippled result codes.
-    Err(submission_failed(
-        "submission_timeout",
-        Some("Transaction not included in ledger".to_string()),
-    )
+    // Polling loop exited without validating the tx (validated ledger
+    // caught up with `last_ledger_sequence`). Semantically the same "we
+    // gave up waiting" as the `c > 20` retry-cap path above, so surface
+    // both via the same `SubmissionTimeout` variant with the ledger
+    // context — keeping `SubmissionFailed` reserved for definite failures
+    // that carry an actual rippled result code.
+    Err(XRPLSubmitAndWaitException::SubmissionTimeout {
+        last_ledger_sequence,
+        validated_ledger_sequence,
+        prelim_result: "Transaction not included in ledger".into(),
+    }
     .into())
 }
 
@@ -381,11 +386,10 @@ mod tests {
         match result {
             Err(crate::asynch::exceptions::XRPLHelperException::XRPLTransactionHelperError(
                 crate::asynch::transaction::exceptions::XRPLTransactionHelperException::XRPLSubmitAndWaitError(
-                    XRPLSubmitAndWaitException::SubmissionFailed { result_code, message },
+                    XRPLSubmitAndWaitException::SubmissionTimeout { prelim_result, .. },
                 ),
             )) => {
-                assert_eq!(result_code, "submission_timeout");
-                assert_eq!(message.as_deref(), Some("Transaction not included in ledger"));
+                assert_eq!(prelim_result, "Transaction not included in ledger");
             }
             other => panic!("expected typed txnNotFound retry path, got {other:?}"),
         }
