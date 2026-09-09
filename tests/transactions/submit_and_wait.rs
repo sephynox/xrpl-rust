@@ -14,9 +14,8 @@ use crate::common::{
 use xrpl::asynch::{
     exceptions::XRPLHelperException,
     transaction::{
-        autofill,
         exceptions::{XRPLSubmitAndWaitException, XRPLTransactionHelperException},
-        sign, submit_and_wait,
+        submit_and_wait,
     },
 };
 use xrpl::wallet::Wallet;
@@ -77,64 +76,6 @@ async fn test_submit_and_wait_payment() {
             .expect("validated transaction should have metadata");
 
         assert_eq!(metadata.transaction_result, "tesSUCCESS");
-    })
-    .await;
-}
-
-/// Prelim `tem*` path: autofill and sign a valid Payment, then mutate the
-/// fee after signing so rippled's hash-verify fails at preflight with
-/// `temBAD_SIGNATURE`. `submit_and_wait` should surface that via the typed
-/// `SubmissionFailed { result_code, message }`.
-///
-/// (An explicit `Fee: "0"` or a self-payment both fail earlier — the former
-/// gets a `tel*` code that stalls the poll loop, the latter is caught by
-/// client-side Payment validation before submit — so tampering with a
-/// post-sign field is the reliable way to force rippled into the `tem*`
-/// branch end-to-end.)
-#[tokio::test]
-async fn test_submit_and_wait_prelim_tem_error() {
-    with_blockchain_lock(|| async {
-        let client = get_client().await;
-        let sender = generate_funded_wallet().await;
-        let recipient = Wallet::create(None).expect("recipient wallet");
-
-        let mut payment = xrp_payment(
-            sender.classic_address.clone(),
-            recipient.classic_address.clone(),
-            "1000000",
-        );
-
-        // Autofill + sign a well-formed tx, then bump the fee to invalidate
-        // the signature without altering `is_signed()` (which only checks
-        // that `txn_signature` / `signing_pub_key` are populated).
-        autofill(&mut payment, client, None)
-            .await
-            .expect("autofill");
-        sign(&mut payment, &sender, false).expect("sign");
-        payment.common_fields.fee = Some("15".into());
-
-        // autofill=false + check_fee=false so nothing tries to re-sign or
-        // re-fee the tampered tx before it hits rippled.
-        let err = submit_and_wait(
-            &mut payment,
-            client,
-            Some(&sender),
-            Some(false),
-            Some(false),
-        )
-        .await
-        .expect_err("post-sign tampering should trigger temBAD_SIGNATURE");
-
-        assert_submission_failed_matches!(err, |result_code, message| {
-            assert!(
-                result_code.starts_with("tem"),
-                "expected tem* result_code, got {result_code}"
-            );
-            assert!(
-                message.is_some(),
-                "prelim tem* path should carry rippled's engine_result_message"
-            );
-        });
     })
     .await;
 }

@@ -489,4 +489,86 @@ mod tests {
             other => panic!("expected tec* SubmissionFailed, got {other:?}"),
         }
     }
+
+    /// Prelim `tem*` path (site 1): when `submit()` comes back with an
+    /// `engine_result` starting with "tem", `send_reliable_submission` should
+    /// short-circuit to `SubmissionFailed { result_code, message }` without
+    /// entering the poll loop. Uses a mocked client so we can guarantee the
+    /// tem* engine_result — real rippled either normalises typical bad-tx
+    /// inputs to `tel*`/`tec*` or fails at the RPC layer before the submit
+    /// response is materialised, making this branch impractical to exercise
+    /// against a live node.
+    #[tokio::test]
+    async fn test_send_reliable_submission_surfaces_tem_engine_result() {
+        use std::sync::Mutex;
+
+        use crate::{
+            asynch::clients::{exceptions::XRPLClientResult, XRPLClient},
+            models::{requests::XRPLRequest, results::XRPLResponse},
+        };
+        use url::Url;
+
+        struct MockClient {
+            submit_calls: Mutex<usize>,
+        }
+
+        impl XRPLClient for MockClient {
+            async fn request_impl<'a: 'b, 'b>(
+                &self,
+                _request: XRPLRequest<'a>,
+            ) -> XRPLClientResult<XRPLResponse<'b>> {
+                *self.submit_calls.lock().unwrap() += 1;
+                Ok(serde_json::from_str(
+                    r#"{
+                        "status":"success",
+                        "result":{
+                            "engine_result":"temBAD_SIGNATURE",
+                            "engine_result_code":-186,
+                            "engine_result_message":"Bad signature.",
+                            "tx_blob":"00",
+                            "tx_json":{}
+                        }
+                    }"#,
+                )?)
+            }
+
+            fn get_host(&self) -> Url {
+                "http://127.0.0.1:5005".parse().unwrap()
+            }
+        }
+
+        let client = MockClient {
+            submit_calls: Mutex::new(0),
+        };
+
+        // Pre-signed AccountSet skips get_signed_transaction's autofill+sign.
+        let wallet = test_wallets::create_test_wallet_unwrap();
+        let mut tx = AccountSet {
+            common_fields: CommonFields::from_account(&wallet.classic_address)
+                .with_transaction_type(TransactionType::AccountSet)
+                .with_fee("10".into())
+                .with_sequence(1),
+            ..Default::default()
+        };
+        tx.common_fields.last_ledger_sequence = Some(1);
+        tx.common_fields.txn_signature = Some("00".into());
+        tx.common_fields.signing_pub_key = Some("00".into());
+
+        let result = submit_and_wait(&mut tx, &client, None, Some(false), Some(false)).await;
+        match result {
+            Err(crate::asynch::exceptions::XRPLHelperException::XRPLTransactionHelperError(
+                crate::asynch::transaction::exceptions::XRPLTransactionHelperException::XRPLSubmitAndWaitError(
+                    XRPLSubmitAndWaitException::SubmissionFailed { result_code, message },
+                ),
+            )) => {
+                assert_eq!(result_code, "temBAD_SIGNATURE");
+                assert_eq!(message.as_deref(), Some("Bad signature."));
+            }
+            other => panic!("expected tem* SubmissionFailed, got {other:?}"),
+        }
+
+        // send_reliable_submission should short-circuit on tem* without
+        // entering the poll loop, so exactly one client request fired.
+        assert_eq!(*client.submit_calls.lock().unwrap(), 1);
+    }
 }
