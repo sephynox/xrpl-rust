@@ -2,18 +2,20 @@
 #
 # Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 #
-# We deliberately opt in to GitHub Actions updates only for now — Cargo updates
-# are handled manually because the toolchain is pinned (see rust-toolchain.toml)
-# and dependency bumps often require a coordinated MSRV/feature review.
+# Cadence + PR-limit mirror the XRPLF convention (see xrpl.js, xrpl-py):
+# quarterly with a 30-PR ceiling. Only GitHub Actions are tracked for now —
+# Cargo updates are handled manually because the toolchain is pinned via
+# rust-toolchain.toml and dep bumps often need a coordinated MSRV/feature
+# review.
 
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
+      interval: quarterly
+      time: "15:00"
+    open-pull-requests-limit: 30
     labels:
       - ci
       - dependencies
@@ -21,8 +23,8 @@ updates:
       prefix: "ci"
       include: scope
     groups:
-      # Batch routine action bumps into a single PR so reviewers don't have to
-      # merge one per action every week.
+      # Batch routine action bumps into a single PR so reviewers don't have
+      # to merge one per action every cycle.
       github-actions:
         patterns:
           - "*"
