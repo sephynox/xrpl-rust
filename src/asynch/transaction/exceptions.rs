@@ -48,7 +48,15 @@ pub enum XRPLSubmitAndWaitException {
         result_code: String,
         message: Option<String>,
     },
-    #[error("The latest validated ledger sequence {validated_ledger_sequence} is greater than the LastLedgerSequence {last_ledger_sequence} in the Transaction. Prelim result: {prelim_result}")]
+    /// The polling loop gave up before seeing the transaction validated.
+    /// Reached from two paths in `wait_for_final_transaction_result`:
+    /// (1) the retry cap fired while `validated_ledger_sequence <
+    /// last_ledger_sequence`, or (2) the loop exited naturally with
+    /// `validated_ledger_sequence >= last_ledger_sequence` (network moved
+    /// past the tx's deadline). The Display text describes both cases; the
+    /// numeric relationship between the two sequences is left for the
+    /// caller to inspect on the struct fields if they care.
+    #[error("Transaction not validated before LastLedgerSequence {last_ledger_sequence} (latest validated ledger: {validated_ledger_sequence}). Prelim result: {prelim_result}")]
     SubmissionTimeout {
         last_ledger_sequence: u32,
         validated_ledger_sequence: u32,
@@ -109,5 +117,37 @@ mod tests {
             }
             _ => panic!("expected SubmissionFailed variant"),
         }
+    }
+
+    /// The retry-cap path (`c > 20`) can fire while
+    /// `validated_ledger_sequence < last_ledger_sequence` — the wording
+    /// must not claim the validated sequence has passed the last one.
+    #[test]
+    fn submission_timeout_display_when_validated_below_last() {
+        let err = XRPLSubmitAndWaitException::SubmissionTimeout {
+            last_ledger_sequence: 100,
+            validated_ledger_sequence: 42,
+            prelim_result: "Transaction not included in ledger".to_string(),
+        };
+        assert_eq!(
+            err.to_string(),
+            "Transaction not validated before LastLedgerSequence 100 (latest validated ledger: 42). Prelim result: Transaction not included in ledger"
+        );
+    }
+
+    /// The after-loop path fires when the validated ledger reaches or passes
+    /// `last_ledger_sequence`. Equality is a valid trigger and must render
+    /// without contradicting the numbers.
+    #[test]
+    fn submission_timeout_display_when_validated_equals_last() {
+        let err = XRPLSubmitAndWaitException::SubmissionTimeout {
+            last_ledger_sequence: 100,
+            validated_ledger_sequence: 100,
+            prelim_result: "Transaction not included in ledger".to_string(),
+        };
+        assert_eq!(
+            err.to_string(),
+            "Transaction not validated before LastLedgerSequence 100 (latest validated ledger: 100). Prelim result: Transaction not included in ledger"
+        );
     }
 }
