@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for [XLS-0094D DynamicMPT](https://github.com/XRPLF/XRPL-Standards/pull/583).
 - **XLS-0096 Confidential MPT:** support for the [XLS-0096 ConfidentialTransfer amendment](https://github.com/XRPLF/XRPL-Standards/tree/master/XLS-0096-confidential-mpt). Adds the vendored `mpt-crypto` native crypto library via the internal `mpt-crypto` (safe Rust wrappers) and `mpt-crypto-sys` (FFI bindings, statically linked) crates.
+- **`GenericRequest`:** an untyped, catch-all request type for XRPL RPC commands that don't have a dedicated typed model yet (e.g. `ledger_accept` on standalone rippled, `server_state`). Accepts a `command` string plus a free-form `params: HashMap<String, Value>` bag; `Serialize` flattens `params` alongside `command`/`id` and strips any collision with those reserved keys. Slots into `XRPLRequest::Generic` and the existing `Request` trait so it flows through `client.request(...)` unchanged.
 
 ### Fixed
 
