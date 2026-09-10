@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for [XLS-0094D DynamicMPT](https://github.com/XRPLF/XRPL-Standards/pull/583).
 - **XLS-0096 Confidential MPT:** support for the [XLS-0096 ConfidentialTransfer amendment](https://github.com/XRPLF/XRPL-Standards/tree/master/XLS-0096-confidential-mpt). Adds the vendored `mpt-crypto` native crypto library via the internal `mpt-crypto` (safe Rust wrappers) and `mpt-crypto-sys` (FFI bindings, statically linked) crates.
+- **XLS-100 Smart Escrows:** typed fields for compiling and executing WebAssembly release conditions on `Escrow*` transactions — `Bytecode` (WASM module hex) and `Data` (contract data blob) on `EscrowCreate`, and `Gas` (execution gas limit) on `EscrowFinish`. All three are optional so existing non-smart escrow flows compile and serialize unchanged. `definitions.json` regenerated from rippled's `ripple/se/supported` branch (via `server_definitions`) to pull in the associated field codes; integration tests cover both the smart-escrow success path and a `tecBYTECODE_REJECTED` rejection path.
 
 ### Fixed
 

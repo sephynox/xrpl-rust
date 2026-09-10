@@ -46,6 +46,11 @@ pub struct EscrowFinish<'a> {
     /// Credential IDs attached to this transaction.
     #[serde(rename = "CredentialIDs")]
     pub credential_ids: Option<Vec<Cow<'a, str>>>,
+    /// Maximum WebAssembly gas the smart-escrow finish invocation may
+    /// consume, per [XLS-100 Smart Escrows](https://xls.xrpl.org/xls/XLS-0100-smart-escrows.html).
+    /// Optional — required by rippled only when the target escrow has a
+    /// `Bytecode` field and the amendment is enabled.
+    pub gas: Option<u32>,
 }
 
 impl<'a> Model for EscrowFinish<'a> {
@@ -81,6 +86,7 @@ impl<'a> CommonTransactionBuilder<'a, NoFlags> for EscrowFinish<'a> {
 }
 
 impl<'a> EscrowFinish<'a> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         account: Cow<'a, str>,
         account_txn_id: Option<Cow<'a, str>>,
@@ -95,6 +101,7 @@ impl<'a> EscrowFinish<'a> {
         offer_sequence: u32,
         condition: Option<Cow<'a, str>>,
         fulfillment: Option<Cow<'a, str>>,
+        gas: Option<u32>,
     ) -> Self {
         Self {
             common_fields: CommonFields::new(
@@ -118,6 +125,7 @@ impl<'a> EscrowFinish<'a> {
             condition,
             fulfillment,
             credential_ids: None,
+            gas,
         }
     }
 
@@ -144,6 +152,14 @@ impl<'a> EscrowFinish<'a> {
     /// Set credential IDs to attach to this transaction for credential-based authorization checks.
     pub fn with_credential_ids(mut self, credential_ids: Vec<Cow<'a, str>>) -> Self {
         self.credential_ids = Some(credential_ids);
+        self
+    }
+
+    /// Set the WebAssembly gas budget for the smart-escrow finish invocation.
+    /// Required by rippled when the target escrow has a `Bytecode` field and
+    /// the XLS-100 Smart Escrows amendment is enabled.
+    pub fn with_gas(mut self, gas: u32) -> Self {
+        self.gas = Some(gas);
         self
     }
 }
@@ -188,6 +204,7 @@ mod tests {
             ),
             fulfillment: None,
             credential_ids: None,
+            gas: None,
         };
 
         assert!(escrow_finish.get_errors().is_err());
@@ -206,6 +223,7 @@ mod tests {
             condition: None,
             fulfillment: Some("A0028000".into()),
             credential_ids: None,
+            gas: None,
         };
 
         assert!(escrow_finish.get_errors().is_err());
@@ -227,6 +245,7 @@ mod tests {
             ),
             fulfillment: Some("A0028000".into()),
             credential_ids: None,
+            gas: None,
         };
 
         assert!(escrow_finish.get_errors().is_ok());
@@ -245,6 +264,7 @@ mod tests {
             condition: None,
             fulfillment: None,
             credential_ids: None,
+            gas: None,
         };
 
         assert!(escrow_finish.get_errors().is_ok());
@@ -267,6 +287,7 @@ mod tests {
             ),
             fulfillment: Some("A0028000".into()),
             credential_ids: None,
+            gas: None,
         };
 
         let default_json_str = r#"{"Account":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","TransactionType":"EscrowFinish","Flags":0,"SigningPubKey":"","Owner":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","OfferSequence":7,"Condition":"A0258020E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855810100","Fulfillment":"A0028000"}"#;
@@ -336,6 +357,38 @@ mod tests {
         assert!(escrow_finish.fulfillment.is_none());
         assert_eq!(escrow_finish.common_fields.fee.as_ref().unwrap().0, "12");
         assert_eq!(escrow_finish.common_fields.sequence, Some(123));
+        assert!(escrow_finish.get_errors().is_ok());
+    }
+
+    /// Verifies the XLS-100 `Gas` field round-trips through serde and sets
+    /// correctly via the builder helper.
+    #[test]
+    fn test_smart_escrow_gas_field() {
+        let escrow_finish = EscrowFinish {
+            common_fields: CommonFields {
+                account: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
+                transaction_type: TransactionType::EscrowFinish,
+                ..Default::default()
+            },
+            owner: "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn".into(),
+            offer_sequence: 7,
+            ..Default::default()
+        }
+        .with_gas(1_000_000);
+
+        assert_eq!(escrow_finish.gas, Some(1_000_000));
+
+        // Serde: PascalCase per the struct-level attribute.
+        let serialized = serde_json::to_string(&escrow_finish).unwrap();
+        assert!(
+            serialized.contains("\"Gas\":1000000"),
+            "serialized: {serialized}"
+        );
+
+        let deserialized: EscrowFinish = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized.gas, Some(1_000_000));
+
+        // The field is optional and validation doesn't touch it.
         assert!(escrow_finish.get_errors().is_ok());
     }
 
